@@ -1,0 +1,31 @@
+{
+  "name": "ai-newsroom",
+  "version": "1.0.0",
+  "description": "AI Newsroom application with reporters and editor agents",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "ts-node src/index.ts",
+    "test": "ts-node src/test.ts",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "ai",
+    "newsroom",
+    "redis",
+    "typescript",
+    "cron"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "dependencies": {
+    "redis": "^4.6.13",
+    "cron": "^3.1.6"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.17",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
+  }
+}
