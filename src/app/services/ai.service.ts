@@ -1,6 +1,6 @@
 import { Reporter, Article } from '../models/types';
 import OpenAI from 'openai';
-import { McpBskyClient } from "mcp-bsky-jetstream/client/McpBskyClient";
+import { McpBskyClient } from "mcp-bsky-jetstream/client/dist/McpBskyClient.js";
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { dailyEditionSchema, reporterArticleSchema } from '../models/schemas';
 
