@@ -1,11 +1,13 @@
 import { Reporter, Article } from '../models/types';
 import OpenAI from 'openai';
+import { McpBskyClient } from "mcp-bsky-jetstream/client/McpBskyClient";
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { dailyEditionSchema, reporterArticleSchema } from '../models/schemas';
 
 export class AIService {
   private openai: OpenAI;
   private readonly modelName: string = 'gpt-5-nano';
+  private mcpClient: McpBskyClient;
 
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -15,6 +17,11 @@ export class AIService {
 
     this.openai = new OpenAI({
       apiKey: apiKey,
+    });
+
+    // Initialize MCP Bluesky client
+    this.mcpClient = new McpBskyClient({
+      serverUrl: process.env.MCP_BSKY_SERVER_URL || 'http://localhost:3001'
     });
   }
 
@@ -43,6 +50,24 @@ export class AIService {
     const beat = reporter.beats[Math.floor(Math.random() * reporter.beats.length)];
 
     try {
+      // Fetch recent social media messages to inform article generation
+      let socialMediaMessages: Array<{did: string; text: string; time: number}> = [];
+      try {
+        await this.mcpClient.connect();
+        socialMediaMessages = await this.mcpClient.getMessages();
+        await this.mcpClient.disconnect();
+      } catch (error) {
+        console.warn('Failed to fetch social media messages:', error);
+        // Continue with article generation even if social media fetch fails
+      }
+
+      // Format social media messages for the prompt
+      const socialMediaContext = socialMediaMessages.length > 0
+        ? `\n\nRecent social media discussions related to ${beat}:\n${socialMediaMessages.slice(0, 10).map((msg, index: number) =>
+            `${index + 1}. User ${msg.did.substring(0, 8)}: "${msg.text}"`
+          ).join('\n')}`
+        : '';
+
       const response = await this.openai.chat.completions.create({
         model: this.modelName,
         messages: [
@@ -62,7 +87,9 @@ export class AIService {
 6. A brief social media summary (under 280 characters)
 7. Reporter notes on research quality, source diversity, and factual accuracy
 
-Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible.`
+Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible.${socialMediaContext}
+
+When generating the article, consider any relevant trends, discussions, or breaking news from the social media context provided above. Incorporate insights from these discussions where appropriate to make the article more timely and relevant.`
           }
         ],
         response_format: zodResponseFormat(reporterArticleSchema, "reporter_article")
