@@ -131,8 +131,44 @@ async function runTests(): Promise<void> {
     }
     console.log('');
 
-    // Test 8: Scheduler status
-    console.log('⏰ Test 8: Checking scheduler status...');
+    // Test 8: Test new structured reporter response schema
+    console.log('📰 Test 8: Testing structured reporter response schema...');
+    if (reporters.length > 0) {
+      try {
+        const firstReporter = reporters[0];
+        const structuredResponse = await reporterService.generateStructuredReporterResponse(firstReporter.id);
+
+        console.log(`✅ Structured response generated for reporter ${firstReporter.id}`);
+        console.log(`   Reporter: ${structuredResponse.reporterName}`);
+        console.log(`   Articles generated: ${structuredResponse.totalArticlesGenerated}`);
+        console.log(`   Beats covered: ${structuredResponse.coverageSummary.beatsCovered.join(', ')}`);
+        console.log(`   Total word count: ${structuredResponse.coverageSummary.totalWordCount}`);
+        console.log(`   Key themes: ${structuredResponse.coverageSummary.keyThemes.join(', ')}`);
+
+        if (structuredResponse.articles.length > 0) {
+          const firstArticle = structuredResponse.articles[0];
+          console.log(`   Sample article: "${firstArticle.headline}"`);
+          console.log(`   Beat: ${firstArticle.beat}`);
+          console.log(`   Word count: ${firstArticle.wordCount}`);
+          console.log(`   Sources: ${firstArticle.sources.length}`);
+          console.log(`   Key quotes: ${firstArticle.keyQuotes.length}`);
+        }
+
+        console.log('   Model feedback:');
+        console.log(`     Positive: ${structuredResponse.modelFeedback.positive}`);
+        console.log(`     Negative: ${structuredResponse.modelFeedback.negative}`);
+        console.log(`     Suggestions: ${structuredResponse.modelFeedback.suggestions}`);
+
+      } catch (error) {
+        console.log('❌ Structured response generation failed:', error instanceof Error ? error.message : String(error));
+      }
+    } else {
+      console.log('❌ No reporters available for structured response test');
+    }
+    console.log('');
+
+    // Test 9: Scheduler status
+    console.log('⏰ Test 9: Checking scheduler status...');
     const jobStatus = schedulerService.getJobStatus();
     const nextRuns = schedulerService.getNextRunTimes();
 

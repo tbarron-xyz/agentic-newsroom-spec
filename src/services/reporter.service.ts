@@ -1,6 +1,7 @@
 import { Reporter, Article } from '../models/types';
 import { RedisService } from './redis.service';
 import { AIService } from './ai.service';
+import { reporterResponseSchema } from '../models/schemas';
 
 export class ReporterService {
   constructor(
@@ -154,5 +155,149 @@ export class ReporterService {
 
     console.log(`Deleted reporter: ${reporterId}`);
     return true;
+  }
+
+  async generateStructuredReporterResponse(reporterId: string): Promise<{
+    reporterId: string;
+    reporterName: string;
+    articles: Array<{
+      id: string;
+      reporterId: string;
+      beat: string;
+      headline: string;
+      leadParagraph: string;
+      body: string;
+      keyQuotes: string[];
+      sources: string[];
+      wordCount: number;
+      generationTime: number;
+      reporterNotes: {
+        researchQuality: string;
+        sourceDiversity: string;
+        factualAccuracy: string;
+      };
+      socialMediaSummary: string;
+    }>;
+    totalArticlesGenerated: number;
+    generationTimestamp: number;
+    coverageSummary: {
+      beatsCovered: string[];
+      totalWordCount: number;
+      keyThemes: string[];
+    };
+    modelFeedback: {
+      positive: string;
+      negative: string;
+      suggestions: string;
+    };
+  }> {
+    console.log(`Generating structured response for reporter ${reporterId}...`);
+
+    // Get reporter information
+    const reporter = await this.redisService.getReporter(reporterId);
+    if (!reporter) {
+      throw new Error(`Reporter ${reporterId} not found`);
+    }
+
+    const generationTimestamp = Date.now();
+    const structuredArticles = [];
+    const beatsCovered = new Set<string>();
+    const keyThemes = new Set<string>();
+    let totalWordCount = 0;
+
+    // Generate 1-3 structured articles per reporter
+    const numArticles = Math.floor(Math.random() * 3) + 1;
+
+    for (let i = 0; i < numArticles; i++) {
+      try {
+        const structuredArticle = await this.aiService.generateStructuredArticle(reporter);
+        structuredArticles.push(structuredArticle);
+
+        // Track coverage data
+        beatsCovered.add(structuredArticle.beat);
+        totalWordCount += structuredArticle.wordCount;
+
+        // Extract key themes from article content (simplified)
+        const themes = this.extractKeyThemes(structuredArticle.body);
+        themes.forEach(theme => keyThemes.add(theme));
+
+        console.log(`Generated structured article: "${structuredArticle.headline}"`);
+      } catch (error) {
+        console.error(`Failed to generate structured article ${i + 1} for reporter ${reporterId}:`, error);
+      }
+    }
+
+    // Generate coverage summary and feedback
+    const coverageSummary = {
+      beatsCovered: Array.from(beatsCovered),
+      totalWordCount,
+      keyThemes: Array.from(keyThemes)
+    };
+
+    const modelFeedback = await this.generateReporterFeedback(reporter, structuredArticles, coverageSummary);
+
+    const response = {
+      reporterId,
+      reporterName: `Reporter ${reporterId}`,
+      articles: structuredArticles,
+      totalArticlesGenerated: structuredArticles.length,
+      generationTimestamp,
+      coverageSummary,
+      modelFeedback
+    };
+
+    // Save articles to Redis (convert to simple Article format for storage)
+    for (const structuredArticle of structuredArticles) {
+      const simpleArticle: Article = {
+        id: structuredArticle.id,
+        reporterId: structuredArticle.reporterId,
+        headline: structuredArticle.headline,
+        body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
+        generationTime: structuredArticle.generationTime
+      };
+      await this.redisService.saveArticle(simpleArticle);
+    }
+
+    console.log(`Generated ${structuredArticles.length} structured articles for reporter ${reporterId}`);
+    return response;
+  }
+
+  private extractKeyThemes(content: string): string[] {
+    // Simple theme extraction - in a real implementation, this could use NLP
+    const themes = [];
+    const keywords = ['technology', 'business', 'politics', 'economy', 'health', 'environment', 'sports', 'entertainment'];
+
+    for (const keyword of keywords) {
+      if (content.toLowerCase().includes(keyword)) {
+        themes.push(keyword.charAt(0).toUpperCase() + keyword.slice(1));
+      }
+    }
+
+    return themes.length > 0 ? themes : ['General News'];
+  }
+
+  private async generateReporterFeedback(
+    reporter: Reporter,
+    articles: any[],
+    coverageSummary: any
+  ): Promise<{
+    positive: string;
+    negative: string;
+    suggestions: string;
+  }> {
+    try {
+      // This would typically use AI to generate feedback, but for now we'll use simple logic
+      const positive = `Successfully covered ${coverageSummary.beatsCovered.length} different beats with ${articles.length} well-structured articles.`;
+      const negative = articles.length === 0 ? 'No articles were generated successfully.' : 'Some articles may benefit from additional fact-checking.';
+      const suggestions = `Consider expanding coverage to include emerging trends in ${reporter.beats.join(', ')}.`;
+
+      return { positive, negative, suggestions };
+    } catch (error) {
+      return {
+        positive: 'Articles generated successfully',
+        negative: 'Feedback generation encountered issues',
+        suggestions: 'Review article quality and source diversity'
+      };
+    }
   }
 }
