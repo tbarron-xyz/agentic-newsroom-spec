@@ -118,9 +118,9 @@ export class SchedulerService {
 
   getJobStatus(): { [key: string]: boolean } {
     return {
-      reporterJob: this.jobs[0]?.running ?? false,
-      newspaperJob: this.jobs[1]?.running ?? false,
-      dailyJob: this.jobs[2]?.running ?? false
+      reporterJob: !!this.jobs[0] && !this.jobs[0].isCallbackRunning,
+      newspaperJob: !!this.jobs[1] && !this.jobs[1].isCallbackRunning,
+      dailyJob: !!this.jobs[2] && !this.jobs[2].isCallbackRunning
     };
   }
 

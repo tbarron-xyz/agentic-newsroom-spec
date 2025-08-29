@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -29,19 +29,14 @@ interface DailyEdition {
   };
 }
 
-export default function DailyEditionPage() {
+function DailyEditionContent() {
   const [dailyEditions, setDailyEditions] = useState<DailyEdition[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEdition, setSelectedEdition] = useState<DailyEdition | null>(null);
   const [message, setMessage] = useState('');
   const searchParams = useSearchParams();
 
-  // Fetch daily editions on component mount
-  useEffect(() => {
-    fetchDailyEditions();
-  }, []);
-
-  const fetchDailyEditions = async () => {
+  const fetchDailyEditions = useCallback(async () => {
     try {
       const response = await fetch('/api/daily-editions');
       if (response.ok) {
@@ -64,7 +59,12 @@ export default function DailyEditionPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [searchParams]);
+
+  // Fetch daily editions on component mount
+  useEffect(() => {
+    fetchDailyEditions();
+  }, [fetchDailyEditions]);
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('en-US', {
@@ -265,5 +265,17 @@ export default function DailyEditionPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DailyEditionPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <DailyEditionContent />
+    </Suspense>
   );
 }

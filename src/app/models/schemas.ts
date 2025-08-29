@@ -34,6 +34,7 @@ export const reporterArticleSchema = z.object({
         factualAccuracy: z.string()
     }),
     socialMediaSummary: z.string(),
+    prompt: z.string(),
 });
 
 export const reporterResponseSchema = z.object({

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -13,7 +13,7 @@ interface Article {
   prompt: string;
 }
 
-export default function ArticlesPage() {
+function ArticlesContent() {
   const searchParams = useSearchParams();
   const reporterId = searchParams.get('reporterId');
   const [articles, setArticles] = useState<Article[]>([]);
@@ -21,13 +21,7 @@ export default function ArticlesPage() {
   const [error, setError] = useState('');
   const [expandedPrompts, setExpandedPrompts] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (reporterId) {
-      fetchArticles();
-    }
-  }, [reporterId]);
-
-  const fetchArticles = async () => {
+  const fetchArticles = useCallback(async () => {
     try {
       const response = await fetch(`/api/articles?reporterId=${reporterId}`);
       if (response.ok) {
@@ -42,7 +36,13 @@ export default function ArticlesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [reporterId]);
+
+  useEffect(() => {
+    if (reporterId) {
+      fetchArticles();
+    }
+  }, [reporterId, fetchArticles]);
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('en-US', {
@@ -193,5 +193,17 @@ export default function ArticlesPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ArticlesPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    }>
+      <ArticlesContent />
+    </Suspense>
   );
 }

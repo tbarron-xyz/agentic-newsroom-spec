@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 
 interface Topic {
   name: string;
@@ -87,9 +86,9 @@ export default function Home() {
           <h1 className="text-4xl font-bold text-slate-800 mb-2">
             Daily Edition
           </h1>
-          <p className="text-slate-600 text-lg">
-            Read today's comprehensive newspaper edition
-          </p>
+            <p className="text-slate-600 text-lg">
+              Read today's comprehensive newspaper edition
+            </p>
         </div>
 
         {/* Message */}

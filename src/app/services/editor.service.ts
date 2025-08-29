@@ -1,4 +1,4 @@
-import { NewspaperEdition, DailyEdition, Article, Editor } from '../models/types';
+import { NewspaperEdition, DailyEdition, Article } from '../models/types';
 import { RedisService } from './redis.service';
 import { AIService } from './ai.service';
 

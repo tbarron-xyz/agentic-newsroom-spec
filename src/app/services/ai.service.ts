@@ -2,6 +2,7 @@ import { Reporter, Article } from '../models/types';
 import OpenAI from 'openai';
 import { McpBskyClient } from "mcp-bsky-jetstream/client/dist/McpBskyClient.js";
 import { zodResponseFormat } from 'openai/helpers/zod';
+import { ZodSchema } from 'zod';
 import { dailyEditionSchema, reporterArticleSchema } from '../models/schemas';
 
 export class AIService {
@@ -217,7 +218,7 @@ Return only the article numbers (1, 2, 3, etc.) of the selected stories, separat
     }
   }
 
-  async generateStructuredReporterResponse(reporter: Reporter, schema: any): Promise<any> {
+  async generateStructuredReporterResponse<T>(reporter: Reporter, schema: ZodSchema<T>): Promise<T> {
     try {
       const response = await this.openai.chat.completions.create({
         model: this.modelName,

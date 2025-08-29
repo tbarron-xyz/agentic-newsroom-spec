@@ -3,6 +3,43 @@ import { RedisService } from './redis.service';
 import { AIService } from './ai.service';
 import { reporterResponseSchema } from '../models/schemas';
 
+type StructuredArticle = Awaited<ReturnType<AIService['generateStructuredArticle']>>;
+
+type StructuredReporterResponse = {
+  reporterId: string;
+  reporterName: string;
+  articles: Array<{
+    id: string;
+    reporterId: string;
+    beat: string;
+    headline: string;
+    leadParagraph: string;
+    body: string;
+    keyQuotes: string[];
+    sources: string[];
+    wordCount: number;
+    generationTime: number;
+    reporterNotes: {
+      researchQuality: string;
+      sourceDiversity: string;
+      factualAccuracy: string;
+    };
+    socialMediaSummary: string;
+  }>;
+  totalArticlesGenerated: number;
+  generationTimestamp: number;
+  coverageSummary: {
+    beatsCovered: string[];
+    totalWordCount: number;
+    keyThemes: string[];
+  };
+  modelFeedback: {
+    positive: string;
+    negative: string;
+    suggestions: string;
+  };
+};
+
 export class ReporterService {
   constructor(
     private redisService: RedisService,
@@ -166,40 +203,7 @@ export class ReporterService {
     return true;
   }
 
-  async generateStructuredReporterResponse(reporterId: string): Promise<{
-    reporterId: string;
-    reporterName: string;
-    articles: Array<{
-      id: string;
-      reporterId: string;
-      beat: string;
-      headline: string;
-      leadParagraph: string;
-      body: string;
-      keyQuotes: string[];
-      sources: string[];
-      wordCount: number;
-      generationTime: number;
-      reporterNotes: {
-        researchQuality: string;
-        sourceDiversity: string;
-        factualAccuracy: string;
-      };
-      socialMediaSummary: string;
-    }>;
-    totalArticlesGenerated: number;
-    generationTimestamp: number;
-    coverageSummary: {
-      beatsCovered: string[];
-      totalWordCount: number;
-      keyThemes: string[];
-    };
-    modelFeedback: {
-      positive: string;
-      negative: string;
-      suggestions: string;
-    };
-  }> {
+  async generateStructuredReporterResponse(reporterId: string): Promise<StructuredReporterResponse> {
     console.log(`Generating structured response for reporter ${reporterId}...`);
 
     // Get reporter information
@@ -218,7 +222,7 @@ export class ReporterService {
       parsedResponse.generationTimestamp = Date.now();
 
       // Add IDs and timestamps to articles
-      parsedResponse.articles = parsedResponse.articles.map((article: any, index: number) => ({
+      parsedResponse.articles = parsedResponse.articles.map((article, index: number) => ({
         ...article,
         id: `article_${Date.now()}_${index}_${Math.random().toString(36).substring(2, 8)}`,
         reporterId: reporterId,
@@ -249,7 +253,7 @@ export class ReporterService {
 
   private extractKeyThemes(content: string): string[] {
     // Simple theme extraction - in a real implementation, this could use NLP
-    const themes = [];
+    const themes: string[] = [];
     const keywords = ['technology', 'business', 'politics', 'economy', 'health', 'environment', 'sports', 'entertainment'];
 
     for (const keyword of keywords) {
@@ -263,8 +267,8 @@ export class ReporterService {
 
   private async generateReporterFeedback(
     reporter: Reporter,
-    articles: any[],
-    coverageSummary: any
+    articles: StructuredArticle[],
+    coverageSummary: { beatsCovered: string[]; totalWordCount: number; keyThemes: string[]; }
   ): Promise<{
     positive: string;
     negative: string;
@@ -278,6 +282,7 @@ export class ReporterService {
 
       return { positive, negative, suggestions };
     } catch (error) {
+      console.error('Error generating reporter feedback:', error);
       return {
         positive: 'Articles generated successfully',
         negative: 'Feedback generation encountered issues',
@@ -286,11 +291,11 @@ export class ReporterService {
     }
   }
 
-  private async generateStructuredReporterResponseFallback(reporterId: string, reporter: Reporter): Promise<any> {
+  private async generateStructuredReporterResponseFallback(reporterId: string, reporter: Reporter): Promise<StructuredReporterResponse> {
     console.log(`Using fallback implementation for reporter ${reporterId}...`);
 
     const generationTimestamp = Date.now();
-    const structuredArticles = [];
+    const structuredArticles: StructuredArticle[] = [];
     const beatsCovered = new Set<string>();
     const keyThemes = new Set<string>();
     let totalWordCount = 0;

@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { RedisService } from '../../services/redis.service';
 
 let redisService: RedisService | null = null;

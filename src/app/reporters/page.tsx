@@ -296,9 +296,9 @@ export default function ReportersPage() {
                   className="w-full h-32 p-4 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-slate-700 placeholder-slate-400"
                   rows={4}
                 />
-                <p className="text-sm text-slate-500 mt-2">
-                  Define the reporter's writing style, tone, and editorial guidelines.
-                </p>
+              <p className="text-sm text-slate-500 mt-2">
+                Define the reporter's writing guidelines and prompt.
+              </p>
               </div>
             </div>
 

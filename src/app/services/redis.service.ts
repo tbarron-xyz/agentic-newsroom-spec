@@ -5,10 +5,7 @@ import {
   Article,
   NewspaperEdition,
   DailyEdition,
-  REDIS_KEYS,
-  RedisArticleData,
-  RedisEditionData,
-  RedisDailyEditionData
+  REDIS_KEYS
 } from '../models/types';
 
 export class RedisService {
@@ -40,7 +37,9 @@ export class RedisService {
   // Editor operations
   async saveEditor(editor: Editor): Promise<void> {
     const multi = this.client.multi();
+    console.log('Redis Write: SET', REDIS_KEYS.EDITOR_BIO, editor.bio);
     multi.set(REDIS_KEYS.EDITOR_BIO, editor.bio);
+    console.log('Redis Write: SET', REDIS_KEYS.EDITOR_PROMPT, editor.prompt);
     multi.set(REDIS_KEYS.EDITOR_PROMPT, editor.prompt);
     await multi.exec();
   }
@@ -59,11 +58,15 @@ export class RedisService {
   // Reporter operations
   async saveReporter(reporter: Reporter): Promise<void> {
     const multi = this.client.multi();
+    console.log('Redis Write: SADD', REDIS_KEYS.REPORTERS, reporter.id);
     multi.sAdd(REDIS_KEYS.REPORTERS, reporter.id);
+    console.log('Redis Write: DEL', REDIS_KEYS.REPORTER_BEATS(reporter.id));
     multi.del(REDIS_KEYS.REPORTER_BEATS(reporter.id));
     reporter.beats.forEach(beat => {
+      console.log('Redis Write: SADD', REDIS_KEYS.REPORTER_BEATS(reporter.id), beat);
       multi.sAdd(REDIS_KEYS.REPORTER_BEATS(reporter.id), beat);
     });
+    console.log('Redis Write: SET', REDIS_KEYS.REPORTER_PROMPT(reporter.id), reporter.prompt);
     multi.set(REDIS_KEYS.REPORTER_PROMPT(reporter.id), reporter.prompt);
     await multi.exec();
   }
@@ -103,15 +106,23 @@ export class RedisService {
     const multi = this.client.multi();
 
     // Add to reporter's article sorted set
+    console.log('Redis Write: ZADD', REDIS_KEYS.ARTICLES_BY_REPORTER(article.reporterId), {
+      score: article.generationTime,
+      value: articleId
+    });
     multi.zAdd(REDIS_KEYS.ARTICLES_BY_REPORTER(article.reporterId), {
       score: article.generationTime,
       value: articleId
     });
 
     // Store article data
+    console.log('Redis Write: SET', REDIS_KEYS.ARTICLE_HEADLINE(articleId), article.headline);
     multi.set(REDIS_KEYS.ARTICLE_HEADLINE(articleId), article.headline);
+    console.log('Redis Write: SET', REDIS_KEYS.ARTICLE_BODY(articleId), article.body);
     multi.set(REDIS_KEYS.ARTICLE_BODY(articleId), article.body);
+    console.log('Redis Write: SET', REDIS_KEYS.ARTICLE_TIME(articleId), article.generationTime.toString());
     multi.set(REDIS_KEYS.ARTICLE_TIME(articleId), article.generationTime.toString());
+    console.log('Redis Write: SET', REDIS_KEYS.ARTICLE_PROMPT(articleId), article.prompt);
     multi.set(REDIS_KEYS.ARTICLE_PROMPT(articleId), article.prompt);
 
     await multi.exec();
@@ -200,16 +211,23 @@ export class RedisService {
     const multi = this.client.multi();
 
     // Add to editions sorted set
+    console.log('Redis Write: ZADD', REDIS_KEYS.EDITIONS, {
+      score: edition.generationTime,
+      value: editionId
+    });
     multi.zAdd(REDIS_KEYS.EDITIONS, {
       score: edition.generationTime,
       value: editionId
     });
 
     // Store edition data
+    console.log('Redis Write: DEL', REDIS_KEYS.EDITION_STORIES(editionId));
     multi.del(REDIS_KEYS.EDITION_STORIES(editionId));
     edition.stories.forEach(storyId => {
+      console.log('Redis Write: SADD', REDIS_KEYS.EDITION_STORIES(editionId), storyId);
       multi.sAdd(REDIS_KEYS.EDITION_STORIES(editionId), storyId);
     });
+    console.log('Redis Write: SET', REDIS_KEYS.EDITION_TIME(editionId), edition.generationTime.toString());
     multi.set(REDIS_KEYS.EDITION_TIME(editionId), edition.generationTime.toString());
 
     await multi.exec();
@@ -253,28 +271,41 @@ export class RedisService {
     const multi = this.client.multi();
 
     // Add to daily editions sorted set
+    console.log('Redis Write: ZADD', REDIS_KEYS.DAILY_EDITIONS, {
+      score: dailyEdition.generationTime,
+      value: dailyEditionId
+    });
     multi.zAdd(REDIS_KEYS.DAILY_EDITIONS, {
       score: dailyEdition.generationTime,
       value: dailyEditionId
     });
 
     // Store daily edition data
+    console.log('Redis Write: DEL', REDIS_KEYS.DAILY_EDITION_EDITIONS(dailyEditionId));
     multi.del(REDIS_KEYS.DAILY_EDITION_EDITIONS(dailyEditionId));
     dailyEdition.editions.forEach(editionId => {
+      console.log('Redis Write: SADD', REDIS_KEYS.DAILY_EDITION_EDITIONS(dailyEditionId), editionId);
       multi.sAdd(REDIS_KEYS.DAILY_EDITION_EDITIONS(dailyEditionId), editionId);
     });
+    console.log('Redis Write: SET', REDIS_KEYS.DAILY_EDITION_TIME(dailyEditionId), dailyEdition.generationTime.toString());
     multi.set(REDIS_KEYS.DAILY_EDITION_TIME(dailyEditionId), dailyEdition.generationTime.toString());
 
     // Store new detailed content fields
+    console.log('Redis Write: SET', `daily_edition:${dailyEditionId}:front_page_headline`, dailyEdition.frontPageHeadline);
     multi.set(`daily_edition:${dailyEditionId}:front_page_headline`, dailyEdition.frontPageHeadline);
+    console.log('Redis Write: SET', `daily_edition:${dailyEditionId}:front_page_article`, dailyEdition.frontPageArticle);
     multi.set(`daily_edition:${dailyEditionId}:front_page_article`, dailyEdition.frontPageArticle);
+    console.log('Redis Write: SET', `daily_edition:${dailyEditionId}:newspaper_name`, dailyEdition.newspaperName);
     multi.set(`daily_edition:${dailyEditionId}:newspaper_name`, dailyEdition.newspaperName);
 
     // Store model feedback
+    console.log('Redis Write: SET', `daily_edition:${dailyEditionId}:model_feedback_positive`, dailyEdition.modelFeedbackAboutThePrompt.positive);
     multi.set(`daily_edition:${dailyEditionId}:model_feedback_positive`, dailyEdition.modelFeedbackAboutThePrompt.positive);
+    console.log('Redis Write: SET', `daily_edition:${dailyEditionId}:model_feedback_negative`, dailyEdition.modelFeedbackAboutThePrompt.negative);
     multi.set(`daily_edition:${dailyEditionId}:model_feedback_negative`, dailyEdition.modelFeedbackAboutThePrompt.negative);
 
     // Store topics as JSON
+    console.log('Redis Write: SET', `daily_edition:${dailyEditionId}:topics`, JSON.stringify(dailyEdition.topics));
     multi.set(`daily_edition:${dailyEditionId}:topics`, JSON.stringify(dailyEdition.topics));
 
     await multi.exec();

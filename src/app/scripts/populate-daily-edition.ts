@@ -1,7 +1,5 @@
 import { RedisService } from '../services/redis.service';
 import { AIService } from '../services/ai.service';
-import { EditorService } from '../services/editor.service';
-import { ReporterService } from '../services/reporter.service';
 import { NewspaperEdition, DailyEdition, Article } from '../models/types';
 
 async function populateDailyEdition(): Promise<void> {
@@ -23,8 +21,7 @@ async function populateDailyEdition(): Promise<void> {
       console.log('⚠️  No OpenAI API key found - will create mock data for testing\n');
     }
 
-    const editorService = aiService ? new EditorService(redisService, aiService) : null;
-    const reporterService = aiService ? new ReporterService(redisService, aiService) : null;
+
 
     // Check if daily editions already exist
     const existingDailyEditions = await redisService.getDailyEditions();
@@ -69,7 +66,8 @@ async function populateDailyEdition(): Promise<void> {
             reporterId: structuredArticle.reporterId,
             headline: structuredArticle.headline,
             body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
-            generationTime: structuredArticle.generationTime
+            generationTime: structuredArticle.generationTime,
+            prompt: structuredArticle.prompt
           };
           await redisService.saveArticle(article);
           allArticles.push(article);
