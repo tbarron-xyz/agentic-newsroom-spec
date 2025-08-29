@@ -2,7 +2,7 @@ import { RedisService } from '../services/redis.service';
 import { AIService } from '../services/ai.service';
 import { EditorService } from '../services/editor.service';
 import { ReporterService } from '../services/reporter.service';
-import { NewspaperEdition, DailyEdition } from '../models/types';
+import { NewspaperEdition, DailyEdition, Article } from '../models/types';
 
 async function populateDailyEdition(): Promise<void> {
   console.log('📰 Starting daily edition population...\n');
@@ -62,7 +62,15 @@ async function populateDailyEdition(): Promise<void> {
         const numArticles = Math.floor(Math.random() * 2) + 2; // 2-3 articles
 
         for (let i = 0; i < numArticles; i++) {
-          const article = await aiService.generateArticle(reporter);
+          const structuredArticle = await aiService.generateStructuredArticle(reporter);
+          // Convert structured article to simple Article format for storage
+          const article: Article = {
+            id: structuredArticle.id,
+            reporterId: structuredArticle.reporterId,
+            headline: structuredArticle.headline,
+            body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
+            generationTime: structuredArticle.generationTime
+          };
           await redisService.saveArticle(article);
           allArticles.push(article);
           console.log(`    ✅ Generated article: "${article.headline}"`);

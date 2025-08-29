@@ -18,23 +18,7 @@ export class AIService {
     });
   }
 
-  async generateArticle(reporter: Reporter): Promise<Article> {
-    const generationTime = Date.now();
-    const articleId = `article_${generationTime}_${Math.random().toString(36).substring(2, 8)}`;
 
-    // Generate article using AI based on reporter's beats
-    const beat = reporter.beats[Math.floor(Math.random() * reporter.beats.length)];
-    const headline = await this.generateHeadline(beat);
-    const body = await this.generateBody(beat, reporter.prompt);
-
-    return {
-      id: articleId,
-      reporterId: reporter.id,
-      headline,
-      body,
-      generationTime
-    };
-  }
 
   async generateStructuredArticle(reporter: Reporter): Promise<{
     id: string;
@@ -123,51 +107,9 @@ Make the article engaging, factual, and professionally written. Ensure all quote
     }
   }
 
-  private async generateHeadline(beat: string): Promise<string> {
-    try {
-      const response = await this.openai.chat.completions.create({
-        model: this.modelName,
-        messages: [
-          {
-            role: 'system',
-            content: 'You are a professional news headline writer. Create compelling, concise headlines for news stories.'
-          },
-          {
-            role: 'user',
-            content: `Generate a catchy, professional news headline for a story in the ${beat} category. Make it engaging and newsworthy.`
-          }
-        ]
-      });
 
-      return response.choices[0]?.message?.content?.trim() || `Breaking News in ${beat}`;
-    } catch (error) {
-      console.error('Error generating headline:', error);
-      return `Breaking News in ${beat}`;
-    }
-  }
 
-  private async generateBody(beat: string, reporterPrompt: string): Promise<string> {
-    try {
-      const response = await this.openai.chat.completions.create({
-        model: this.modelName,
-        messages: [
-          {
-            role: 'system',
-            content: `You are a professional journalist writing for a news publication. Write engaging, informative news articles that are well-structured and follow journalistic standards. Include relevant quotes, context, and analysis. Write in a neutral, factual tone.`
-          },
-          {
-            role: 'user',
-            content: `Write a comprehensive news article about a recent development in the ${beat} sector. Incorporate this reporter's style and focus: "${reporterPrompt}". Make the article approximately 400-600 words, with proper structure including an introduction, body with details and quotes, and a conclusion.`
-          }
-        ]
-      });
 
-      return response.choices[0]?.message?.content?.trim() || `A significant development has occurred in the ${beat} sector, capturing widespread attention and prompting discussion among industry experts and the general public.`;
-    } catch (error) {
-      console.error('Error generating article body:', error);
-      return `A significant development has occurred in the ${beat} sector, capturing widespread attention and prompting discussion among industry experts and the general public. The situation continues to evolve with potential implications for various stakeholders.`;
-    }
-  }
 
   async selectNewsworthyStories(articles: Article[], editorPrompt: string): Promise<Article[]> {
     if (articles.length === 0) return [];
@@ -219,6 +161,43 @@ Return only the article numbers (1, 2, 3, etc.) of the selected stories, separat
       const numStories = Math.floor(Math.random() * (maxStories - minStories + 1)) + minStories;
       const shuffled = [...articles].sort(() => 0.5 - Math.random());
       return shuffled.slice(0, numStories);
+    }
+  }
+
+  async generateStructuredReporterResponse(reporter: Reporter, schema: any): Promise<any> {
+    try {
+      const response = await this.openai.chat.completions.create({
+        model: this.modelName,
+        messages: [
+          {
+            role: 'system',
+            content: `You are a professional news reporter creating comprehensive structured news content. Generate a complete reporter response with multiple articles, coverage analysis, and editorial feedback. Focus on: ${reporter.prompt}`
+          },
+          {
+            role: 'user',
+            content: `Create a comprehensive reporter response for reporter covering beats: ${reporter.beats.join(', ')}.
+
+Generate 1-3 articles for each beat, with complete journalistic structure including headlines, lead paragraphs, detailed bodies, key quotes, sources, and reporter notes.
+
+Then provide:
+1. Coverage summary analyzing which beats were covered and key themes
+2. Model feedback with positive aspects, negative aspects, and suggestions for improvement
+
+Make all content professional, factual, and engaging. Ensure proper journalistic standards are maintained throughout.`
+          }
+        ],
+        response_format: zodResponseFormat(schema, "reporter_response")
+      });
+
+      const content = response.choices[0]?.message?.content?.trim();
+      if (!content) {
+        throw new Error('No response content from AI service');
+      }
+
+      return JSON.parse(content);
+    } catch (error) {
+      console.error('Error generating structured reporter response:', error);
+      throw error;
     }
   }
 

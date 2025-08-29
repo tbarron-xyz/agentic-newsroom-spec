@@ -28,7 +28,15 @@ export class ReporterService {
 
     for (let i = 0; i < numArticles; i++) {
       try {
-        const article = await this.aiService.generateArticle(reporter);
+        const structuredArticle = await this.aiService.generateStructuredArticle(reporter);
+        // Convert structured article to simple Article format for storage
+        const article: Article = {
+          id: structuredArticle.id,
+          reporterId: structuredArticle.reporterId,
+          headline: structuredArticle.headline,
+          body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
+          generationTime: structuredArticle.generationTime
+        };
         articles.push(article);
         console.log(`Generated article: "${article.headline}"`);
       } catch (error) {
@@ -199,6 +207,86 @@ export class ReporterService {
       throw new Error(`Reporter ${reporterId} not found`);
     }
 
+    try {
+      // Use AIService method with reporterResponseSchema to generate the complete structured response
+      const parsedResponse = await this.aiService.generateStructuredReporterResponse(reporter, reporterResponseSchema);
+
+      // Add generated fields
+      parsedResponse.reporterId = reporterId;
+      parsedResponse.reporterName = `Reporter ${reporterId}`;
+      parsedResponse.generationTimestamp = Date.now();
+
+      // Add IDs and timestamps to articles
+      parsedResponse.articles = parsedResponse.articles.map((article: any, index: number) => ({
+        ...article,
+        id: `article_${Date.now()}_${index}_${Math.random().toString(36).substring(2, 8)}`,
+        reporterId: reporterId,
+        generationTime: Date.now()
+      }));
+
+      // Save articles to Redis (convert to simple Article format for storage)
+      for (const structuredArticle of parsedResponse.articles) {
+        const simpleArticle: Article = {
+          id: structuredArticle.id,
+          reporterId: structuredArticle.reporterId,
+          headline: structuredArticle.headline,
+          body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
+          generationTime: structuredArticle.generationTime
+        };
+        await this.redisService.saveArticle(simpleArticle);
+      }
+
+      console.log(`Generated ${parsedResponse.articles.length} structured articles for reporter ${reporterId}`);
+      return parsedResponse;
+    } catch (error) {
+      console.error('Error generating structured reporter response:', error);
+      // Fallback to original implementation if schema-based generation fails
+      return this.generateStructuredReporterResponseFallback(reporterId, reporter);
+    }
+  }
+
+  private extractKeyThemes(content: string): string[] {
+    // Simple theme extraction - in a real implementation, this could use NLP
+    const themes = [];
+    const keywords = ['technology', 'business', 'politics', 'economy', 'health', 'environment', 'sports', 'entertainment'];
+
+    for (const keyword of keywords) {
+      if (content.toLowerCase().includes(keyword)) {
+        themes.push(keyword.charAt(0).toUpperCase() + keyword.slice(1));
+      }
+    }
+
+    return themes.length > 0 ? themes : ['General News'];
+  }
+
+  private async generateReporterFeedback(
+    reporter: Reporter,
+    articles: any[],
+    coverageSummary: any
+  ): Promise<{
+    positive: string;
+    negative: string;
+    suggestions: string;
+  }> {
+    try {
+      // This would typically use AI to generate feedback, but for now we'll use simple logic
+      const positive = `Successfully covered ${coverageSummary.beatsCovered.length} different beats with ${articles.length} well-structured articles.`;
+      const negative = articles.length === 0 ? 'No articles were generated successfully.' : 'Some articles may benefit from additional fact-checking.';
+      const suggestions = `Consider expanding coverage to include emerging trends in ${reporter.beats.join(', ')}.`;
+
+      return { positive, negative, suggestions };
+    } catch (error) {
+      return {
+        positive: 'Articles generated successfully',
+        negative: 'Feedback generation encountered issues',
+        suggestions: 'Review article quality and source diversity'
+      };
+    }
+  }
+
+  private async generateStructuredReporterResponseFallback(reporterId: string, reporter: Reporter): Promise<any> {
+    console.log(`Using fallback implementation for reporter ${reporterId}...`);
+
     const generationTimestamp = Date.now();
     const structuredArticles = [];
     const beatsCovered = new Set<string>();
@@ -258,46 +346,7 @@ export class ReporterService {
       await this.redisService.saveArticle(simpleArticle);
     }
 
-    console.log(`Generated ${structuredArticles.length} structured articles for reporter ${reporterId}`);
+    console.log(`Generated ${structuredArticles.length} structured articles for reporter ${reporterId} (fallback)`);
     return response;
-  }
-
-  private extractKeyThemes(content: string): string[] {
-    // Simple theme extraction - in a real implementation, this could use NLP
-    const themes = [];
-    const keywords = ['technology', 'business', 'politics', 'economy', 'health', 'environment', 'sports', 'entertainment'];
-
-    for (const keyword of keywords) {
-      if (content.toLowerCase().includes(keyword)) {
-        themes.push(keyword.charAt(0).toUpperCase() + keyword.slice(1));
-      }
-    }
-
-    return themes.length > 0 ? themes : ['General News'];
-  }
-
-  private async generateReporterFeedback(
-    reporter: Reporter,
-    articles: any[],
-    coverageSummary: any
-  ): Promise<{
-    positive: string;
-    negative: string;
-    suggestions: string;
-  }> {
-    try {
-      // This would typically use AI to generate feedback, but for now we'll use simple logic
-      const positive = `Successfully covered ${coverageSummary.beatsCovered.length} different beats with ${articles.length} well-structured articles.`;
-      const negative = articles.length === 0 ? 'No articles were generated successfully.' : 'Some articles may benefit from additional fact-checking.';
-      const suggestions = `Consider expanding coverage to include emerging trends in ${reporter.beats.join(', ')}.`;
-
-      return { positive, negative, suggestions };
-    } catch (error) {
-      return {
-        positive: 'Articles generated successfully',
-        negative: 'Feedback generation encountered issues',
-        suggestions: 'Review article quality and source diversity'
-      };
-    }
   }
 }
