@@ -53,6 +53,9 @@ export class AIService {
       // Fetch recent social media messages to inform article generation
       let socialMediaMessages: Array<{did: string; text: string; time: number}> = [];
       try {
+        this.mcpClient = new McpBskyClient({
+          serverUrl: process.env.MCP_BSKY_SERVER_URL || 'http://localhost:3001'
+        });
         await this.mcpClient.connect();
         socialMediaMessages = await this.mcpClient.getMessages();
         await this.mcpClient.disconnect();
