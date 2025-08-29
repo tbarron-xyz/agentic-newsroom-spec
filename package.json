@@ -21,8 +21,9 @@
   "author": "",
   "license": "UNLICENSED",
   "dependencies": {
-    "redis": "^4.6.13",
-    "cron": "^3.1.6"
+    "cron": "^3.1.6",
+    "openai": "^5.16.0",
+    "redis": "^4.6.13"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
