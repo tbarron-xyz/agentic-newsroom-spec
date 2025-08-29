@@ -1,40 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, RedisClientType } from 'redis';
+import { RedisService } from '../../services/redis.service';
 
-const REDIS_KEYS = {
-  EDITOR_BIO: 'editor:bio',
-  EDITOR_PROMPT: 'editor:prompt',
-} as const;
+let redisService: RedisService | null = null;
 
-let redisClient: RedisClientType | null = null;
-
-async function getRedisClient(): Promise<RedisClientType> {
-  if (!redisClient) {
-    redisClient = createClient({
-      url: 'redis://localhost:6379',
-    });
-
-    redisClient.on('error', (err: Error) => {
-      console.error('Redis Client Error:', err);
-    });
-
-    await redisClient.connect();
+async function getRedisService(): Promise<RedisService> {
+  if (!redisService) {
+    redisService = new RedisService();
+    await redisService.connect();
   }
-  return redisClient;
+  return redisService;
 }
 
 // GET /api/editor - Get current editor data
 export async function GET() {
   try {
-    const client = await getRedisClient();
-    const [bio, prompt] = await Promise.all([
-      client.get(REDIS_KEYS.EDITOR_BIO),
-      client.get(REDIS_KEYS.EDITOR_PROMPT)
-    ]);
+    const redisService = await getRedisService();
+    const editor = await redisService.getEditor();
 
     return NextResponse.json({
-      bio: bio || '',
-      prompt: prompt || ''
+      bio: editor?.bio || '',
+      prompt: editor?.prompt || ''
     });
   } catch (error) {
     console.error('Error fetching editor data:', error);
@@ -58,11 +43,8 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    const client = await getRedisClient();
-    const multi = client.multi();
-    multi.set(REDIS_KEYS.EDITOR_BIO, bio);
-    multi.set(REDIS_KEYS.EDITOR_PROMPT, prompt);
-    await multi.exec();
+    const redisService = await getRedisService();
+    await redisService.saveEditor({ bio, prompt });
 
     return NextResponse.json({
       bio,

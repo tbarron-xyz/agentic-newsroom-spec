@@ -1,50 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, RedisClientType } from 'redis';
+import { RedisService } from '../../services/redis.service';
+import { ReporterService } from '../../services/reporter.service';
+import { AIService } from '../../services/ai.service';
 
-const REDIS_KEYS = {
-  REPORTERS: 'reporters',
-  REPORTER_BEATS: (id: string) => `reporter:${id}:beats`,
-  REPORTER_PROMPT: (id: string) => `reporter:${id}:prompt`,
-} as const;
+let redisService: RedisService | null = null;
+let reporterService: ReporterService | null = null;
+let aiService: AIService | null = null;
 
-let redisClient: RedisClientType | null = null;
-
-async function getRedisClient(): Promise<RedisClientType> {
-  if (!redisClient) {
-    redisClient = createClient({
-      url: 'redis://localhost:6379',
-    });
-
-    redisClient.on('error', (err: Error) => {
-      console.error('Redis Client Error:', err);
-    });
-
-    await redisClient.connect();
+async function initializeServices(): Promise<void> {
+  if (!redisService) {
+    redisService = new RedisService();
+    await redisService.connect();
   }
-  return redisClient;
+  if (!aiService) {
+    aiService = new AIService();
+  }
+  if (!reporterService) {
+    reporterService = new ReporterService(redisService, aiService);
+  }
 }
 
 // GET /api/reporters - Get all reporters
 export async function GET() {
   try {
-    const client = await getRedisClient();
-    const reporterIds = await client.sMembers(REDIS_KEYS.REPORTERS);
-
-    const reporters = [];
-
-    for (const reporterId of reporterIds) {
-      const [beats, prompt] = await Promise.all([
-        client.sMembers(REDIS_KEYS.REPORTER_BEATS(reporterId)),
-        client.get(REDIS_KEYS.REPORTER_PROMPT(reporterId))
-      ]);
-
-      reporters.push({
-        id: reporterId,
-        beats: beats || [],
-        prompt: prompt || ''
-      });
-    }
-
+    await initializeServices();
+    const reporters = await redisService!.getAllReporters();
     return NextResponse.json(reporters);
   } catch (error) {
     console.error('Error fetching reporters:', error);
@@ -68,24 +48,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const client = await getRedisClient();
-
-    // Generate new reporter ID
-    const reporterId = `reporter_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-
-    // Save everything using Redis sets (matching backend structure)
-    const multi = client.multi();
-    multi.sAdd(REDIS_KEYS.REPORTERS, reporterId);
-    beats.forEach(beat => {
-      multi.sAdd(REDIS_KEYS.REPORTER_BEATS(reporterId), beat);
-    });
-    multi.set(REDIS_KEYS.REPORTER_PROMPT(reporterId), prompt);
-    await multi.exec();
+    await initializeServices();
+    const reporter = await reporterService!.createReporter({ beats, prompt });
 
     return NextResponse.json({
-      id: reporterId,
-      beats,
-      prompt,
+      ...reporter,
       message: 'Reporter created successfully'
     }, { status: 201 });
   } catch (error) {

@@ -1,27 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, RedisClientType } from 'redis';
+import { RedisService } from '../../../services/redis.service';
+import { ReporterService } from '../../../services/reporter.service';
+import { AIService } from '../../../services/ai.service';
 
-const REDIS_KEYS = {
-  REPORTERS: 'reporters',
-  REPORTER_BEATS: (id: string) => `reporter:${id}:beats`,
-  REPORTER_PROMPT: (id: string) => `reporter:${id}:prompt`,
-} as const;
+let redisService: RedisService | null = null;
+let reporterService: ReporterService | null = null;
+let aiService: AIService | null = null;
 
-let redisClient: RedisClientType | null = null;
-
-async function getRedisClient(): Promise<RedisClientType> {
-  if (!redisClient) {
-    redisClient = createClient({
-      url: 'redis://localhost:6379',
-    });
-
-    redisClient.on('error', (err: Error) => {
-      console.error('Redis Client Error:', err);
-    });
-
-    await redisClient.connect();
+async function initializeServices(): Promise<void> {
+  if (!redisService) {
+    redisService = new RedisService();
+    await redisService.connect();
   }
-  return redisClient;
+  if (!aiService) {
+    aiService = new AIService();
+  }
+  if (!reporterService) {
+    reporterService = new ReporterService(redisService, aiService);
+  }
 }
 
 // GET /api/reporters/[id] - Get specific reporter
@@ -31,28 +27,17 @@ export async function GET(
 ) {
   try {
     const { id: reporterId } = await params;
-    const client = await getRedisClient();
+    await initializeServices();
 
-    // Check if reporter exists in the set
-    const isMember = await client.sIsMember(REDIS_KEYS.REPORTERS, reporterId);
-    if (!isMember) {
+    const reporter = await redisService!.getReporter(reporterId);
+    if (!reporter) {
       return NextResponse.json(
         { error: 'Reporter not found' },
         { status: 404 }
       );
     }
 
-    // Get reporter data
-    const [beats, prompt] = await Promise.all([
-      client.sMembers(REDIS_KEYS.REPORTER_BEATS(reporterId)),
-      client.get(REDIS_KEYS.REPORTER_PROMPT(reporterId))
-    ]);
-
-    return NextResponse.json({
-      id: reporterId,
-      beats: beats || [],
-      prompt: prompt || ''
-    });
+    return NextResponse.json(reporter);
   } catch (error) {
     console.error('Error fetching reporter:', error);
     return NextResponse.json(
@@ -79,30 +64,18 @@ export async function PUT(
       );
     }
 
-    const client = await getRedisClient();
+    await initializeServices();
+    const updatedReporter = await reporterService!.updateReporter(reporterId, { beats, prompt });
 
-    // Check if reporter exists
-    const isMember = await client.sIsMember(REDIS_KEYS.REPORTERS, reporterId);
-    if (!isMember) {
+    if (!updatedReporter) {
       return NextResponse.json(
         { error: 'Reporter not found' },
         { status: 404 }
       );
     }
 
-    // Update reporter data using Redis sets
-    const multi = client.multi();
-    multi.del(REDIS_KEYS.REPORTER_BEATS(reporterId)); // Clear existing beats
-    beats.forEach(beat => {
-      multi.sAdd(REDIS_KEYS.REPORTER_BEATS(reporterId), beat);
-    });
-    multi.set(REDIS_KEYS.REPORTER_PROMPT(reporterId), prompt);
-    await multi.exec();
-
     return NextResponse.json({
-      id: reporterId,
-      beats,
-      prompt,
+      ...updatedReporter,
       message: 'Reporter updated successfully'
     });
   } catch (error) {
@@ -121,23 +94,15 @@ export async function DELETE(
 ) {
   try {
     const { id: reporterId } = await params;
-    const client = await getRedisClient();
+    await initializeServices();
 
-    // Check if reporter exists
-    const isMember = await client.sIsMember(REDIS_KEYS.REPORTERS, reporterId);
-    if (!isMember) {
+    const success = await reporterService!.deleteReporter(reporterId);
+    if (!success) {
       return NextResponse.json(
         { error: 'Reporter not found' },
         { status: 404 }
       );
     }
-
-    // Delete reporter data using Redis sets
-    const multi = client.multi();
-    multi.sRem(REDIS_KEYS.REPORTERS, reporterId);
-    multi.del(REDIS_KEYS.REPORTER_BEATS(reporterId));
-    multi.del(REDIS_KEYS.REPORTER_PROMPT(reporterId));
-    await multi.exec();
 
     return NextResponse.json({
       message: 'Reporter deleted successfully'

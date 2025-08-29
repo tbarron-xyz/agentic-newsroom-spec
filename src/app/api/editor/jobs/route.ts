@@ -1,112 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, RedisClientType } from 'redis';
+import { RedisService } from '../../../services/redis.service';
+import { AIService } from '../../../services/ai.service';
+import { ReporterService } from '../../../services/reporter.service';
+import { EditorService } from '../../../services/editor.service';
 
-// Simple Redis service for the API
-class SimpleRedisService {
-  private client: RedisClientType | null = null;
-
-  async connect(): Promise<void> {
-    if (!this.client) {
-      this.client = createClient({
-        url: 'redis://localhost:6379',
-      });
-      this.client.on('error', (err: Error) => {
-        console.error('Redis Client Error:', err);
-      });
-      await this.client.connect();
-    }
-  }
-
-  async disconnect(): Promise<void> {
-    if (this.client) {
-      await this.client.disconnect();
-      this.client = null;
-    }
-  }
-
-  async get(key: string): Promise<string | null> {
-    if (!this.client) await this.connect();
-    return this.client!.get(key);
-  }
-
-  async set(key: string, value: string): Promise<void> {
-    if (!this.client) await this.connect();
-    await this.client!.set(key, value);
-  }
-
-  async hgetall(key: string): Promise<Record<string, string>> {
-    if (!this.client) await this.connect();
-    return this.client!.hGetAll(key);
-  }
-
-  async hset(key: string, field: string, value: string): Promise<void> {
-    if (!this.client) await this.connect();
-    await this.client!.hSet(key, field, value);
-  }
-
-  async lrange(key: string, start: number, end: number): Promise<string[]> {
-    if (!this.client) await this.connect();
-    return this.client!.lRange(key, start, end);
-  }
-
-  async lpush(key: string, value: string): Promise<void> {
-    if (!this.client) await this.connect();
-    await this.client!.lPush(key, value);
-  }
-
-  async del(key: string): Promise<void> {
-    if (!this.client) await this.connect();
-    await this.client!.del(key);
-  }
-}
-
-// Simple mock implementations for the job triggers
-class SimpleReporterService {
-  constructor(private redisService: SimpleRedisService) {}
-
-  async generateAllReporterArticles(): Promise<Record<string, any[]>> {
-    console.log('Generating articles for all reporters...');
-    // Mock implementation - in real scenario this would call the actual service
-    return { 'mock-reporter': [{ id: '1', title: 'Mock Article', content: 'Mock content' }] };
-  }
-}
-
-class SimpleEditorService {
-  constructor(private redisService: SimpleRedisService) {}
-
-  async generateNewspaperEdition(): Promise<any> {
-    console.log('Generating newspaper edition...');
-    // Mock implementation
-    return {
-      id: `edition-${Date.now()}`,
-      stories: [{ id: '1', title: 'Mock Story', content: 'Mock content' }]
-    };
-  }
-
-  async generateDailyEdition(): Promise<any> {
-    console.log('Generating daily edition...');
-    // Mock implementation
-    return {
-      id: `daily-${Date.now()}`,
-      editions: [{ id: '1', stories: [] }]
-    };
-  }
-}
-
-let redisService: SimpleRedisService | null = null;
-let reporterService: SimpleReporterService | null = null;
-let editorService: SimpleEditorService | null = null;
+let redisService: RedisService | null = null;
+let aiService: AIService | null = null;
+let reporterService: ReporterService | null = null;
+let editorService: EditorService | null = null;
 
 async function initializeServices(): Promise<void> {
   if (!redisService) {
-    redisService = new SimpleRedisService();
+    redisService = new RedisService();
     await redisService.connect();
   }
+  if (!aiService) {
+    aiService = new AIService();
+  }
   if (!reporterService) {
-    reporterService = new SimpleReporterService(redisService);
+    reporterService = new ReporterService(redisService, aiService);
   }
   if (!editorService) {
-    editorService = new SimpleEditorService(redisService);
+    editorService = new EditorService(redisService, aiService);
   }
 }
 

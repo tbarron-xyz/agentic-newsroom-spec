@@ -1,76 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient, RedisClientType } from 'redis';
+import { RedisService } from '../../services/redis.service';
 
-const REDIS_KEYS = {
-  DAILY_EDITIONS: 'daily_editions',
-  DAILY_EDITION_EDITIONS: (dailyEditionId: string) => `daily_edition:${dailyEditionId}:editions`,
-  DAILY_EDITION_TIME: (dailyEditionId: string) => `daily_edition:${dailyEditionId}:time`,
-} as const;
+let redisService: RedisService | null = null;
 
-let redisClient: RedisClientType | null = null;
-
-async function getRedisClient(): Promise<RedisClientType> {
-  if (!redisClient) {
-    redisClient = createClient({
-      url: 'redis://localhost:6379',
-    });
-
-    redisClient.on('error', (err: Error) => {
-      console.error('Redis Client Error:', err);
-    });
-
-    await redisClient.connect();
+async function getRedisService(): Promise<RedisService> {
+  if (!redisService) {
+    redisService = new RedisService();
+    await redisService.connect();
   }
-  return redisClient;
+  return redisService;
 }
 
 // GET /api/daily-editions - Get all daily editions
 export async function GET() {
   try {
-    const client = await getRedisClient();
-
-    // Get all daily edition IDs with their timestamps
-    const dailyEditionIds = await client.zRange(REDIS_KEYS.DAILY_EDITIONS, 0, -1, { REV: true });
-
-    const dailyEditions = [];
-
-    for (const dailyEditionId of dailyEditionIds) {
-      const [
-        time,
-        frontPageHeadline,
-        frontPageArticle,
-        newspaperName,
-        modelFeedbackPositive,
-        modelFeedbackNegative,
-        topics
-      ] = await Promise.all([
-        client.get(REDIS_KEYS.DAILY_EDITION_TIME(dailyEditionId)),
-        client.get(`daily_edition:${dailyEditionId}:front_page_headline`),
-        client.get(`daily_edition:${dailyEditionId}:front_page_article`),
-        client.get(`daily_edition:${dailyEditionId}:newspaper_name`),
-        client.get(`daily_edition:${dailyEditionId}:model_feedback_positive`),
-        client.get(`daily_edition:${dailyEditionId}:model_feedback_negative`),
-        client.get(`daily_edition:${dailyEditionId}:topics`)
-      ]);
-
-      // Get editions for this daily edition
-      const editions = await client.sMembers(REDIS_KEYS.DAILY_EDITION_EDITIONS(dailyEditionId));
-
-      dailyEditions.push({
-        id: dailyEditionId,
-        editions: editions || [],
-        generationTime: parseInt(time || '0'),
-        frontPageHeadline: frontPageHeadline || '',
-        frontPageArticle: frontPageArticle || '',
-        newspaperName: newspaperName || '',
-        topics: topics ? JSON.parse(topics) : [],
-        modelFeedbackAboutThePrompt: {
-          positive: modelFeedbackPositive || '',
-          negative: modelFeedbackNegative || ''
-        }
-      });
-    }
-
+    const redisService = await getRedisService();
+    const dailyEditions = await redisService.getDailyEditions();
     return NextResponse.json(dailyEditions);
   } catch (error) {
     console.error('Error fetching daily editions:', error);
