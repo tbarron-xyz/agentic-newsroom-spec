@@ -1,0 +1,1 @@
+Incorporate the result of McpBskyClient getMessages() into the generateStructuredArticle prompt, so that the articles will be based on the provided social media messages.
