@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface EditorData {
   bio: string;
@@ -28,9 +29,15 @@ export default function EditorPage() {
   const [message, setMessage] = useState('');
   const [jobTriggering, setJobTriggering] = useState<string | null>(null);
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const router = useRouter();
 
-  // Fetch editor data and job status on component mount
+  // Check admin status and fetch data on component mount
   useEffect(() => {
+    const storedPassword = sessionStorage.getItem('adminPassword');
+    const adminStatus = !!storedPassword;
+    setIsAdmin(adminStatus);
+
     fetchEditorData();
     fetchJobStatus();
   }, []);
@@ -57,12 +64,18 @@ export default function EditorPage() {
     setMessage('');
 
     try {
+      const storedPassword = sessionStorage.getItem('adminPassword');
+      const requestBody = {
+        ...editorData,
+        adminPassword: storedPassword
+      };
+
       const response = await fetch('/api/editor', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(editorData),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
@@ -85,12 +98,18 @@ export default function EditorPage() {
     setMessage('');
 
     try {
+      const storedPassword = sessionStorage.getItem('adminPassword');
+      const requestBody = {
+        jobType,
+        adminPassword: storedPassword
+      };
+
       const response = await fetch('/api/editor/jobs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ jobType }),
+        body: JSON.stringify(requestBody),
       });
 
       if (response.ok) {
@@ -121,6 +140,11 @@ export default function EditorPage() {
     }
   };
 
+  const handleLogout = () => {
+    sessionStorage.removeItem('adminPassword');
+    router.push('/login');
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
@@ -143,6 +167,14 @@ export default function EditorPage() {
             </p>
           </div>
           <div className="flex items-center space-x-4">
+            {isAdmin && (
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Logout
+              </button>
+            )}
           </div>
         </div>
 
@@ -163,8 +195,13 @@ export default function EditorPage() {
                 value={editorData.bio}
                 onChange={(e) => setEditorData({ ...editorData, bio: e.target.value })}
                 placeholder="Enter the editor's biography..."
-                className="w-full h-32 p-4 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-slate-700 placeholder-slate-400"
+                className={`w-full h-32 p-4 border border-slate-200 rounded-lg resize-none text-slate-700 placeholder-slate-400 ${
+                  isAdmin
+                    ? 'focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+                    : 'bg-slate-100 cursor-not-allowed opacity-60'
+                }`}
                 rows={4}
+                readOnly={!isAdmin}
               />
               <p className="text-sm text-slate-500 mt-2">
                 This biography will be used to inform the AI's editorial decisions and writing style.
@@ -187,10 +224,16 @@ export default function EditorPage() {
                 value={editorData.prompt}
                 onChange={(e) => setEditorData({ ...editorData, prompt: e.target.value })}
                 placeholder="Enter the editorial guidelines and prompt..."
-                className="w-full h-48 p-4 border border-slate-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-slate-700 placeholder-slate-400"
+                className={`w-full h-48 p-4 border border-slate-200 rounded-lg resize-none text-slate-700 placeholder-slate-400 ${
+                  isAdmin
+                    ? 'focus:ring-2 focus:ring-green-500 focus:border-transparent'
+                    : 'bg-slate-100 cursor-not-allowed opacity-60'
+                }`}
                 rows={6}
+                readOnly={!isAdmin}
               />
               <p className="text-sm text-slate-500 mt-2">
+                Define the editorial standards, tone, and guidelines that will guide the AI's newsroom decisions.
                 Define the editorial standards, tone, and guidelines that will guide the AI's newsroom decisions.
               </p>
             </div>
@@ -200,7 +243,12 @@ export default function EditorPage() {
           <div className="flex items-center justify-between pt-6 border-t border-slate-200">
             <button
               onClick={fetchEditorData}
-              className="px-6 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium"
+              disabled={!isAdmin}
+              className={`px-6 py-3 rounded-lg font-medium transition-colors ${
+                isAdmin
+                  ? 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                  : 'bg-slate-50 text-slate-400 cursor-not-allowed'
+              }`}
             >
               Refresh Data
             </button>
@@ -218,8 +266,12 @@ export default function EditorPage() {
 
               <button
                 onClick={saveEditorData}
-                disabled={saving}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center space-x-2"
+                disabled={saving || !isAdmin}
+                className={`px-8 py-3 rounded-lg font-medium flex items-center space-x-2 transition-colors ${
+                  isAdmin
+                    ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                    : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                }`}
               >
                 {saving ? (
                   <>
@@ -274,8 +326,12 @@ export default function EditorPage() {
                 </p>
                 <button
                   onClick={() => triggerJob('reporter')}
-                  disabled={jobTriggering === 'reporter'}
-                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center space-x-2"
+                  disabled={jobTriggering === 'reporter' || !isAdmin}
+                  className={`w-full px-4 py-2 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors ${
+                    isAdmin
+                      ? 'bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                      : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                  }`}
                 >
                   {jobTriggering === 'reporter' ? (
                     <>
@@ -311,8 +367,12 @@ export default function EditorPage() {
                 </p>
                 <button
                   onClick={() => triggerJob('newspaper')}
-                  disabled={jobTriggering === 'newspaper'}
-                  className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center space-x-2"
+                  disabled={jobTriggering === 'newspaper' || !isAdmin}
+                  className={`w-full px-4 py-2 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors ${
+                    isAdmin
+                      ? 'bg-green-600 text-white hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                      : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                  }`}
                 >
                   {jobTriggering === 'newspaper' ? (
                     <>
@@ -348,8 +408,12 @@ export default function EditorPage() {
                 </p>
                 <button
                   onClick={() => triggerJob('daily')}
-                  disabled={jobTriggering === 'daily'}
-                  className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center justify-center space-x-2"
+                  disabled={jobTriggering === 'daily' || !isAdmin}
+                  className={`w-full px-4 py-2 rounded-lg font-medium flex items-center justify-center space-x-2 transition-colors ${
+                    isAdmin
+                      ? 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed'
+                      : 'bg-slate-300 text-slate-500 cursor-not-allowed'
+                  }`}
                 >
                   {jobTriggering === 'daily' ? (
                     <>

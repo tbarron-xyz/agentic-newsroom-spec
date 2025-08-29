@@ -29,7 +29,15 @@ async function initializeServices(): Promise<void> {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { jobType } = body;
+    const { jobType, adminPassword } = body;
+
+    // Check if admin password is provided and valid
+    if (!adminPassword || adminPassword !== process.env.NEWSROOM_ADMIN_PASS) {
+      return NextResponse.json(
+        { error: 'Invalid admin password' },
+        { status: 403 }
+      );
+    }
 
     if (!jobType || typeof jobType !== 'string') {
       return NextResponse.json(

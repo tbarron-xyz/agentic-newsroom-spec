@@ -24,7 +24,8 @@ export default function LoginPage() {
       });
 
       if (response.ok) {
-        // Successful login, redirect to editor
+        // Successful login, store password for subsequent requests and redirect to editor
+        sessionStorage.setItem('adminPassword', password);
         router.push('/editor');
       } else {
         const data = await response.json();

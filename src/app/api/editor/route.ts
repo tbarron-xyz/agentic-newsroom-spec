@@ -34,7 +34,15 @@ export async function GET() {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { bio, prompt } = body;
+    const { bio, prompt, adminPassword } = body;
+
+    // Check if admin password is provided and valid
+    if (!adminPassword || adminPassword !== process.env.NEWSROOM_ADMIN_PASS) {
+      return NextResponse.json(
+        { error: 'Invalid admin password' },
+        { status: 403 }
+      );
+    }
 
     if (typeof bio !== 'string' || typeof prompt !== 'string') {
       return NextResponse.json(
