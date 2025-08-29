@@ -1,0 +1,55 @@
+import { z } from 'zod';
+
+export const dailyEditionSchema = z.object({
+    frontPageHeadline: z.string(),
+    frontPageArticle: z.string(),
+    topics: z.array(z.object({
+        name: z.string(),
+        headline: z.string(),
+        newsStoryFirstParagraph: z.string(),
+        newsStorySecondParagraph: z.string(),
+        oneLineSummary: z.string(),
+        supportingSocialMediaMessage: z.string(),
+        skepticalComment: z.string(),
+        gullibleComment: z.string(),
+    })),
+    modelFeedbackAboutThePrompt: z.object({positive: z.string(), negative: z.string()}),
+    newspaperName: z.string(),
+});
+
+export const reporterArticleSchema = z.object({
+    id: z.string(),
+    reporterId: z.string(),
+    beat: z.string(),
+    headline: z.string(),
+    leadParagraph: z.string(),
+    body: z.string(),
+    keyQuotes: z.array(z.string()),
+    sources: z.array(z.string()),
+    wordCount: z.number(),
+    generationTime: z.number(),
+    reporterNotes: z.object({
+        researchQuality: z.string(),
+        sourceDiversity: z.string(),
+        factualAccuracy: z.string()
+    }),
+    socialMediaSummary: z.string(),
+});
+
+export const reporterResponseSchema = z.object({
+    reporterId: z.string(),
+    reporterName: z.string(),
+    articles: z.array(reporterArticleSchema),
+    totalArticlesGenerated: z.number(),
+    generationTimestamp: z.number(),
+    coverageSummary: z.object({
+        beatsCovered: z.array(z.string()),
+        totalWordCount: z.number(),
+        keyThemes: z.array(z.string())
+    }),
+    modelFeedback: z.object({
+        positive: z.string(),
+        negative: z.string(),
+        suggestions: z.string()
+    })
+});
