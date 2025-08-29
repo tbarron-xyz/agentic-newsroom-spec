@@ -63,6 +63,12 @@ export default function RootLayout({
                   Reporters
                 </Link>
                 <Link
+                  href="/login"
+                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Admin Login
+                </Link>
+                <Link
                   href="/editor"
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
