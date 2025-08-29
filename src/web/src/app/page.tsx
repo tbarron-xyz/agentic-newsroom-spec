@@ -3,65 +3,72 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
-interface EditorData {
-  bio: string;
-  prompt: string;
+interface Topic {
+  name: string;
+  headline: string;
+  newsStoryFirstParagraph: string;
+  newsStorySecondParagraph: string;
+  oneLineSummary: string;
+  supportingSocialMediaMessage: string;
+  skepticalComment: string;
+  gullibleComment: string;
+}
+
+interface DailyEdition {
+  id: string;
+  editions: string[];
+  generationTime: number;
+  frontPageHeadline: string;
+  frontPageArticle: string;
+  newspaperName: string;
+  topics: Topic[];
+  modelFeedbackAboutThePrompt: {
+    positive: string;
+    negative: string;
+  };
 }
 
 export default function Home() {
-  const [editorData, setEditorData] = useState<EditorData>({ bio: '', prompt: '' });
+  const [dailyEditions, setDailyEditions] = useState<DailyEdition[]>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
+  const [selectedEdition, setSelectedEdition] = useState<DailyEdition | null>(null);
   const [message, setMessage] = useState('');
 
-  // Fetch editor data on component mount
+  // Fetch daily editions on component mount
   useEffect(() => {
-    fetchEditorData();
+    fetchDailyEditions();
   }, []);
 
-  const fetchEditorData = async () => {
+  const fetchDailyEditions = async () => {
     try {
-      const response = await fetch('/api/editor');
+      const response = await fetch('/api/daily-editions');
       if (response.ok) {
         const data = await response.json();
-        setEditorData(data);
+        setDailyEditions(data);
+        // Auto-select the latest edition if available
+        if (data.length > 0) {
+          setSelectedEdition(data[0]);
+        }
       } else {
-        setMessage('Failed to load editor data');
+        setMessage('Failed to load daily editions');
       }
     } catch (error) {
-      setMessage('Error loading editor data');
-      console.error('Error fetching editor data:', error);
+      setMessage('Error loading daily editions');
+      console.error('Error fetching daily editions:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const saveEditorData = async () => {
-    setSaving(true);
-    setMessage('');
-
-    try {
-      const response = await fetch('/api/editor', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(editorData),
-      });
-
-      if (response.ok) {
-        setMessage('Editor data saved successfully!');
-        setTimeout(() => setMessage(''), 3000);
-      } else {
-        const error = await response.json();
-        setMessage(error.error || 'Failed to save editor data');
-      }
-    } catch (error) {
-      setMessage('Error saving editor data');
-      console.error('Error saving editor data:', error);
-    } finally {
-      setSaving(false);
-    }
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
   if (loading) {
@@ -74,135 +81,173 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-slate-800 mb-2">
-              Newsroom Editor Configuration
-            </h1>
-            <p className="text-slate-600 text-lg">
-              Configure your AI editor's biography and editorial guidelines
-            </p>
+      <div className="max-w-7xl mx-auto">
+        {/* Page Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">
+            Daily Edition
+          </h1>
+          <p className="text-slate-600 text-lg">
+            Read today's comprehensive newspaper edition
+          </p>
+        </div>
+
+        {/* Message */}
+        {message && (
+          <div className="mb-6 px-6 py-4 rounded-lg text-center font-medium bg-red-100 text-red-800">
+            {message}
           </div>
-          <div className="flex items-center space-x-4">
-            <Link
-              href="/daily-edition"
-              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center space-x-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        )}
+
+        {dailyEditions.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2zM16 2v4M8 2v4M3 10h18" />
               </svg>
-              <span>Read Daily Edition</span>
-            </Link>
-            <Link
-              href="/reporters"
-              className="px-6 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center space-x-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-              <span>Manage Reporters</span>
-            </Link>
+            </div>
+            <h3 className="text-xl font-semibold text-slate-800 mb-2">No Daily Editions Available</h3>
+            <p className="text-slate-600">Daily editions are generated automatically. Check back later!</p>
           </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 space-y-8">
-          {/* Bio Section */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Edition Selector */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-2xl shadow-xl p-6">
+                <h2 className="text-xl font-semibold text-slate-800 mb-4">Available Editions</h2>
+                <div className="space-y-2">
+                  {dailyEditions.map((edition) => (
+                    <button
+                      key={edition.id}
+                      onClick={() => setSelectedEdition(edition)}
+                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
+                        selectedEdition?.id === edition.id
+                          ? 'bg-blue-100 text-blue-800 border-2 border-blue-200'
+                          : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                      }`}
+                    >
+                      <div className="font-medium text-sm">
+                        {edition.newspaperName || 'Daily Edition'}
+                      </div>
+                      <div className="text-xs text-slate-500 mt-1">
+                        {formatDate(edition.generationTime)}
+                      </div>
+                      <div className="text-xs text-slate-500">
+                        {edition.topics.length} topics
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
-              <h2 className="text-2xl font-semibold text-slate-800">Editor Biography</h2>
             </div>
-            <div className="bg-slate-50 rounded-xl p-6">
-              <textarea
-                value={editorData.bio}
-                onChange={(e) => setEditorData({ ...editorData, bio: e.target.value })}
-                placeholder="Enter the editor's biography..."
-                className="w-full h-32 p-4 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-slate-700 placeholder-slate-400"
-                rows={4}
-              />
-              <p className="text-sm text-slate-500 mt-2">
-                This biography will be used to inform the AI's editorial decisions and writing style.
-              </p>
-            </div>
-          </div>
 
-          {/* Prompt Section */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                <svg className="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-semibold text-slate-800">Editorial Prompt</h2>
-            </div>
-            <div className="bg-slate-50 rounded-xl p-6">
-              <textarea
-                value={editorData.prompt}
-                onChange={(e) => setEditorData({ ...editorData, prompt: e.target.value })}
-                placeholder="Enter the editorial guidelines and prompt..."
-                className="w-full h-48 p-4 border border-slate-200 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none text-slate-700 placeholder-slate-400"
-                rows={6}
-              />
-              <p className="text-sm text-slate-500 mt-2">
-                Define the editorial standards, tone, and guidelines that will guide the AI's newsroom decisions.
-              </p>
-            </div>
-          </div>
+            {/* Edition Content */}
+            <div className="lg:col-span-3">
+              {selectedEdition && (
+                <div className="space-y-8">
+                  {/* Front Page */}
+                  <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <div className="border-b border-slate-200 pb-6 mb-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-3xl font-bold text-slate-800">
+                          {selectedEdition.newspaperName || 'Daily Edition'}
+                        </h2>
+                        <span className="text-sm text-slate-500">
+                          {formatDate(selectedEdition.generationTime)}
+                        </span>
+                      </div>
+                      <h1 className="text-4xl font-bold text-slate-900 mb-4 leading-tight">
+                        {selectedEdition.frontPageHeadline}
+                      </h1>
+                    </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-between pt-6 border-t border-slate-200">
-            <button
-              onClick={fetchEditorData}
-              className="px-6 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium"
-            >
-              Refresh Data
-            </button>
+                    <div className="prose prose-lg max-w-none">
+                      <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                        {selectedEdition.frontPageArticle}
+                      </p>
+                    </div>
+                  </div>
 
-            <div className="flex items-center space-x-4">
-              {message && (
-                <div className={`px-4 py-2 rounded-lg text-sm font-medium ${
-                  message.includes('successfully')
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-red-100 text-red-800'
-                }`}>
-                  {message}
+                  {/* Topics */}
+                  <div className="space-y-6">
+                    <h2 className="text-2xl font-bold text-slate-800">Today's Stories</h2>
+                    {selectedEdition.topics.map((topic, index) => (
+                      <div key={index} className="bg-white rounded-2xl shadow-xl p-8">
+                        <div className="mb-4">
+                          <div className="flex items-center space-x-3 mb-2">
+                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-semibold text-blue-600">
+                                {index + 1}
+                              </span>
+                            </div>
+                            <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-medium">
+                              {topic.name}
+                            </span>
+                          </div>
+                          <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                            {topic.headline}
+                          </h3>
+                          <p className="text-sm text-slate-600 italic">
+                            {topic.oneLineSummary}
+                          </p>
+                        </div>
+
+                        <div className="prose prose-lg max-w-none mb-6">
+                          <p className="text-slate-700 leading-relaxed mb-4">
+                            {topic.newsStoryFirstParagraph}
+                          </p>
+                          <p className="text-slate-700 leading-relaxed">
+                            {topic.newsStorySecondParagraph}
+                          </p>
+                        </div>
+
+                        {/* Social Media & Comments */}
+                        <div className="border-t border-slate-200 pt-6 space-y-4">
+                          <div>
+                            <h4 className="text-sm font-semibold text-slate-700 mb-2">Social Media Buzz</h4>
+                            <p className="text-slate-600 italic">"{topic.supportingSocialMediaMessage}"</p>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                              <h4 className="text-sm font-semibold text-red-600 mb-2">Skeptical View</h4>
+                              <p className="text-slate-600 text-sm italic">"{topic.skepticalComment}"</p>
+                            </div>
+                            <div>
+                              <h4 className="text-sm font-semibold text-green-600 mb-2">Supportive View</h4>
+                              <p className="text-slate-600 text-sm italic">"{topic.gullibleComment}"</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Model Feedback */}
+                  {selectedEdition.modelFeedbackAboutThePrompt.positive && (
+                    <div className="bg-white rounded-2xl shadow-xl p-8">
+                      <h2 className="text-2xl font-bold text-slate-800 mb-6">Editorial Notes</h2>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <h3 className="text-lg font-semibold text-green-600 mb-3">What Worked Well</h3>
+                          <p className="text-slate-700">{selectedEdition.modelFeedbackAboutThePrompt.positive}</p>
+                        </div>
+                        <div>
+                          <h3 className="text-lg font-semibold text-red-600 mb-3">Areas for Improvement</h3>
+                          <p className="text-slate-700">{selectedEdition.modelFeedbackAboutThePrompt.negative}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-
-              <button
-                onClick={saveEditorData}
-                disabled={saving}
-                className="px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium flex items-center space-x-2"
-              >
-                {saving ? (
-                  <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                    <span>Saving...</span>
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>Save Changes</span>
-                  </>
-                )}
-              </button>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Footer */}
-        <div className="text-center mt-8 text-slate-500">
-          <p>AI Newsroom Editor Configuration Panel</p>
+        <div className="text-center mt-12 text-slate-500">
+          <p>AI Newsroom Daily Edition Reader</p>
         </div>
       </div>
     </div>

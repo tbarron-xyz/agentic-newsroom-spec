@@ -32,6 +32,20 @@ async function initializeNewsroom(): Promise<void> {
     // Start the scheduler
     schedulerService.start();
 
+    // Print current time and next scheduled run times
+    const currentTime = new Date();
+    const nextRunTimes = schedulerService.getNextRunTimes();
+
+    console.log('🎉 AI Newsroom is now running!');
+    console.log(`� Current time: ${currentTime.toLocaleString()}`);
+    console.log('📅 Scheduled jobs:');
+    console.log('   • Reporter articles: Every 15 minutes');
+    console.log(`     Next run: ${nextRunTimes.reporterJob?.toLocaleString() ?? 'Not scheduled'}`);
+    console.log('   • Newspaper editions: Every 3 hours');
+    console.log(`     Next run: ${nextRunTimes.newspaperJob?.toLocaleString() ?? 'Not scheduled'}`);
+    console.log('   • Daily editions: Every 24 hours');
+    console.log(`     Next run: ${nextRunTimes.dailyJob?.toLocaleString() ?? 'Not scheduled'}\n`);
+
     // Set up graceful shutdown
     process.on('SIGINT', async () => {
       console.log('\n🛑 Received shutdown signal...');
@@ -42,18 +56,12 @@ async function initializeNewsroom(): Promise<void> {
     });
 
     process.on('SIGTERM', async () => {
-      console.log('\n🛑 Received termination signal...');
+      console.log('\n� Received termination signal...');
       schedulerService.stop();
       await redisService.disconnect();
       console.log('👋 AI Newsroom shut down gracefully');
       process.exit(0);
     });
-
-    console.log('🎉 AI Newsroom is now running!');
-    console.log('📅 Scheduled jobs:');
-    console.log('   • Reporter articles: Every 15 minutes');
-    console.log('   • Newspaper editions: Every 3 hours');
-    console.log('   • Daily editions: Every 24 hours\n');
 
     // Keep the process running
     await new Promise(() => {}); // This will run indefinitely
