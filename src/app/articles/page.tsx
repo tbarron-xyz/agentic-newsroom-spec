@@ -127,9 +127,14 @@ export default function ArticlesPage() {
             articles.map((article) => (
               <div key={article.id} className="bg-white rounded-2xl shadow-xl p-8">
                 <div className="mb-4">
-                  <h2 className="text-2xl font-bold text-slate-800 mb-2">
-                    {article.headline}
-                  </h2>
+                  <Link
+                    href={`/articles/${article.id}`}
+                    className="block group"
+                  >
+                    <h2 className="text-2xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">
+                      {article.headline}
+                    </h2>
+                  </Link>
                   <div className="flex items-center text-sm text-slate-500">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
