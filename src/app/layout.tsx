@@ -51,6 +51,12 @@ export default function RootLayout({
                   Daily Edition
                 </Link>
                 <Link
+                  href="/editions"
+                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  All Editions
+                </Link>
+                <Link
                   href="/reporters"
                   className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >

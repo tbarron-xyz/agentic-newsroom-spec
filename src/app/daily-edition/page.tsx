@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 interface Topic {
@@ -33,6 +34,7 @@ export default function DailyEditionPage() {
   const [loading, setLoading] = useState(true);
   const [selectedEdition, setSelectedEdition] = useState<DailyEdition | null>(null);
   const [message, setMessage] = useState('');
+  const searchParams = useSearchParams();
 
   // Fetch daily editions on component mount
   useEffect(() => {
@@ -45,8 +47,12 @@ export default function DailyEditionPage() {
       if (response.ok) {
         const data = await response.json();
         setDailyEditions(data);
-        // Auto-select the latest edition if available
-        if (data.length > 0) {
+        // Check for edition query param
+        const editionId = searchParams.get('edition');
+        if (editionId && data.length > 0) {
+          const edition = data.find((e: DailyEdition) => e.id === editionId);
+          setSelectedEdition(edition || data[0]);
+        } else if (data.length > 0) {
           setSelectedEdition(data[0]);
         }
       } else {
