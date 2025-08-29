@@ -27,6 +27,24 @@ export interface DailyEdition {
   id: string;
   editions: string[]; // edition IDs
   generationTime: number; // milliseconds since epoch
+  // New detailed content from AI service
+  frontPageHeadline: string;
+  frontPageArticle: string;
+  topics: Array<{
+    name: string;
+    headline: string;
+    newsStoryFirstParagraph: string;
+    newsStorySecondParagraph: string;
+    oneLineSummary: string;
+    supportingSocialMediaMessage: string;
+    skepticalComment: string;
+    gullibleComment: string;
+  }>;
+  modelFeedbackAboutThePrompt: {
+    positive: string;
+    negative: string;
+  };
+  newspaperName: string;
 }
 
 // Redis key patterns

@@ -89,27 +89,33 @@ export class EditorService {
       throw new Error('No editor configuration found');
     }
 
-    // Use AI to select notable editions
+    // Use AI to generate comprehensive daily edition content
     const editionIds = last24HoursEditions.map(edition => edition.id);
-    const selectedEditionIds = await this.aiService.selectNotableEditions(
+    const dailyEditionContent = await this.aiService.selectNotableEditions(
       editionIds,
       editor.prompt
     );
 
-    console.log(`Selected ${selectedEditionIds.length} notable editions for the daily edition`);
+    console.log(`Generated comprehensive daily edition with ${dailyEditionContent.topics.length} topics`);
 
-    // Create daily edition
+    // Create daily edition with the new detailed format
     const dailyEditionId = await this.redisService.generateId('daily_edition');
     const dailyEdition: DailyEdition = {
       id: dailyEditionId,
-      editions: selectedEditionIds,
-      generationTime: Date.now()
+      editions: editionIds, // Keep all edition IDs for reference
+      generationTime: Date.now(),
+      // Add the new detailed content
+      frontPageHeadline: dailyEditionContent.frontPageHeadline,
+      frontPageArticle: dailyEditionContent.frontPageArticle,
+      topics: dailyEditionContent.topics,
+      modelFeedbackAboutThePrompt: dailyEditionContent.modelFeedbackAboutThePrompt,
+      newspaperName: dailyEditionContent.newspaperName
     };
 
     // Save the daily edition
     await this.redisService.saveDailyEdition(dailyEdition);
 
-    console.log(`Daily edition ${dailyEditionId} generated with ${selectedEditionIds.length} newspaper editions`);
+    console.log(`Daily edition ${dailyEditionId} generated with comprehensive content for ${dailyEditionContent.newspaperName}`);
     return dailyEdition;
   }
 

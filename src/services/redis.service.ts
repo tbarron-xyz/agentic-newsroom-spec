@@ -259,6 +259,18 @@ export class RedisService {
     });
     multi.set(REDIS_KEYS.DAILY_EDITION_TIME(dailyEditionId), dailyEdition.generationTime.toString());
 
+    // Store new detailed content fields
+    multi.set(`daily_edition:${dailyEditionId}:front_page_headline`, dailyEdition.frontPageHeadline);
+    multi.set(`daily_edition:${dailyEditionId}:front_page_article`, dailyEdition.frontPageArticle);
+    multi.set(`daily_edition:${dailyEditionId}:newspaper_name`, dailyEdition.newspaperName);
+
+    // Store model feedback
+    multi.set(`daily_edition:${dailyEditionId}:model_feedback_positive`, dailyEdition.modelFeedbackAboutThePrompt.positive);
+    multi.set(`daily_edition:${dailyEditionId}:model_feedback_negative`, dailyEdition.modelFeedbackAboutThePrompt.negative);
+
+    // Store topics as JSON
+    multi.set(`daily_edition:${dailyEditionId}:topics`, JSON.stringify(dailyEdition.topics));
+
     await multi.exec();
   }
 
@@ -278,17 +290,51 @@ export class RedisService {
   }
 
   async getDailyEdition(dailyEditionId: string): Promise<DailyEdition | null> {
-    const [editions, timeStr] = await Promise.all([
+    const [
+      editions,
+      timeStr,
+      frontPageHeadline,
+      frontPageArticle,
+      newspaperName,
+      modelFeedbackPositive,
+      modelFeedbackNegative,
+      topicsJson
+    ] = await Promise.all([
       this.client.sMembers(REDIS_KEYS.DAILY_EDITION_EDITIONS(dailyEditionId)),
-      this.client.get(REDIS_KEYS.DAILY_EDITION_TIME(dailyEditionId))
+      this.client.get(REDIS_KEYS.DAILY_EDITION_TIME(dailyEditionId)),
+      this.client.get(`daily_edition:${dailyEditionId}:front_page_headline`),
+      this.client.get(`daily_edition:${dailyEditionId}:front_page_article`),
+      this.client.get(`daily_edition:${dailyEditionId}:newspaper_name`),
+      this.client.get(`daily_edition:${dailyEditionId}:model_feedback_positive`),
+      this.client.get(`daily_edition:${dailyEditionId}:model_feedback_negative`),
+      this.client.get(`daily_edition:${dailyEditionId}:topics`)
     ]);
 
     if (!timeStr) return null;
 
+    // Parse topics JSON
+    let topics: DailyEdition['topics'] = [];
+    if (topicsJson) {
+      try {
+        topics = JSON.parse(topicsJson);
+      } catch (error) {
+        console.error('Error parsing topics JSON:', error);
+        topics = [];
+      }
+    }
+
     return {
       id: dailyEditionId,
       editions,
-      generationTime: parseInt(timeStr)
+      generationTime: parseInt(timeStr),
+      frontPageHeadline: frontPageHeadline || '',
+      frontPageArticle: frontPageArticle || '',
+      newspaperName: newspaperName || 'Daily Gazette',
+      modelFeedbackAboutThePrompt: {
+        positive: modelFeedbackPositive || '',
+        negative: modelFeedbackNegative || ''
+      },
+      topics
     };
   }
 

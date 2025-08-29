@@ -1,5 +1,7 @@
 import { Reporter, Article } from '../models/types';
 import OpenAI from 'openai';
+import { zodResponseFormat } from 'openai/helpers/zod';
+import { dailyEditionSchema } from '../models/schemas';
 
 export class AIService {
   private openai: OpenAI;
@@ -133,8 +135,25 @@ Return only the article numbers (1, 2, 3, etc.) of the selected stories, separat
     }
   }
 
-  async selectNotableEditions(editions: string[], editorPrompt: string): Promise<string[]> {
-    if (editions.length === 0) return [];
+  async selectNotableEditions(editions: string[], editorPrompt: string): Promise<{
+    frontPageHeadline: string;
+    frontPageArticle: string;
+    topics: Array<{
+      name: string;
+      headline: string;
+      newsStoryFirstParagraph: string;
+      newsStorySecondParagraph: string;
+      oneLineSummary: string;
+      supportingSocialMediaMessage: string;
+      skepticalComment: string;
+      gullibleComment: string;
+    }>;
+    modelFeedbackAboutThePrompt: { positive: string; negative: string };
+    newspaperName: string;
+  }> {
+    if (editions.length === 0) {
+      throw new Error('No editions available for daily edition generation');
+    }
 
     try {
       const editionsText = editions.map((edition, index) =>
@@ -146,43 +165,68 @@ Return only the article numbers (1, 2, 3, etc.) of the selected stories, separat
         messages: [
           {
             role: 'system',
-            content: 'You are a newspaper editor evaluating which editions should be highlighted as notable or special editions. Consider factors like holidays, major events, anniversaries, and editorial significance.'
+            content: `You are a newspaper editor creating a comprehensive daily edition. Based on the available newspaper editions, create a structured daily newspaper with front page content, multiple topics, and editorial feedback. Create engaging, professional content that synthesizes the available editions into a cohesive daily newspaper.`
           },
           {
             role: 'user',
-            content: `Given the editorial guidelines: "${editorPrompt}", select the 2-4 most notable or significant newspaper editions from the list below. Consider which editions would be most interesting or important to highlight.
+            content: `Using the editorial guidelines: "${editorPrompt}", create a comprehensive daily newspaper edition based on these available newspaper editions:
 
-Available editions:
 ${editionsText}
 
-Return only the edition numbers (1, 2, 3, etc.) of the selected editions, separated by commas. Select between 2-4 editions based on their significance and editorial value.`
+Generate a complete daily edition with:
+1. A compelling front page headline that captures the day's most important story
+2. A detailed front page article (300-500 words)
+3. 3-5 major topics, each with complete news coverage including headlines, two-paragraph stories, social media content, and contrasting viewpoints
+4. Feedback about the editorial prompt (both positive and negative aspects)
+5. An appropriate newspaper name
+
+Make the content engaging, balanced, and professionally written. Focus on creating a cohesive narrative that connects the various editions into a unified daily newspaper experience.`
           }
-        ]
+        ],
+        response_format: zodResponseFormat(dailyEditionSchema, "daily_edition")
       });
 
-      const selectedIndices = response.choices[0]?.message?.content?.trim()
-        .split(',')
-        .map(num => parseInt(num.trim()) - 1)
-        .filter(index => index >= 0 && index < editions.length) || [];
-
-      // If AI selection fails or returns empty, fall back to random selection
-      if (selectedIndices.length === 0) {
-        const minEditions = 2;
-        const maxEditions = Math.min(4, editions.length);
-        const numEditions = Math.floor(Math.random() * (maxEditions - minEditions + 1)) + minEditions;
-        const shuffled = [...editions].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, numEditions);
+      const content = response.choices[0]?.message?.content?.trim();
+      if (!content) {
+        throw new Error('No response content from AI service');
       }
 
-      return selectedIndices.map(index => editions[index]);
+      const parsedResponse = JSON.parse(content);
+
+      // Validate the response structure
+      if (!parsedResponse.frontPageHeadline ||
+          !parsedResponse.frontPageArticle ||
+          !Array.isArray(parsedResponse.topics) ||
+          !parsedResponse.modelFeedbackAboutThePrompt ||
+          !parsedResponse.newspaperName) {
+        throw new Error('Invalid response structure from AI service');
+      }
+
+      return parsedResponse;
     } catch (error) {
-      console.error('Error selecting notable editions:', error);
-      // Fallback to random selection
-      const minEditions = 2;
-      const maxEditions = Math.min(4, editions.length);
-      const numEditions = Math.floor(Math.random() * (maxEditions - minEditions + 1)) + minEditions;
-      const shuffled = [...editions].sort(() => 0.5 - Math.random());
-      return shuffled.slice(0, numEditions);
+      console.error('Error generating daily edition:', error);
+      // Return a fallback structure
+      return {
+        frontPageHeadline: "Daily News Roundup",
+        frontPageArticle: "Today's news brings together the most important stories from our recent editions, providing readers with a comprehensive overview of current events and developments.",
+        topics: [
+          {
+            name: "General News",
+            headline: "News Developments",
+            newsStoryFirstParagraph: "Recent events have captured public attention with various developments across multiple sectors.",
+            newsStorySecondParagraph: "These stories continue to evolve as more information becomes available and stakeholders respond to the changing landscape.",
+            oneLineSummary: "Breaking news and updates from recent editions.",
+            supportingSocialMediaMessage: "Stay informed with today's top stories! 📰 #DailyNews",
+            skepticalComment: "Another day of carefully curated news - but what's really happening behind the headlines?",
+            gullibleComment: "This is absolutely the most important news of the day! Everyone should read this immediately!"
+          }
+        ],
+        modelFeedbackAboutThePrompt: {
+          positive: "The editorial guidelines provide clear direction for content creation.",
+          negative: "The prompt could benefit from more specific guidance on content prioritization."
+        },
+        newspaperName: "Daily Gazette"
+      };
     }
   }
 }
