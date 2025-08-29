@@ -44,6 +44,7 @@ export class AIService {
       factualAccuracy: string;
     };
     socialMediaSummary: string;
+    prompt: string; // Add prompt to the return type
   }> {
     const generationTime = Date.now();
     const articleId = `article_${generationTime}_${Math.random().toString(36).substring(2, 8)}`;
@@ -67,20 +68,13 @@ export class AIService {
       // Format social media messages for the prompt
       const socialMediaContext = socialMediaMessages.length > 0
         ? `\n\nRecent social media discussions related to ${beat}:\n${socialMediaMessages.slice(0, 10).map((msg, index: number) =>
-            `${index + 1}. User ${msg.did.substring(0, 8)}: "${msg.text}"`
+            `${index + 1}. "${msg.text}"`
           ).join('\n')}`
         : '';
 
-      const response = await this.openai.chat.completions.create({
-        model: this.modelName,
-        messages: [
-          {
-            role: 'system',
-            content: `You are a professional journalist creating structured news articles. Generate comprehensive, well-researched articles with proper journalistic structure including lead paragraphs, key quotes, sources, and reporter notes. Focus on: ${reporter.prompt}`
-          },
-          {
-            role: 'user',
-            content: `Create a comprehensive news article about recent developments in the ${beat} sector. Include:
+      const systemPrompt = `You are a professional journalist creating structured news articles. Generate comprehensive, well-researched articles with proper journalistic structure including lead paragraphs, key quotes, sources, and reporter notes. Focus on: ${reporter.prompt}`;
+
+      const userPrompt = `Create a comprehensive news article about recent developments in the ${beat} sector. Include:
 
 1. A compelling headline
 2. A strong lead paragraph (2-3 sentences)
@@ -92,7 +86,20 @@ export class AIService {
 
 Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible.${socialMediaContext}
 
-When generating the article, consider any relevant trends, discussions, or breaking news from the social media context provided above. Incorporate insights from these discussions where appropriate to make the article more timely and relevant.`
+When generating the article, consider any relevant trends, discussions, or breaking news from the social media context provided above. Incorporate insights from these discussions where appropriate to make the article more timely and relevant.`;
+
+      const fullPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
+
+      const response = await this.openai.chat.completions.create({
+        model: this.modelName,
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: userPrompt
           }
         ],
         response_format: zodResponseFormat(reporterArticleSchema, "reporter_article")
@@ -111,11 +118,26 @@ When generating the article, consider any relevant trends, discussions, or break
       parsedResponse.beat = beat;
       parsedResponse.generationTime = generationTime;
       parsedResponse.wordCount = parsedResponse.body.split(' ').length;
+      parsedResponse.prompt = fullPrompt; // Add the full prompt
 
       return parsedResponse;
     } catch (error) {
       console.error('Error generating structured article:', error);
       // Return fallback structured article
+      const fallbackPrompt = `System: You are a professional journalist creating structured news articles. Generate comprehensive, well-researched articles with proper journalistic structure including lead paragraphs, key quotes, sources, and reporter notes. Focus on: ${reporter.prompt}
+
+User: Create a comprehensive news article about recent developments in the ${beat} sector. Include:
+
+1. A compelling headline
+2. A strong lead paragraph (2-3 sentences)
+3. A detailed body (300-500 words) with context and analysis
+4. 2-4 key quotes from relevant sources
+5. 3-5 credible sources
+6. A brief social media summary (under 280 characters)
+7. Reporter notes on research quality, source diversity, and factual accuracy
+
+Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible.`;
+
       return {
         id: articleId,
         reporterId: reporter.id,
@@ -132,7 +154,8 @@ When generating the article, consider any relevant trends, discussions, or break
           sourceDiversity: 'Limited source diversity due to breaking news nature',
           factualAccuracy: 'Information based on preliminary reports'
         },
-        socialMediaSummary: `Breaking: Major developments in ${beat} sector capturing widespread attention. Stay tuned for updates! #${beat.replace(/\s+/g, '')}News`
+        socialMediaSummary: `Breaking: Major developments in ${beat} sector capturing widespread attention. Stay tuned for updates! #${beat.replace(/\s+/g, '')}News`,
+        prompt: fallbackPrompt
       };
     }
   }

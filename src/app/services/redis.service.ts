@@ -112,6 +112,7 @@ export class RedisService {
     multi.set(REDIS_KEYS.ARTICLE_HEADLINE(articleId), article.headline);
     multi.set(REDIS_KEYS.ARTICLE_BODY(articleId), article.body);
     multi.set(REDIS_KEYS.ARTICLE_TIME(articleId), article.generationTime.toString());
+    multi.set(REDIS_KEYS.ARTICLE_PROMPT(articleId), article.prompt);
 
     await multi.exec();
   }
@@ -156,10 +157,11 @@ export class RedisService {
   }
 
   async getArticle(articleId: string): Promise<Article | null> {
-    const [headline, body, timeStr] = await Promise.all([
+    const [headline, body, timeStr, prompt] = await Promise.all([
       this.client.get(REDIS_KEYS.ARTICLE_HEADLINE(articleId)),
       this.client.get(REDIS_KEYS.ARTICLE_BODY(articleId)),
-      this.client.get(REDIS_KEYS.ARTICLE_TIME(articleId))
+      this.client.get(REDIS_KEYS.ARTICLE_TIME(articleId)),
+      this.client.get(REDIS_KEYS.ARTICLE_PROMPT(articleId))
     ]);
 
     if (!headline || !body || !timeStr) return null;
@@ -174,7 +176,8 @@ export class RedisService {
       reporterId,
       headline,
       body,
-      generationTime: parseInt(timeStr)
+      generationTime: parseInt(timeStr),
+      prompt: prompt || 'Prompt not available (generated before prompt storage was implemented)'
     };
   }
 

@@ -10,6 +10,7 @@ interface Article {
   headline: string;
   body: string;
   generationTime: number;
+  prompt: string;
 }
 
 export default function ArticlesPage() {
@@ -18,6 +19,7 @@ export default function ArticlesPage() {
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [expandedPrompts, setExpandedPrompts] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (reporterId) {
@@ -50,6 +52,16 @@ export default function ArticlesPage() {
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const togglePrompt = (articleId: string) => {
+    const newExpanded = new Set(expandedPrompts);
+    if (newExpanded.has(articleId)) {
+      newExpanded.delete(articleId);
+    } else {
+      newExpanded.add(articleId);
+    }
+    setExpandedPrompts(newExpanded);
   };
 
   if (loading) {
@@ -130,6 +142,33 @@ export default function ArticlesPage() {
                   <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
                     {article.body}
                   </p>
+                </div>
+
+                {/* Prompt Section */}
+                <div className="mt-6 pt-6 border-t border-slate-200">
+                  <button
+                    onClick={() => togglePrompt(article.id)}
+                    className="flex items-center text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+                  >
+                    <svg
+                      className={`w-4 h-4 mr-2 transition-transform ${expandedPrompts.has(article.id) ? 'rotate-90' : ''}`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
+                    {expandedPrompts.has(article.id) ? 'Hide Prompt' : 'Show Prompt'}
+                  </button>
+
+                  {expandedPrompts.has(article.id) && (
+                    <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <h4 className="text-sm font-semibold text-slate-700 mb-2">AI Generation Prompt:</h4>
+                      <pre className="text-xs text-slate-600 whitespace-pre-wrap font-mono leading-relaxed">
+                        {article.prompt}
+                      </pre>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-6 pt-6 border-t border-slate-200">

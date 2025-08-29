@@ -35,7 +35,8 @@ export class ReporterService {
           reporterId: structuredArticle.reporterId,
           headline: structuredArticle.headline,
           body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
-          generationTime: structuredArticle.generationTime
+          generationTime: structuredArticle.generationTime,
+          prompt: structuredArticle.prompt
         };
         articles.push(article);
         console.log(`Generated article: "${article.headline}"`);
@@ -231,7 +232,8 @@ export class ReporterService {
           reporterId: structuredArticle.reporterId,
           headline: structuredArticle.headline,
           body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
-          generationTime: structuredArticle.generationTime
+          generationTime: structuredArticle.generationTime,
+          prompt: structuredArticle.prompt
         };
         await this.redisService.saveArticle(simpleArticle);
       }
@@ -341,7 +343,8 @@ export class ReporterService {
         reporterId: structuredArticle.reporterId,
         headline: structuredArticle.headline,
         body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
-        generationTime: structuredArticle.generationTime
+        generationTime: structuredArticle.generationTime,
+        prompt: structuredArticle.prompt
       };
       await this.redisService.saveArticle(simpleArticle);
     }

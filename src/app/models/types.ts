@@ -15,6 +15,7 @@ export interface Article {
   headline: string;
   body: string;
   generationTime: number; // milliseconds since epoch
+  prompt: string; // The full prompt used to generate this article
 }
 
 export interface NewspaperEdition {
@@ -63,6 +64,7 @@ export const REDIS_KEYS = {
   ARTICLE_HEADLINE: (articleId: string) => `article:${articleId}:headline`,
   ARTICLE_BODY: (articleId: string) => `article:${articleId}:body`,
   ARTICLE_TIME: (articleId: string) => `article:${articleId}:time`,
+  ARTICLE_PROMPT: (articleId: string) => `article:${articleId}:prompt`,
 
   // Newspaper Editions
   EDITIONS: 'editions',
