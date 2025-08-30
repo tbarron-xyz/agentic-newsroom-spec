@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 
 interface User {
@@ -12,10 +13,16 @@ interface User {
 export default function Navigation() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
 
   useEffect(() => {
     checkAuthStatus();
   }, []);
+
+  // Re-check auth status when pathname changes
+  useEffect(() => {
+    checkAuthStatus();
+  }, [pathname]);
 
   const checkAuthStatus = async () => {
     try {
