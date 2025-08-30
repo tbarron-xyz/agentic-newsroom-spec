@@ -116,8 +116,9 @@ const AdsPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Ad Entries</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
+      <div className="container mx-auto">
+        <h1 className="text-3xl font-bold mb-8">Ad Entries</h1>
 
       {error && (
         <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -252,6 +253,7 @@ const AdsPage: React.FC = () => {
             </div>
           ))
         )}
+      </div>
       </div>
     </div>
   );
