@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 interface EditorData {
   bio: string;
   prompt: string;
+  modelName: string;
 }
 
 interface JobStatus {
@@ -23,7 +24,7 @@ interface JobStatus {
 }
 
 export default function EditorPage() {
-  const [editorData, setEditorData] = useState<EditorData>({ bio: '', prompt: '' });
+  const [editorData, setEditorData] = useState<EditorData>({ bio: '', prompt: '', modelName: '' });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -259,6 +260,35 @@ export default function EditorPage() {
               <p className="text-sm text-slate-500 mt-2">
                 Define the editorial standards, tone, and guidelines that will guide the AI's newsroom decisions.
                 Define the editorial standards, tone, and guidelines that will guide the AI's newsroom decisions.
+              </p>
+            </div>
+          </div>
+
+          {/* Model Name Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-slate-800">AI Model Name</h2>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-6">
+              <input
+                type="text"
+                value={editorData.modelName}
+                onChange={(e) => setEditorData({ ...editorData, modelName: e.target.value })}
+                placeholder="Enter AI model name (e.g., gpt-5-nano)"
+                className={`w-full p-4 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 ${
+                  isAdmin
+                    ? 'focus:ring-2 focus:ring-purple-500 focus:border-transparent'
+                    : 'bg-slate-100 cursor-not-allowed opacity-60'
+                }`}
+                readOnly={!isAdmin}
+              />
+              <p className="text-sm text-slate-500 mt-2">
+                Specify the AI model to use for content generation. This setting affects all AI operations in the newsroom.
               </p>
             </div>
           </div>

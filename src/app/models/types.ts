@@ -1,6 +1,7 @@
 export interface Editor {
   bio: string;
   prompt: string;
+  modelName: string;
 }
 
 export interface Reporter {

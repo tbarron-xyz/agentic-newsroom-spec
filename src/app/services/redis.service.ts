@@ -48,18 +48,25 @@ export class RedisService {
     multi.set(REDIS_KEYS.EDITOR_BIO, editor.bio);
     console.log('Redis Write: SET', REDIS_KEYS.EDITOR_PROMPT, editor.prompt);
     multi.set(REDIS_KEYS.EDITOR_PROMPT, editor.prompt);
+    console.log('Redis Write: SET', REDIS_KEYS.MODEL_NAME, editor.modelName);
+    multi.set(REDIS_KEYS.MODEL_NAME, editor.modelName);
     await multi.exec();
   }
 
   async getEditor(): Promise<Editor | null> {
-    const [bio, prompt] = await Promise.all([
+    const [bio, prompt, modelName] = await Promise.all([
       this.client.get(REDIS_KEYS.EDITOR_BIO),
-      this.client.get(REDIS_KEYS.EDITOR_PROMPT)
+      this.client.get(REDIS_KEYS.EDITOR_PROMPT),
+      this.client.get(REDIS_KEYS.MODEL_NAME)
     ]);
 
     if (!bio || !prompt) return null;
 
-    return { bio, prompt };
+    return {
+      bio,
+      prompt,
+      modelName: modelName || 'gpt-5-nano' // Default fallback
+    };
   }
 
   // Reporter operations

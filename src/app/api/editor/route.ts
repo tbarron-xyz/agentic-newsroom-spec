@@ -29,7 +29,8 @@ export async function GET() {
 
     return NextResponse.json({
       bio: editor?.bio || '',
-      prompt: editor?.prompt || ''
+      prompt: editor?.prompt || '',
+      modelName: editor?.modelName || 'gpt-5-nano'
     });
   } catch (error) {
     console.error('Error fetching editor data:', error);
@@ -64,21 +65,22 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { bio, prompt } = body;
+    const { bio, prompt, modelName } = body;
 
-    if (typeof bio !== 'string' || typeof prompt !== 'string') {
+    if (typeof bio !== 'string' || typeof prompt !== 'string' || typeof modelName !== 'string') {
       return NextResponse.json(
-        { error: 'Bio and prompt must be strings' },
+        { error: 'Bio, prompt, and modelName must be strings' },
         { status: 400 }
       );
     }
 
     const redisService = await getRedisService();
-    await redisService.saveEditor({ bio, prompt });
+    await redisService.saveEditor({ bio, prompt, modelName });
 
     return NextResponse.json({
       bio,
       prompt,
+      modelName,
       message: 'Editor data updated successfully'
     });
   } catch (error) {
