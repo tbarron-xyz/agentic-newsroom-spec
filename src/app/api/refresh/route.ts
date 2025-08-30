@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RedisService } from '../../services/redis.service';
 import { AuthService } from '../../services/auth.service';
-import { loginRequestSchema } from '../../models/schemas';
 
 const redisService = new RedisService();
 const authService = new AuthService(redisService);
@@ -9,48 +8,37 @@ const authService = new AuthService(redisService);
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const { refreshToken } = body;
 
-    // Validate request body
-    const validationResult = loginRequestSchema.safeParse(body);
-    if (!validationResult.success) {
+    if (!refreshToken) {
       return NextResponse.json(
-        { message: 'Invalid request data', errors: validationResult.error.errors },
+        { message: 'Refresh token is required' },
         { status: 400 }
       );
     }
 
-    const { email, password } = validationResult.data;
-
     // Connect to Redis
     await redisService.connect();
 
-    // Authenticate user
-    const user = await authService.authenticateUser(email, password);
-    if (!user) {
+    // Refresh the access token
+    const newTokens = await authService.refreshAccessToken(refreshToken);
+    if (!newTokens) {
       return NextResponse.json(
-        { message: 'Invalid email or password' },
+        { message: 'Invalid or expired refresh token' },
         { status: 401 }
       );
     }
 
-    // Generate tokens
-    const tokens = authService.generateTokens(user);
-
-    // Return success response with tokens
+    // Return new tokens
     return NextResponse.json(
       {
-        message: 'Login successful',
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role
-        },
-        tokens
+        message: 'Token refreshed successfully',
+        tokens: newTokens
       },
       { status: 200 }
     );
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Token refresh error:', error);
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

@@ -6,6 +6,7 @@ import {
   NewspaperEdition,
   DailyEdition,
   AdEntry,
+  User,
   REDIS_KEYS
 } from '../models/types';
 
@@ -498,6 +499,118 @@ export class RedisService {
     multi.del(REDIS_KEYS.AD_PROMPT_CONTENT(adId));
     console.log('Redis Write: DEL', REDIS_KEYS.AD_USER_ID(adId));
     multi.del(REDIS_KEYS.AD_USER_ID(adId));
+
+    await multi.exec();
+  }
+
+  // User operations
+  async createUser(user: Omit<User, 'id' | 'createdAt' | 'lastLoginAt'>): Promise<User> {
+    const userId = await this.generateId('user');
+    const now = Date.now();
+    const newUser: User = {
+      ...user,
+      id: userId,
+      createdAt: now
+    };
+
+    const multi = this.client.multi();
+
+    // Add to users set
+    console.log('Redis Write: SADD', REDIS_KEYS.USERS, userId);
+    multi.sAdd(REDIS_KEYS.USERS, userId);
+
+    // Store user data
+    console.log('Redis Write: SET', REDIS_KEYS.USER_EMAIL(userId), newUser.email);
+    multi.set(REDIS_KEYS.USER_EMAIL(userId), newUser.email);
+    console.log('Redis Write: SET', REDIS_KEYS.USER_PASSWORD_HASH(userId), newUser.passwordHash);
+    multi.set(REDIS_KEYS.USER_PASSWORD_HASH(userId), newUser.passwordHash);
+    console.log('Redis Write: SET', REDIS_KEYS.USER_ROLE(userId), newUser.role);
+    multi.set(REDIS_KEYS.USER_ROLE(userId), newUser.role);
+    console.log('Redis Write: SET', REDIS_KEYS.USER_CREATED_AT(userId), newUser.createdAt.toString());
+    multi.set(REDIS_KEYS.USER_CREATED_AT(userId), newUser.createdAt.toString());
+
+    // Create email to user ID mapping
+    console.log('Redis Write: SET', REDIS_KEYS.USER_BY_EMAIL(newUser.email), userId);
+    multi.set(REDIS_KEYS.USER_BY_EMAIL(newUser.email), userId);
+
+    await multi.exec();
+
+    return newUser;
+  }
+
+  async getUserById(userId: string): Promise<User | null> {
+    const [email, passwordHash, role, createdAtStr, lastLoginAtStr] = await Promise.all([
+      this.client.get(REDIS_KEYS.USER_EMAIL(userId)),
+      this.client.get(REDIS_KEYS.USER_PASSWORD_HASH(userId)),
+      this.client.get(REDIS_KEYS.USER_ROLE(userId)),
+      this.client.get(REDIS_KEYS.USER_CREATED_AT(userId)),
+      this.client.get(REDIS_KEYS.USER_LAST_LOGIN_AT(userId))
+    ]);
+
+    if (!email || !passwordHash || !role || !createdAtStr) return null;
+
+    return {
+      id: userId,
+      email,
+      passwordHash,
+      role: role as User['role'],
+      createdAt: parseInt(createdAtStr),
+      lastLoginAt: lastLoginAtStr ? parseInt(lastLoginAtStr) : undefined
+    };
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    const userId = await this.client.get(REDIS_KEYS.USER_BY_EMAIL(email));
+    if (!userId) return null;
+
+    return await this.getUserById(userId);
+  }
+
+  async updateUserLastLogin(userId: string): Promise<void> {
+    const now = Date.now();
+    console.log('Redis Write: SET', REDIS_KEYS.USER_LAST_LOGIN_AT(userId), now.toString());
+    await this.client.set(REDIS_KEYS.USER_LAST_LOGIN_AT(userId), now.toString());
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    const userIds = await this.client.sMembers(REDIS_KEYS.USERS);
+    const users: User[] = [];
+
+    for (const userId of userIds) {
+      const user = await this.getUserById(userId);
+      if (user) {
+        users.push(user);
+      }
+    }
+
+    return users;
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    const user = await this.getUserById(userId);
+    if (!user) return;
+
+    const multi = this.client.multi();
+
+    // Remove from users set
+    console.log('Redis Write: SREM', REDIS_KEYS.USERS, userId);
+    multi.sRem(REDIS_KEYS.USERS, userId);
+
+    // Delete user data
+    console.log('Redis Write: DEL', REDIS_KEYS.USER_EMAIL(userId));
+    multi.del(REDIS_KEYS.USER_EMAIL(userId));
+    console.log('Redis Write: DEL', REDIS_KEYS.USER_PASSWORD_HASH(userId));
+    multi.del(REDIS_KEYS.USER_PASSWORD_HASH(userId));
+    console.log('Redis Write: DEL', REDIS_KEYS.USER_ROLE(userId));
+    multi.del(REDIS_KEYS.USER_ROLE(userId));
+    console.log('Redis Write: DEL', REDIS_KEYS.USER_CREATED_AT(userId));
+    multi.del(REDIS_KEYS.USER_CREATED_AT(userId));
+    console.log('Redis Write: DEL', REDIS_KEYS.USER_LAST_LOGIN_AT(userId));
+    multi.del(REDIS_KEYS.USER_LAST_LOGIN_AT(userId));
+
+    // Delete email mapping
+    console.log('Redis Write: DEL', REDIS_KEYS.USER_BY_EMAIL(user.email));
+    multi.del(REDIS_KEYS.USER_BY_EMAIL(user.email));
 
     await multi.exec();
   }

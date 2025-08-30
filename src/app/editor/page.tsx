@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiService } from '../services/api.service';
 
 interface EditorData {
   bio: string;

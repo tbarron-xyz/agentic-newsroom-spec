@@ -58,6 +58,15 @@ export interface AdEntry {
   promptContent: string;
 }
 
+export interface User {
+  id: string;
+  email: string;
+  passwordHash: string;
+  role: 'admin' | 'editor' | 'reporter';
+  createdAt: number;
+  lastLoginAt?: number;
+}
+
 // Redis key patterns
 export const REDIS_KEYS = {
   // Editor
@@ -94,6 +103,15 @@ export const REDIS_KEYS = {
   AD_BID_PRICE: (adId: string) => `ad:${adId}:bid_price`,
   AD_PROMPT_CONTENT: (adId: string) => `ad:${adId}:prompt_content`,
   AD_USER_ID: (adId: string) => `ad:${adId}:user_id`,
+
+  // Users
+  USERS: 'users',
+  USER_EMAIL: (userId: string) => `user:${userId}:email`,
+  USER_PASSWORD_HASH: (userId: string) => `user:${userId}:password_hash`,
+  USER_ROLE: (userId: string) => `user:${userId}:role`,
+  USER_CREATED_AT: (userId: string) => `user:${userId}:created_at`,
+  USER_LAST_LOGIN_AT: (userId: string) => `user:${userId}:last_login_at`,
+  USER_BY_EMAIL: (email: string) => `user_by_email:${email}`,
 } as const;
 
 // Utility types for Redis operations

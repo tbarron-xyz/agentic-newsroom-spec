@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RedisService } from '../../services/redis.service';
 import { AuthService } from '../../services/auth.service';
-import { loginRequestSchema } from '../../models/schemas';
+import { registerRequestSchema } from '../../models/schemas';
 
 const redisService = new RedisService();
 const authService = new AuthService(redisService);
@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // Validate request body
-    const validationResult = loginRequestSchema.safeParse(body);
+    const validationResult = registerRequestSchema.safeParse(body);
     if (!validationResult.success) {
       return NextResponse.json(
         { message: 'Invalid request data', errors: validationResult.error.errors },
@@ -19,27 +19,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password } = validationResult.data;
+    const { email, password, role } = validationResult.data;
 
     // Connect to Redis
     await redisService.connect();
 
-    // Authenticate user
-    const user = await authService.authenticateUser(email, password);
-    if (!user) {
-      return NextResponse.json(
-        { message: 'Invalid email or password' },
-        { status: 401 }
-      );
-    }
+    // Register user
+    const user = await authService.registerUser(email, password, role);
 
-    // Generate tokens
+    // Generate tokens for immediate login
     const tokens = authService.generateTokens(user);
 
-    // Return success response with tokens
+    // Return success response
     return NextResponse.json(
       {
-        message: 'Login successful',
+        message: 'User registered successfully',
         user: {
           id: user.id,
           email: user.email,
@@ -47,10 +41,18 @@ export async function POST(request: NextRequest) {
         },
         tokens
       },
-      { status: 200 }
+      { status: 201 }
     );
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Registration error:', error);
+
+    if (error instanceof Error && error.message === 'User with this email already exists') {
+      return NextResponse.json(
+        { message: 'User with this email already exists' },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       { message: 'Internal server error' },
       { status: 500 }

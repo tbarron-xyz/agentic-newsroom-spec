@@ -54,3 +54,23 @@ export const reporterResponseSchema = z.object({
         suggestions: z.string()
     })
 });
+
+export const userSchema = z.object({
+    id: z.string(),
+    email: z.string().email(),
+    passwordHash: z.string(),
+    role: z.enum(['admin', 'editor', 'reporter']),
+    createdAt: z.number(),
+    lastLoginAt: z.number().optional()
+});
+
+export const loginRequestSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6)
+});
+
+export const registerRequestSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6),
+    role: z.enum(['admin', 'editor', 'reporter']).optional().default('reporter')
+});
