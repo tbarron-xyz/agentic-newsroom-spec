@@ -229,6 +229,8 @@ export class RedisService {
     });
     console.log('Redis Write: SET', REDIS_KEYS.EDITION_TIME(editionId), edition.generationTime.toString());
     multi.set(REDIS_KEYS.EDITION_TIME(editionId), edition.generationTime.toString());
+    console.log('Redis Write: SET', REDIS_KEYS.EDITION_PROMPT(editionId), edition.prompt);
+    multi.set(REDIS_KEYS.EDITION_PROMPT(editionId), edition.prompt);
 
     await multi.exec();
   }
@@ -251,9 +253,10 @@ export class RedisService {
   }
 
   async getNewspaperEdition(editionId: string): Promise<NewspaperEdition | null> {
-    const [stories, timeStr] = await Promise.all([
+    const [stories, timeStr, prompt] = await Promise.all([
       this.client.sMembers(REDIS_KEYS.EDITION_STORIES(editionId)),
-      this.client.get(REDIS_KEYS.EDITION_TIME(editionId))
+      this.client.get(REDIS_KEYS.EDITION_TIME(editionId)),
+      this.client.get(REDIS_KEYS.EDITION_PROMPT(editionId))
     ]);
 
     if (!timeStr) return null;
@@ -261,7 +264,8 @@ export class RedisService {
     return {
       id: editionId,
       stories: stories || [],
-      generationTime: parseInt(timeStr)
+      generationTime: parseInt(timeStr),
+      prompt: prompt || 'Prompt not available (generated before prompt storage was implemented)'
     };
   }
 
@@ -307,6 +311,8 @@ export class RedisService {
     // Store topics as JSON
     console.log('Redis Write: SET', `daily_edition:${dailyEditionId}:topics`, JSON.stringify(dailyEdition.topics));
     multi.set(`daily_edition:${dailyEditionId}:topics`, JSON.stringify(dailyEdition.topics));
+    console.log('Redis Write: SET', REDIS_KEYS.DAILY_EDITION_PROMPT(dailyEditionId), dailyEdition.prompt);
+    multi.set(REDIS_KEYS.DAILY_EDITION_PROMPT(dailyEditionId), dailyEdition.prompt);
 
     await multi.exec();
   }
@@ -337,7 +343,8 @@ export class RedisService {
       newspaperName,
       modelFeedbackPositive,
       modelFeedbackNegative,
-      topicsJson
+      topicsJson,
+      prompt
     ] = await Promise.all([
       this.client.sMembers(REDIS_KEYS.DAILY_EDITION_EDITIONS(dailyEditionId)),
       this.client.get(REDIS_KEYS.DAILY_EDITION_TIME(dailyEditionId)),
@@ -346,7 +353,8 @@ export class RedisService {
       this.client.get(`daily_edition:${dailyEditionId}:newspaper_name`),
       this.client.get(`daily_edition:${dailyEditionId}:model_feedback_positive`),
       this.client.get(`daily_edition:${dailyEditionId}:model_feedback_negative`),
-      this.client.get(`daily_edition:${dailyEditionId}:topics`)
+      this.client.get(`daily_edition:${dailyEditionId}:topics`),
+      this.client.get(REDIS_KEYS.DAILY_EDITION_PROMPT(dailyEditionId))
     ]);
 
     if (!timeStr) return null;
@@ -373,7 +381,8 @@ export class RedisService {
         positive: modelFeedbackPositive || '',
         negative: modelFeedbackNegative || ''
       },
-      topics
+      topics,
+      prompt: prompt || 'Prompt not available (generated before prompt storage was implemented)'
     };
   }
 

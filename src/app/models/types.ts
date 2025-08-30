@@ -22,6 +22,7 @@ export interface NewspaperEdition {
   id: string;
   stories: string[]; // article IDs
   generationTime: number; // milliseconds since epoch
+  prompt: string; // The full prompt used to generate this edition
 }
 
 export interface DailyEdition {
@@ -46,6 +47,7 @@ export interface DailyEdition {
     negative: string;
   };
   newspaperName: string;
+  prompt: string; // The full prompt used to generate this daily edition
 }
 
 // Redis key patterns
@@ -70,11 +72,13 @@ export const REDIS_KEYS = {
   EDITIONS: 'editions',
   EDITION_STORIES: (editionId: string) => `edition:${editionId}:stories`,
   EDITION_TIME: (editionId: string) => `edition:${editionId}:time`,
+  EDITION_PROMPT: (editionId: string) => `edition:${editionId}:prompt`,
 
   // Daily Editions
   DAILY_EDITIONS: 'daily_editions',
   DAILY_EDITION_EDITIONS: (dailyEditionId: string) => `daily_edition:${dailyEditionId}:editions`,
   DAILY_EDITION_TIME: (dailyEditionId: string) => `daily_edition:${dailyEditionId}:time`,
+  DAILY_EDITION_PROMPT: (dailyEditionId: string) => `daily_edition:${dailyEditionId}:prompt`,
 } as const;
 
 // Utility types for Redis operations

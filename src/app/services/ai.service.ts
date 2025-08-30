@@ -165,29 +165,34 @@ Make the article engaging, factual, and professionally written. Ensure all quote
 
 
 
-  async selectNewsworthyStories(articles: Article[], editorPrompt: string): Promise<Article[]> {
-    if (articles.length === 0) return [];
+  async selectNewsworthyStories(articles: Article[], editorPrompt: string): Promise<{ selectedArticles: Article[]; fullPrompt: string }> {
+    if (articles.length === 0) return { selectedArticles: [], fullPrompt: '' };
 
     try {
       const articlesText = articles.map((article, index) =>
         `Article ${index + 1}:\nHeadline: ${article.headline}\nContent: ${article.body.substring(0, 300)}...`
       ).join('\n\n');
 
+      const systemPrompt = 'You are an experienced news editor evaluating story newsworthiness. Select the most important and engaging stories based on journalistic criteria.';
+      const userPrompt = `Given the following articles and editorial guidelines: "${editorPrompt}", select the 3-5 most newsworthy stories from the list below. Consider factors like timeliness, impact, audience interest, and editorial fit.
+
+Articles:
+${articlesText}
+
+Return only the article numbers (1, 2, 3, etc.) of the selected stories, separated by commas. Select between 3-5 articles based on their quality and newsworthiness.`;
+
+      const fullPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
+
       const response = await this.openai.chat.completions.create({
         model: this.modelName,
         messages: [
           {
             role: 'system',
-            content: 'You are an experienced news editor evaluating story newsworthiness. Select the most important and engaging stories based on journalistic criteria.'
+            content: systemPrompt
           },
           {
             role: 'user',
-            content: `Given the following articles and editorial guidelines: "${editorPrompt}", select the 3-5 most newsworthy stories from the list below. Consider factors like timeliness, impact, audience interest, and editorial fit.
-
-Articles:
-${articlesText}
-
-Return only the article numbers (1, 2, 3, etc.) of the selected stories, separated by commas. Select between 3-5 articles based on their quality and newsworthiness.`
+            content: userPrompt
           }
         ]
       });
@@ -203,10 +208,10 @@ Return only the article numbers (1, 2, 3, etc.) of the selected stories, separat
         const maxStories = Math.min(5, articles.length);
         const numStories = Math.floor(Math.random() * (maxStories - minStories + 1)) + minStories;
         const shuffled = [...articles].sort(() => 0.5 - Math.random());
-        return shuffled.slice(0, numStories);
+        return { selectedArticles: shuffled.slice(0, numStories), fullPrompt };
       }
 
-      return selectedIndices.map(index => articles[index]);
+      return { selectedArticles: selectedIndices.map(index => articles[index]), fullPrompt };
     } catch (error) {
       console.error('Error selecting newsworthy stories:', error);
       // Fallback to random selection
@@ -214,7 +219,12 @@ Return only the article numbers (1, 2, 3, etc.) of the selected stories, separat
       const maxStories = Math.min(5, articles.length);
       const numStories = Math.floor(Math.random() * (maxStories - minStories + 1)) + minStories;
       const shuffled = [...articles].sort(() => 0.5 - Math.random());
-      return shuffled.slice(0, numStories);
+      return {
+        selectedArticles: shuffled.slice(0, numStories),
+        fullPrompt: `System: You are an experienced news editor evaluating story newsworthiness. Select the most important and engaging stories based on journalistic criteria.
+
+User: Given the following articles and editorial guidelines: "${editorPrompt}", select the 3-5 most newsworthy stories from the list below.`
+      };
     }
   }
 
@@ -256,20 +266,23 @@ Make all content professional, factual, and engaging. Ensure proper journalistic
   }
 
   async selectNotableEditions(editions: string[], editorPrompt: string): Promise<{
-    frontPageHeadline: string;
-    frontPageArticle: string;
-    topics: Array<{
-      name: string;
-      headline: string;
-      newsStoryFirstParagraph: string;
-      newsStorySecondParagraph: string;
-      oneLineSummary: string;
-      supportingSocialMediaMessage: string;
-      skepticalComment: string;
-      gullibleComment: string;
-    }>;
-    modelFeedbackAboutThePrompt: { positive: string; negative: string };
-    newspaperName: string;
+    content: {
+      frontPageHeadline: string;
+      frontPageArticle: string;
+      topics: Array<{
+        name: string;
+        headline: string;
+        newsStoryFirstParagraph: string;
+        newsStorySecondParagraph: string;
+        oneLineSummary: string;
+        supportingSocialMediaMessage: string;
+        skepticalComment: string;
+        gullibleComment: string;
+      }>;
+      modelFeedbackAboutThePrompt: { positive: string; negative: string };
+      newspaperName: string;
+    };
+    fullPrompt: string;
   }> {
     if (editions.length === 0) {
       throw new Error('No editions available for daily edition generation');
@@ -280,16 +293,8 @@ Make all content professional, factual, and engaging. Ensure proper journalistic
         `Edition ${index + 1}: ${edition}`
       ).join('\n');
 
-      const response = await this.openai.chat.completions.create({
-        model: this.modelName,
-        messages: [
-          {
-            role: 'system',
-            content: `You are a newspaper editor creating a comprehensive daily edition. Based on the available newspaper editions, create a structured daily newspaper with front page content, multiple topics, and editorial feedback. Create engaging, professional content that synthesizes the available editions into a cohesive daily newspaper.`
-          },
-          {
-            role: 'user',
-            content: `Using the editorial guidelines: "${editorPrompt}", create a comprehensive daily newspaper edition based on these available newspaper editions:
+      const systemPrompt = `You are a newspaper editor creating a comprehensive daily edition. Based on the available newspaper editions, create a structured daily newspaper with front page content, multiple topics, and editorial feedback. Create engaging, professional content that synthesizes the available editions into a cohesive daily newspaper.`;
+      const userPrompt = `Using the editorial guidelines: "${editorPrompt}", create a comprehensive daily newspaper edition based on these available newspaper editions:
 
 ${editionsText}
 
@@ -300,7 +305,20 @@ Generate a complete daily edition with:
 4. Feedback about the editorial prompt (both positive and negative aspects)
 5. An appropriate newspaper name
 
-Make the content engaging, balanced, and professionally written. Focus on creating a cohesive narrative that connects the various editions into a unified daily newspaper experience.`
+Make the content engaging, balanced, and professionally written. Focus on creating a cohesive narrative that connects the various editions into a unified daily newspaper experience.`;
+
+      const fullPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
+
+      const response = await this.openai.chat.completions.create({
+        model: this.modelName,
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: userPrompt
           }
         ],
         response_format: zodResponseFormat(dailyEditionSchema, "daily_edition")
@@ -322,11 +340,11 @@ Make the content engaging, balanced, and professionally written. Focus on creati
         throw new Error('Invalid response structure from AI service');
       }
 
-      return parsedResponse;
+      return { content: parsedResponse, fullPrompt };
     } catch (error) {
       console.error('Error generating daily edition:', error);
       // Return a fallback structure
-      return {
+      const fallbackContent = {
         frontPageHeadline: "Daily News Roundup",
         frontPageArticle: "Today's news brings together the most important stories from our recent editions, providing readers with a comprehensive overview of current events and developments.",
         topics: [
@@ -346,6 +364,13 @@ Make the content engaging, balanced, and professionally written. Focus on creati
           negative: "The prompt could benefit from more specific guidance on content prioritization."
         },
         newspaperName: "Daily Gazette"
+      };
+
+      return {
+        content: fallbackContent,
+        fullPrompt: `System: You are a newspaper editor creating a comprehensive daily edition. Based on the available newspaper editions, create a structured daily newspaper with front page content, multiple topics, and editorial feedback. Create engaging, professional content that synthesizes the available editions into a cohesive daily newspaper.
+
+User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive daily newspaper edition based on these available newspaper editions.`
       };
     }
   }

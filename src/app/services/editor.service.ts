@@ -43,7 +43,7 @@ export class EditorService {
     }
 
     // Use AI to select newsworthy stories
-    const selectedArticles = await this.aiService.selectNewsworthyStories(
+    const { selectedArticles, fullPrompt } = await this.aiService.selectNewsworthyStories(
       allRecentArticles,
       editor.prompt
     );
@@ -55,7 +55,8 @@ export class EditorService {
     const edition: NewspaperEdition = {
       id: editionId,
       stories: selectedArticles.map(article => article.id),
-      generationTime: Date.now()
+      generationTime: Date.now(),
+      prompt: fullPrompt
     };
 
     // Save the edition
@@ -91,7 +92,7 @@ export class EditorService {
 
     // Use AI to generate comprehensive daily edition content
     const editionIds = last24HoursEditions.map(edition => edition.id);
-    const dailyEditionContent = await this.aiService.selectNotableEditions(
+    const { content: dailyEditionContent, fullPrompt } = await this.aiService.selectNotableEditions(
       editionIds,
       editor.prompt
     );
@@ -109,7 +110,8 @@ export class EditorService {
       frontPageArticle: dailyEditionContent.frontPageArticle,
       topics: dailyEditionContent.topics,
       modelFeedbackAboutThePrompt: dailyEditionContent.modelFeedbackAboutThePrompt,
-      newspaperName: dailyEditionContent.newspaperName
+      newspaperName: dailyEditionContent.newspaperName,
+      prompt: fullPrompt
     };
 
     // Save the daily edition

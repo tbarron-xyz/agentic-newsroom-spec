@@ -16,6 +16,7 @@ interface NewspaperEdition {
   id: string;
   stories: Article[];
   generationTime: number;
+  prompt: string;
 }
 
 export default function EditionsPage() {
@@ -135,6 +136,14 @@ export default function EditionsPage() {
 
                 <div className="text-center text-sm text-slate-500">
                   Edition ID: {edition.id.slice(0, 12)}...
+                </div>
+
+                {/* Prompt Display */}
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                  <h4 className="text-sm font-semibold text-slate-700 mb-2">Generation Prompt</h4>
+                  <div className="bg-slate-50 rounded-lg p-3 text-xs text-slate-600 font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
+                    {edition.prompt}
+                  </div>
                 </div>
               </div>
             ))}

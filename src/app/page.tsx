@@ -25,6 +25,7 @@ interface DailyEdition {
     positive: string;
     negative: string;
   };
+  prompt: string;
 }
 
 export default function Home() {
@@ -238,6 +239,14 @@ export default function Home() {
                       </div>
                     </div>
                   )}
+
+                  {/* Generation Prompt */}
+                  <div className="bg-white rounded-2xl shadow-xl p-8">
+                    <h2 className="text-2xl font-bold text-slate-800 mb-6">Generation Prompt</h2>
+                    <div className="bg-slate-50 rounded-lg p-4 text-sm text-slate-600 font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
+                      {selectedEdition.prompt}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
