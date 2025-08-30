@@ -4,6 +4,7 @@ import { McpBskyClient } from "mcp-bsky-jetstream/client/dist/McpBskyClient.js";
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { ZodSchema } from 'zod';
 import { dailyEditionSchema, reporterArticleSchema } from '../models/schemas';
+import { RedisService } from './redis.service';
 
 export class AIService {
   private openai: OpenAI;
@@ -66,12 +67,35 @@ export class AIService {
         // Continue with article generation even if social media fetch fails
       }
 
-      // Format social media messages for the prompt
-      const socialMediaContext = socialMediaMessages.length > 0
-        ? `\n\nRecent social media discussions related to ${beat}:\n${socialMediaMessages.slice(-200).map((msg, index: number) =>
-            `${index + 1}. "${msg.text}"`
-          ).join('\n')}`
-        : '';
+      // Fetch the most recent ad from data storage
+      let mostRecentAd = null;
+      try {
+        const redis = new RedisService();
+        await redis.connect();
+        mostRecentAd = await redis.getMostRecentAd();
+        await redis.disconnect();
+      } catch (error) {
+        console.warn('Failed to fetch most recent ad:', error);
+        // Continue with article generation even if ad fetch fails
+      }
+
+      // Format social media messages for the prompt with ad insertion
+      let socialMediaContext = '';
+      if (socialMediaMessages.length > 0) {
+        const messages = socialMediaMessages.slice(-200);
+        const formattedMessages: string[] = [];
+
+        for (let i = 0; i < messages.length; i++) {
+          formattedMessages.push(`${i + 1}. "${messages[i].text}"`);
+
+          // Insert ad prompt after every 20 message entries
+          if ((i + 1) % 20 === 0 && mostRecentAd) {
+            formattedMessages.push(`\n\n${mostRecentAd.promptContent}\n\n`);
+          }
+        }
+
+        socialMediaContext = `\n\nRecent social media discussions related to ${beat}:\n${formattedMessages.join('\n')}`;
+      }
 
       const systemPrompt = `You are a professional journalist creating structured news articles. Generate comprehensive, well-researched articles with proper journalistic structure including lead paragraphs, key quotes, sources, and reporter notes. Focus on: ${reporter.prompt}`;
 

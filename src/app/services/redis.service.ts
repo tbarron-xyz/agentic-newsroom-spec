@@ -423,6 +423,20 @@ export class RedisService {
     return ads;
   }
 
+  async getMostRecentAd(): Promise<AdEntry | null> {
+    const adIds = await this.client.sMembers(REDIS_KEYS.ADS);
+    if (adIds.length === 0) return null;
+
+    // Sort ad IDs by timestamp (extracted from ID format: ad_timestamp_random)
+    const sortedAdIds = adIds.sort((a, b) => {
+      const timestampA = parseInt(a.split('_')[1]);
+      const timestampB = parseInt(b.split('_')[1]);
+      return timestampB - timestampA; // Most recent first
+    });
+
+    return await this.getAd(sortedAdIds[0]);
+  }
+
   async getAd(adId: string): Promise<AdEntry | null> {
     const [name, bidPriceStr, promptContent, userId] = await Promise.all([
       this.client.get(REDIS_KEYS.AD_NAME(adId)),
