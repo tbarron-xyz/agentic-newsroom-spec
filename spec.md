@@ -8,3 +8,5 @@ Add a login page with just an "admin password" field, which hits a new login end
 On successful login, set a localstorage entry indicating that the user is admin. If the user is not admin, make the text fields on the editor page readonly, and disable the buttons, including on the backend.
 
 Add a logout button if the user is logged in.
+
+Create a page at /ads that displays a placeholder list of "ad entries" which each have an editable name, editable bid price, and "prompt content" textarea. Add it to the nav bar.
