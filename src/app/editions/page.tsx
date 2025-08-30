@@ -3,9 +3,18 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 
+interface Article {
+  id: string;
+  reporterId: string;
+  headline: string;
+  body: string;
+  generationTime: number;
+  prompt: string;
+}
+
 interface NewspaperEdition {
   id: string;
-  stories: string[];
+  stories: Article[];
   generationTime: number;
 }
 
@@ -110,18 +119,17 @@ export default function EditionsPage() {
                 </div>
 
                 <div className="mb-6">
-                  <h4 className="text-sm font-semibold text-slate-700 mb-2">Story IDs</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {edition.stories.slice(0, 3).map((storyId: string, index: number) => (
-                      <span key={index} className="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-xs font-mono">
-                        {storyId.slice(0, 8)}...
-                      </span>
+                  <h4 className="text-sm font-semibold text-slate-700 mb-2">Articles</h4>
+                  <div className="space-y-4">
+                    {edition.stories.map((article: Article, index: number) => (
+                      <div key={article.id} className="border border-slate-200 rounded-lg p-4">
+                        <h5 className="font-semibold text-slate-800 mb-2">{article.headline}</h5>
+                        <p className="text-slate-600 text-sm leading-relaxed">{article.body}</p>
+                        <div className="mt-2 text-xs text-slate-500">
+                          Reporter: {article.reporterId} | Generated: {new Date(article.generationTime).toLocaleDateString()}
+                        </div>
+                      </div>
                     ))}
-                    {edition.stories.length > 3 && (
-                      <span className="px-2 py-1 bg-slate-100 text-slate-600 rounded-full text-xs">
-                        +{edition.stories.length - 3} more
-                      </span>
-                    )}
                   </div>
                 </div>
 

@@ -11,12 +11,33 @@ async function getRedisService(): Promise<RedisService> {
   return redisService;
 }
 
-// GET /api/editions - Get all newspaper editions
+// GET /api/editions - Get all newspaper editions with full article data
 export async function GET() {
   try {
     const redisService = await getRedisService();
     const editions = await redisService.getNewspaperEditions();
-    return NextResponse.json(editions);
+
+    // Fetch full article data for each edition
+    const editionsWithArticles = await Promise.all(
+      editions.map(async (edition) => {
+        const articles = await Promise.all(
+          edition.stories.map(async (storyId) => {
+            const article = await redisService.getArticle(storyId);
+            return article;
+          })
+        );
+
+        // Filter out null articles (in case some are missing)
+        const validArticles = articles.filter(article => article !== null);
+
+        return {
+          ...edition,
+          stories: validArticles
+        };
+      })
+    );
+
+    return NextResponse.json(editionsWithArticles);
   } catch (error) {
     console.error('Error fetching newspaper editions:', error);
     return NextResponse.json(
