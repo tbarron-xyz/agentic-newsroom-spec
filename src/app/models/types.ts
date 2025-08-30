@@ -50,6 +50,14 @@ export interface DailyEdition {
   prompt: string; // The full prompt used to generate this daily edition
 }
 
+export interface AdEntry {
+  id: string;
+  userId: string;
+  name: string;
+  bidPrice: number;
+  promptContent: string;
+}
+
 // Redis key patterns
 export const REDIS_KEYS = {
   // Editor
@@ -79,6 +87,13 @@ export const REDIS_KEYS = {
   DAILY_EDITION_EDITIONS: (dailyEditionId: string) => `daily_edition:${dailyEditionId}:editions`,
   DAILY_EDITION_TIME: (dailyEditionId: string) => `daily_edition:${dailyEditionId}:time`,
   DAILY_EDITION_PROMPT: (dailyEditionId: string) => `daily_edition:${dailyEditionId}:prompt`,
+
+  // Ads
+  ADS: 'ads',
+  AD_NAME: (adId: string) => `ad:${adId}:name`,
+  AD_BID_PRICE: (adId: string) => `ad:${adId}:bid_price`,
+  AD_PROMPT_CONTENT: (adId: string) => `ad:${adId}:prompt_content`,
+  AD_USER_ID: (adId: string) => `ad:${adId}:user_id`,
 } as const;
 
 // Utility types for Redis operations

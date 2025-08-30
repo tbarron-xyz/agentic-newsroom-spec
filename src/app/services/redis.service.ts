@@ -5,6 +5,7 @@ import {
   Article,
   NewspaperEdition,
   DailyEdition,
+  AdEntry,
   REDIS_KEYS
 } from '../models/types';
 
@@ -384,6 +385,107 @@ export class RedisService {
       topics,
       prompt: prompt || 'Prompt not available (generated before prompt storage was implemented)'
     };
+  }
+
+  // Ad operations
+  async saveAd(ad: AdEntry): Promise<void> {
+    const adId = ad.id;
+    const multi = this.client.multi();
+
+    // Add to ads set
+    console.log('Redis Write: SADD', REDIS_KEYS.ADS, adId);
+    multi.sAdd(REDIS_KEYS.ADS, adId);
+
+    // Store ad data
+    console.log('Redis Write: SET', REDIS_KEYS.AD_NAME(adId), ad.name);
+    multi.set(REDIS_KEYS.AD_NAME(adId), ad.name);
+    console.log('Redis Write: SET', REDIS_KEYS.AD_BID_PRICE(adId), ad.bidPrice.toString());
+    multi.set(REDIS_KEYS.AD_BID_PRICE(adId), ad.bidPrice.toString());
+    console.log('Redis Write: SET', REDIS_KEYS.AD_PROMPT_CONTENT(adId), ad.promptContent);
+    multi.set(REDIS_KEYS.AD_PROMPT_CONTENT(adId), ad.promptContent);
+    console.log('Redis Write: SET', REDIS_KEYS.AD_USER_ID(adId), ad.userId);
+    multi.set(REDIS_KEYS.AD_USER_ID(adId), ad.userId);
+
+    await multi.exec();
+  }
+
+  async getAllAds(): Promise<AdEntry[]> {
+    const adIds = await this.client.sMembers(REDIS_KEYS.ADS);
+    const ads: AdEntry[] = [];
+
+    for (const adId of adIds) {
+      const ad = await this.getAd(adId);
+      if (ad) {
+        ads.push(ad);
+      }
+    }
+
+    return ads;
+  }
+
+  async getAd(adId: string): Promise<AdEntry | null> {
+    const [name, bidPriceStr, promptContent, userId] = await Promise.all([
+      this.client.get(REDIS_KEYS.AD_NAME(adId)),
+      this.client.get(REDIS_KEYS.AD_BID_PRICE(adId)),
+      this.client.get(REDIS_KEYS.AD_PROMPT_CONTENT(adId)),
+      this.client.get(REDIS_KEYS.AD_USER_ID(adId))
+    ]);
+
+    if (!name || !bidPriceStr || !promptContent || !userId) return null;
+
+    return {
+      id: adId,
+      userId,
+      name,
+      bidPrice: parseFloat(bidPriceStr),
+      promptContent
+    };
+  }
+
+  async updateAd(adId: string, updates: Partial<Omit<AdEntry, 'id'>>): Promise<void> {
+    const multi = this.client.multi();
+
+    if (updates.name !== undefined) {
+      console.log('Redis Write: SET', REDIS_KEYS.AD_NAME(adId), updates.name);
+      multi.set(REDIS_KEYS.AD_NAME(adId), updates.name);
+    }
+
+    if (updates.bidPrice !== undefined) {
+      console.log('Redis Write: SET', REDIS_KEYS.AD_BID_PRICE(adId), updates.bidPrice.toString());
+      multi.set(REDIS_KEYS.AD_BID_PRICE(adId), updates.bidPrice.toString());
+    }
+
+    if (updates.promptContent !== undefined) {
+      console.log('Redis Write: SET', REDIS_KEYS.AD_PROMPT_CONTENT(adId), updates.promptContent);
+      multi.set(REDIS_KEYS.AD_PROMPT_CONTENT(adId), updates.promptContent);
+    }
+
+    if (updates.userId !== undefined) {
+      console.log('Redis Write: SET', REDIS_KEYS.AD_USER_ID(adId), updates.userId);
+      multi.set(REDIS_KEYS.AD_USER_ID(adId), updates.userId);
+    }
+
+    await multi.exec();
+  }
+
+  async deleteAd(adId: string): Promise<void> {
+    const multi = this.client.multi();
+
+    // Remove from ads set
+    console.log('Redis Write: SREM', REDIS_KEYS.ADS, adId);
+    multi.sRem(REDIS_KEYS.ADS, adId);
+
+    // Delete ad data
+    console.log('Redis Write: DEL', REDIS_KEYS.AD_NAME(adId));
+    multi.del(REDIS_KEYS.AD_NAME(adId));
+    console.log('Redis Write: DEL', REDIS_KEYS.AD_BID_PRICE(adId));
+    multi.del(REDIS_KEYS.AD_BID_PRICE(adId));
+    console.log('Redis Write: DEL', REDIS_KEYS.AD_PROMPT_CONTENT(adId));
+    multi.del(REDIS_KEYS.AD_PROMPT_CONTENT(adId));
+    console.log('Redis Write: DEL', REDIS_KEYS.AD_USER_ID(adId));
+    multi.del(REDIS_KEYS.AD_USER_ID(adId));
+
+    await multi.exec();
   }
 
   // Utility methods

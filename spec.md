@@ -10,3 +10,5 @@ On successful login, set a localstorage entry indicating that the user is admin.
 Add a logout button if the user is logged in.
 
 Create a page at /ads that displays a placeholder list of "ad entries" which each have an editable name, editable bid price, and "prompt content" textarea. Add it to the nav bar.
+
+Hook up the /ads page to working backend routes to CRUD the ads. The ads entries in the data storage should contain a field "userId" which will contain a placeholder value of 1 for now.
