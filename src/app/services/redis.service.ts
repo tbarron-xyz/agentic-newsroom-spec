@@ -32,7 +32,7 @@ export class RedisService {
   }
 
   async disconnect(): Promise<void> {
-    await this.client.disconnect();
+    // await this.client..disconnect();
     console.log('Disconnected from Redis');
   }
 
