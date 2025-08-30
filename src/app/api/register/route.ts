@@ -19,13 +19,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password, role } = validationResult.data;
+    const { email, password } = validationResult.data;
 
     // Connect to Redis
     await redisService.connect();
 
     // Register user
-    const user = await authService.registerUser(email, password, role);
+    const user = await authService.registerUser(email, password);
 
     // Generate tokens for immediate login
     const tokens = authService.generateTokens(user);

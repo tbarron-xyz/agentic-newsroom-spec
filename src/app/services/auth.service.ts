@@ -93,7 +93,7 @@ export class AuthService {
     return user;
   }
 
-  async registerUser(email: string, password: string, role: User['role'] = 'reporter'): Promise<User> {
+  async registerUser(email: string, password: string): Promise<User> {
     // Check if user already exists
     const existingUser = await this.redisService.getUserByEmail(email);
     if (existingUser) {
@@ -107,7 +107,7 @@ export class AuthService {
     const user = await this.redisService.createUser({
       email,
       passwordHash,
-      role
+      role: 'user'
     });
 
     return user;

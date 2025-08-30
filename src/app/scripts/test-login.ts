@@ -17,8 +17,7 @@ async function testLoginFlow() {
     console.log('\n👤 Creating admin user...');
     const adminUser = await authService.registerUser(
       'admin@example.com',
-      'admin123',
-      'admin'
+      'admin123'
     );
     console.log('✅ Admin user created:', {
       id: adminUser.id,

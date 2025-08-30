@@ -10,14 +10,14 @@ async function testAuthSystem() {
   try {
     // Connect to Redis
     await redisService.connect();
-    console.log('✅ Connected to Redis');
+    await redisService.clearAllData();
+    console.log('✅ Connected to Redis and cleared data');
 
     // Test user registration
     console.log('\n📝 Testing user registration...');
     const testUser = await authService.registerUser(
       'test@example.com',
-      'testpassword123',
-      'reporter'
+      'testpassword123'
     );
     console.log('✅ User registered successfully:', {
       id: testUser.id,
@@ -102,8 +102,7 @@ async function testAuthSystem() {
     try {
       await authService.registerUser(
         'test@example.com',
-        'anotherpassword',
-        'admin'
+        'anotherpassword'
       );
       console.log('❌ Duplicate registration was allowed');
     } catch (error) {

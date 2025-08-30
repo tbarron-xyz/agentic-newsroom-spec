@@ -62,7 +62,7 @@ export interface User {
   id: string;
   email: string;
   passwordHash: string;
-  role: 'admin' | 'editor' | 'reporter';
+  role: 'admin' | 'editor' | 'reporter' | 'user';
   createdAt: number;
   lastLoginAt?: number;
 }
