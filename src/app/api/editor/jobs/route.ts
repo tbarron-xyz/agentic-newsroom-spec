@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RedisService } from '../../../services/redis.service';
+import { AuthService } from '../../../services/auth.service';
 import { AIService } from '../../../services/ai.service';
 import { ReporterService } from '../../../services/reporter.service';
 import { EditorService } from '../../../services/editor.service';
 
 let redisService: RedisService | null = null;
+let authService: AuthService | null = null;
 let aiService: AIService | null = null;
 let reporterService: ReporterService | null = null;
 let editorService: EditorService | null = null;
@@ -13,6 +15,9 @@ async function initializeServices(): Promise<void> {
   if (!redisService) {
     redisService = new RedisService();
     await redisService.connect();
+  }
+  if (!authService) {
+    authService = new AuthService(redisService);
   }
   if (!aiService) {
     aiService = new AIService();
@@ -28,16 +33,28 @@ async function initializeServices(): Promise<void> {
 // POST /api/editor/jobs/trigger - Trigger a specific job
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { jobType, adminPassword } = body;
-
-    // Check if admin password is provided and valid
-    if (!adminPassword || adminPassword !== process.env.NEWSROOM_ADMIN_PASS) {
+    // Check authorization header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
-        { error: 'Invalid admin password' },
+        { error: 'Authorization token required' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    await initializeServices();
+    const user = await authService!.getUserFromToken(token);
+
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Admin access required' },
         { status: 403 }
       );
     }
+
+    const body = await request.json();
+    const { jobType } = body;
 
     if (!jobType || typeof jobType !== 'string') {
       return NextResponse.json(
@@ -45,8 +62,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    await initializeServices();
 
     let result;
     switch (jobType) {

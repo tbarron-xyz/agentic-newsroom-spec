@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiService } from '../services/api.service';
 
 interface EditorData {
   bio: string;
@@ -35,13 +34,36 @@ export default function EditorPage() {
 
   // Check admin status and fetch data on component mount
   useEffect(() => {
-    const storedPassword = sessionStorage.getItem('adminPassword');
-    const adminStatus = !!storedPassword;
-    setIsAdmin(adminStatus);
-
+    checkAdminStatus();
     fetchEditorData();
     fetchJobStatus();
   }, []);
+
+  const checkAdminStatus = async () => {
+    try {
+      const accessToken = localStorage.getItem('accessToken');
+      if (!accessToken) {
+        setIsAdmin(false);
+        return;
+      }
+
+      const response = await fetch('/api/auth/verify', {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setIsAdmin(data.user.role === 'admin');
+      } else {
+        setIsAdmin(false);
+      }
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+    }
+  };
 
   const fetchEditorData = async () => {
     try {
@@ -65,16 +87,16 @@ export default function EditorPage() {
     setMessage('');
 
     try {
-      const storedPassword = sessionStorage.getItem('adminPassword');
+      const accessToken = localStorage.getItem('accessToken');
       const requestBody = {
-        ...editorData,
-        adminPassword: storedPassword
+        ...editorData
       };
 
       const response = await fetch('/api/editor', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify(requestBody),
       });
@@ -99,16 +121,16 @@ export default function EditorPage() {
     setMessage('');
 
     try {
-      const storedPassword = sessionStorage.getItem('adminPassword');
+      const accessToken = localStorage.getItem('accessToken');
       const requestBody = {
-        jobType,
-        adminPassword: storedPassword
+        jobType
       };
 
       const response = await fetch('/api/editor/jobs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify(requestBody),
       });
@@ -142,7 +164,8 @@ export default function EditorPage() {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('adminPassword');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('refreshToken');
     router.push('/login');
   };
 

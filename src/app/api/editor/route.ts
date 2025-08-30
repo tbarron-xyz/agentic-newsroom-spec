@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RedisService } from '../../services/redis.service';
+import { AuthService } from '../../services/auth.service';
 
 let redisService: RedisService | null = null;
+let authService: AuthService | null = null;
 
 async function getRedisService(): Promise<RedisService> {
   if (!redisService) {
@@ -9,6 +11,14 @@ async function getRedisService(): Promise<RedisService> {
     await redisService.connect();
   }
   return redisService;
+}
+
+async function getAuthService(): Promise<AuthService> {
+  if (!authService) {
+    const redis = await getRedisService();
+    authService = new AuthService(redis);
+  }
+  return authService;
 }
 
 // GET /api/editor - Get current editor data
@@ -33,16 +43,28 @@ export async function GET() {
 // PUT /api/editor - Update editor data
 export async function PUT(request: NextRequest) {
   try {
-    const body = await request.json();
-    const { bio, prompt, adminPassword } = body;
-
-    // Check if admin password is provided and valid
-    if (!adminPassword || adminPassword !== process.env.NEWSROOM_ADMIN_PASS) {
+    // Check authorization header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return NextResponse.json(
-        { error: 'Invalid admin password' },
+        { error: 'Authorization token required' },
+        { status: 401 }
+      );
+    }
+
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const authService = await getAuthService();
+    const user = await authService.getUserFromToken(token);
+
+    if (!user || user.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Admin access required' },
         { status: 403 }
       );
     }
+
+    const body = await request.json();
+    const { bio, prompt } = body;
 
     if (typeof bio !== 'string' || typeof prompt !== 'string') {
       return NextResponse.json(

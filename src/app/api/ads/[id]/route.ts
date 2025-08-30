@@ -3,10 +3,10 @@ import { RedisService } from '../../../services/redis.service';
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const adId = params.id;
+    const { id: adId } = await params;
     const redis = new RedisService();
     await redis.connect();
 
@@ -33,10 +33,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const adId = params.id;
+    const { id: adId } = await params;
     const body = await request.json();
     const { name, bidPrice, promptContent, userId } = body;
 
@@ -79,10 +79,10 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const adId = params.id;
+    const { id: adId } = await params;
     const redis = new RedisService();
     await redis.connect();
 
