@@ -31,7 +31,8 @@ async function testDailyEditionStorage(): Promise<void> {
       modelFeedbackAboutThePrompt: {
         positive: 'Test feedback - positive aspects noted.',
         negative: 'Test feedback - some areas for improvement.'
-      }
+      },
+      prompt: 'Test prompt for daily edition generation'
     };
 
     console.log('📝 Storing test daily edition...');

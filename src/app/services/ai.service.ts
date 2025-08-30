@@ -265,7 +265,7 @@ Make all content professional, factual, and engaging. Ensure proper journalistic
     }
   }
 
-  async selectNotableEditions(editions: string[], editorPrompt: string): Promise<{
+  async selectNotableEditions(editions: Array<{id: string; articles: Array<{headline: string; body: string}>}>, editorPrompt: string): Promise<{
     content: {
       frontPageHeadline: string;
       frontPageArticle: string;
@@ -289,12 +289,15 @@ Make all content professional, factual, and engaging. Ensure proper journalistic
     }
 
     try {
-      const editionsText = editions.map((edition, index) =>
-        `Edition ${index + 1}: ${edition}`
-      ).join('\n');
+      const editionsText = editions.map((edition, index) => {
+        const articlesText = edition.articles.map((article, articleIndex) =>
+          `Article ${articleIndex + 1}:\nHeadline: ${article.headline}\nFirst Paragraph: ${article.body.split('\n')[0] || article.body.substring(0, 200)}`
+        ).join('\n\n');
+        return `Edition ${index + 1} (ID: ${edition.id}):\n${articlesText}`;
+      }).join('\n\n');
 
-      const systemPrompt = `You are a newspaper editor creating a comprehensive daily edition. Based on the available newspaper editions, create a structured daily newspaper with front page content, multiple topics, and editorial feedback. Create engaging, professional content that synthesizes the available editions into a cohesive daily newspaper.`;
-      const userPrompt = `Using the editorial guidelines: "${editorPrompt}", create a comprehensive daily newspaper edition based on these available newspaper editions:
+      const systemPrompt = `You are a newspaper editor creating a comprehensive daily edition. Based on the available newspaper editions and their articles, create a structured daily newspaper with front page content, multiple topics, and editorial feedback. Create engaging, professional content that synthesizes the available editions into a cohesive daily newspaper.`;
+      const userPrompt = `Using the editorial guidelines: "${editorPrompt}", create a comprehensive daily newspaper edition based on these available newspaper editions and their articles:
 
 ${editionsText}
 

@@ -90,10 +90,29 @@ export class EditorService {
       throw new Error('No editor configuration found');
     }
 
+    // Prepare detailed edition information with articles
+    const detailedEditions = await Promise.all(
+      last24HoursEditions.map(async (edition) => {
+        const articles: Array<{headline: string; body: string}> = [];
+        for (const articleId of edition.stories) {
+          const article = await this.redisService.getArticle(articleId);
+          if (article) {
+            articles.push({
+              headline: article.headline,
+              body: article.body
+            });
+          }
+        }
+        return {
+          id: edition.id,
+          articles
+        };
+      })
+    );
+
     // Use AI to generate comprehensive daily edition content
-    const editionIds = last24HoursEditions.map(edition => edition.id);
     const { content: dailyEditionContent, fullPrompt } = await this.aiService.selectNotableEditions(
-      editionIds,
+      detailedEditions,
       editor.prompt
     );
 
@@ -103,7 +122,7 @@ export class EditorService {
     const dailyEditionId = await this.redisService.generateId('daily_edition');
     const dailyEdition: DailyEdition = {
       id: dailyEditionId,
-      editions: editionIds, // Keep all edition IDs for reference
+      editions: last24HoursEditions.map(edition => edition.id), // Keep all edition IDs for reference
       generationTime: Date.now(),
       // Add the new detailed content
       frontPageHeadline: dailyEditionContent.frontPageHeadline,

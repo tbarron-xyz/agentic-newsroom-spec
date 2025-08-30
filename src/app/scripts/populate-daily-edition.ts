@@ -85,13 +85,14 @@ async function populateDailyEdition(): Promise<void> {
       return;
     }
 
-    const selectedArticles = await aiService.selectNewsworthyStories(allArticles, existingEditor.prompt);
+    const { selectedArticles, fullPrompt } = await aiService.selectNewsworthyStories(allArticles, existingEditor.prompt);
     const editionId = await redisService.generateId('edition');
 
     const newspaperEdition: NewspaperEdition = {
       id: editionId,
       stories: selectedArticles.map(article => article.id),
-      generationTime: Date.now()
+      generationTime: Date.now(),
+      prompt: fullPrompt
     };
 
     await redisService.saveNewspaperEdition(newspaperEdition);
@@ -100,8 +101,17 @@ async function populateDailyEdition(): Promise<void> {
     // Step 4: Generate daily edition from the newspaper edition
     console.log('\n🌟 Generating daily edition...\n');
 
-    const dailyEditionContent = await aiService.selectNotableEditions(
-      [`Edition: ${newspaperEdition.id} with ${selectedArticles.length} stories`],
+    // Prepare detailed edition information with articles
+    const detailedEditions = [{
+      id: newspaperEdition.id,
+      articles: selectedArticles.map(article => ({
+        headline: article.headline,
+        body: article.body
+      }))
+    }];
+
+    const { content: dailyEditionContent, fullPrompt: dailyEditionPrompt } = await aiService.selectNotableEditions(
+      detailedEditions,
       existingEditor.prompt
     );
 
@@ -115,7 +125,8 @@ async function populateDailyEdition(): Promise<void> {
       frontPageArticle: dailyEditionContent.frontPageArticle,
       topics: dailyEditionContent.topics,
       modelFeedbackAboutThePrompt: dailyEditionContent.modelFeedbackAboutThePrompt,
-      newspaperName: dailyEditionContent.newspaperName
+      newspaperName: dailyEditionContent.newspaperName,
+      prompt: dailyEditionPrompt
     };
 
     await redisService.saveDailyEdition(dailyEdition);
