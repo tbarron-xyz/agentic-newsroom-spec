@@ -104,7 +104,7 @@ export default function EditionsPage() {
             <p className="text-slate-600">Newspaper editions are generated automatically. Check back later!</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 gap-6">
             {editions.map((edition: NewspaperEdition) => (
               <div key={edition.id} className="bg-white rounded-2xl shadow-xl p-6 hover:shadow-2xl transition-shadow">
                 <div className="mb-4">
