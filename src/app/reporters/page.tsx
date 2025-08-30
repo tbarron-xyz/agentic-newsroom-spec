@@ -293,7 +293,7 @@ export default function ReportersPage() {
                   value={newReporter.prompt}
                   onChange={(e) => setNewReporter({ ...newReporter, prompt: e.target.value })}
                   placeholder="Enter the reporter's writing guidelines and prompt..."
-                  className="w-full h-32 p-4 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-slate-700 placeholder-slate-400"
+                  className="w-full h-32 p-4 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-slate-800 placeholder-slate-400"
                   rows={4}
                 />
               <p className="text-sm text-slate-500 mt-2">
@@ -471,7 +471,7 @@ export default function ReportersPage() {
                       <textarea
                         value={editingReporter.prompt}
                         onChange={(e) => setEditingReporter({ ...editingReporter, prompt: e.target.value })}
-                        className="w-full h-32 p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        className="w-full h-32 p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-slate-800 placeholder-slate-400"
                         rows={4}
                       />
                     </div>

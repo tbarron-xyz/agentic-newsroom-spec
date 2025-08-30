@@ -195,7 +195,7 @@ export default function EditorPage() {
                 value={editorData.bio}
                 onChange={(e) => setEditorData({ ...editorData, bio: e.target.value })}
                 placeholder="Enter the editor's biography..."
-                className={`w-full h-32 p-4 border border-slate-200 rounded-lg resize-none text-slate-700 placeholder-slate-400 ${
+                className={`w-full h-32 p-4 border border-slate-200 rounded-lg resize-none text-slate-800 placeholder-slate-400 ${
                   isAdmin
                     ? 'focus:ring-2 focus:ring-blue-500 focus:border-transparent'
                     : 'bg-slate-100 cursor-not-allowed opacity-60'
@@ -224,7 +224,7 @@ export default function EditorPage() {
                 value={editorData.prompt}
                 onChange={(e) => setEditorData({ ...editorData, prompt: e.target.value })}
                 placeholder="Enter the editorial guidelines and prompt..."
-                className={`w-full h-48 p-4 border border-slate-200 rounded-lg resize-none text-slate-700 placeholder-slate-400 ${
+                className={`w-full h-48 p-4 border border-slate-200 rounded-lg resize-none text-slate-800 placeholder-slate-400 ${
                   isAdmin
                     ? 'focus:ring-2 focus:ring-green-500 focus:border-transparent'
                     : 'bg-slate-100 cursor-not-allowed opacity-60'

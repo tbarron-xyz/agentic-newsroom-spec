@@ -137,7 +137,7 @@ const AdsPage: React.FC = () => {
               type="text"
               value={newAd.name}
               onChange={(e) => setNewAd(prev => ({ ...prev, name: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
               placeholder="Enter ad name"
             />
           </div>
@@ -152,7 +152,7 @@ const AdsPage: React.FC = () => {
               min="0"
               value={newAd.bidPrice}
               onChange={(e) => setNewAd(prev => ({ ...prev, bidPrice: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
               placeholder="0.00"
             />
           </div>
@@ -175,7 +175,7 @@ const AdsPage: React.FC = () => {
             value={newAd.promptContent}
             onChange={(e) => setNewAd(prev => ({ ...prev, promptContent: e.target.value }))}
             rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical text-slate-800 placeholder-slate-400"
             placeholder="Enter prompt content here..."
           />
         </div>
@@ -209,7 +209,7 @@ const AdsPage: React.FC = () => {
                     type="text"
                     value={ad.name}
                     onChange={(e) => updateAd(ad.id, 'name', e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
                   />
                 </div>
 
@@ -223,7 +223,7 @@ const AdsPage: React.FC = () => {
                     min="0"
                     value={ad.bidPrice}
                     onChange={(e) => updateAd(ad.id, 'bidPrice', parseFloat(e.target.value) || 0)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-800 placeholder-slate-400"
                   />
                 </div>
 
@@ -245,7 +245,7 @@ const AdsPage: React.FC = () => {
                   value={ad.promptContent}
                   onChange={(e) => updateAd(ad.id, 'promptContent', e.target.value)}
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical text-slate-800 placeholder-slate-400"
                   placeholder="Enter prompt content here..."
                 />
               </div>
