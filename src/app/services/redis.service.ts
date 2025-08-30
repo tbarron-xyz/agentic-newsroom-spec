@@ -36,6 +36,11 @@ export class RedisService {
     console.log('Disconnected from Redis');
   }
 
+  // Getter for client access (used by AIService)
+  getClient() {
+    return this.client;
+  }
+
   // Editor operations
   async saveEditor(editor: Editor): Promise<void> {
     const multi = this.client.multi();

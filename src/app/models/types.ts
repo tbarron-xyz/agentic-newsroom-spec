@@ -69,6 +69,9 @@ export interface User {
 
 // Redis key patterns
 export const REDIS_KEYS = {
+  // AI Service
+  MODEL_NAME: 'ai:model_name',
+
   // Editor
   EDITOR_BIO: 'editor:bio',
   EDITOR_PROMPT: 'editor:prompt',

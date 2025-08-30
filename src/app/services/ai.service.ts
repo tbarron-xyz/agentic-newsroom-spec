@@ -1,4 +1,4 @@
-import { Reporter, Article } from '../models/types';
+import { Reporter, Article, REDIS_KEYS } from '../models/types';
 import OpenAI from 'openai';
 import { McpBskyClient } from "mcp-bsky-jetstream/client/dist/McpBskyClient.js";
 import { zodResponseFormat } from 'openai/helpers/zod';
@@ -8,7 +8,7 @@ import { RedisService } from './redis.service';
 
 export class AIService {
   private openai: OpenAI;
-  private readonly modelName: string = 'gpt-5-nano';
+  private modelName: string = 'gpt-5-nano';
   private mcpClient: McpBskyClient;
 
   constructor() {
@@ -25,6 +25,23 @@ export class AIService {
     this.mcpClient = new McpBskyClient({
       serverUrl: process.env.MCP_BSKY_SERVER_URL || 'http://localhost:3001'
     });
+
+    // Initialize modelName from Redis with default
+    this.initializeModelName();
+  }
+
+  private async initializeModelName(): Promise<void> {
+    try {
+      const redis = new RedisService();
+      await redis.connect();
+      const storedModelName = await redis.getClient().get(REDIS_KEYS.MODEL_NAME);
+      await redis.disconnect();
+
+      this.modelName = storedModelName || 'gpt-5-nano';
+    } catch (error) {
+      console.warn('Failed to fetch modelName from Redis, using default:', error);
+      this.modelName = 'gpt-5-nano';
+    }
   }
 
 
