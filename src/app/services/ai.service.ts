@@ -68,7 +68,7 @@ export class AIService {
 
       // Format social media messages for the prompt
       const socialMediaContext = socialMediaMessages.length > 0
-        ? `\n\nRecent social media discussions related to ${beat}:\n${socialMediaMessages.slice(0, 10).map((msg, index: number) =>
+        ? `\n\nRecent social media discussions related to ${beat}:\n${socialMediaMessages.slice(-200).map((msg, index: number) =>
             `${index + 1}. "${msg.text}"`
           ).join('\n')}`
         : '';
