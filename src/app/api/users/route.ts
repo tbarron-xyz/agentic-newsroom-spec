@@ -7,6 +7,7 @@ const authService = new AuthService(redisService);
 
 // GET /api/users - Get all users (admin only)
 export async function GET(request: NextRequest) {
+  await redisService.connect();
   try {
     // Get authorization header
     const authHeader = request.headers.get('authorization');
@@ -20,7 +21,6 @@ export async function GET(request: NextRequest) {
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
 
     // Connect to Redis
-    await redisService.connect();
 
     // Verify token and get user
     const user = await authService.getUserFromToken(token);
