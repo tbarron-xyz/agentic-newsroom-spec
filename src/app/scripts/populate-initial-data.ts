@@ -30,6 +30,7 @@ async function populateInitialData(): Promise<void> {
 
     // Create Editor
     const editor: Editor = {
+      modelName: 'gpt-5-nano',
       bio: 'Veteran newspaper editor with over 25 years of experience in journalism. Expert at identifying compelling stories, maintaining editorial standards, and guiding reporters to produce high-quality content that informs and engages readers.',
       prompt: 'You are the chief editor of a major metropolitan newspaper. Your role is to curate the most important and impactful stories from the day\'s reporting. Consider factors like timeliness, significance, reader interest, and journalistic merit when selecting stories for publication. Ensure the final edition represents a balanced mix of news categories while prioritizing breaking developments and stories with broad societal impact.'
     };
