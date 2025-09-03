@@ -20,8 +20,8 @@ async function initializeServices(): Promise<void> {
   }
 }
 
-// POST /api/cron/15mins - Trigger reporter article generation job
-export async function POST(request: NextRequest) {
+// GET /api/cron/15mins - Trigger reporter article generation job
+export async function GET(request: NextRequest) {
   try {
     console.log('\n=== CRON JOB: REPORTER ARTICLE GENERATION ===');
     console.log(`[${new Date().toISOString()}] Starting cron-triggered article generation...`);
@@ -50,13 +50,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
-
-// GET /api/cron/15mins - Health check for cron monitoring
-export async function GET() {
-  return NextResponse.json({
-    status: 'ok',
-    message: 'Reporter article generation cron endpoint is available',
-    nextRun: 'Every 15 minutes via cron scheduler'
-  });
 }
