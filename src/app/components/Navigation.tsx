@@ -13,6 +13,7 @@ interface User {
 export default function Navigation() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
@@ -56,6 +57,14 @@ export default function Navigation() {
     window.location.href = '/';
   };
 
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
+  };
+
+  const closeMobileMenu = () => {
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <nav className="bg-white border-b border-slate-200 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -71,7 +80,8 @@ export default function Navigation() {
             </Link>
           </div>
 
-          <div className="flex items-center space-x-4">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-4">
             <Link
               href="/"
               className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -135,6 +145,122 @@ export default function Navigation() {
               <Link
                 href="/login"
                 className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Admin Login
+              </Link>
+            )}
+          </div>
+
+          {/* Mobile menu button */}
+          <div className="md:hidden flex items-center">
+            <button
+              onClick={toggleMobileMenu}
+              className="text-slate-600 hover:text-slate-900 p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500"
+              aria-expanded="false"
+            >
+              <span className="sr-only">Open main menu</span>
+              <svg
+                className={`${isMobileMenuOpen ? 'hidden' : 'block'} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+              <svg
+                className={`${isMobileMenuOpen ? 'block' : 'hidden'} h-6 w-6`}
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden`}>
+        <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-slate-200">
+          <Link
+            href="/"
+            onClick={closeMobileMenu}
+            className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+          >
+            Daily Edition
+          </Link>
+          <Link
+            href="/editions"
+            onClick={closeMobileMenu}
+            className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+          >
+            All Editions
+          </Link>
+          <Link
+            href="/reporters"
+            onClick={closeMobileMenu}
+            className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+          >
+            Reporters
+          </Link>
+          <Link
+            href="/ads"
+            onClick={closeMobileMenu}
+            className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+          >
+            Ads
+          </Link>
+
+          {/* Admin-only links */}
+          {user?.role === 'admin' && (
+            <>
+              <Link
+                href="/users"
+                onClick={closeMobileMenu}
+                className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+              >
+                Users
+              </Link>
+              <Link
+                href="/editor"
+                onClick={closeMobileMenu}
+                className="bg-blue-600 text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-700 transition-colors"
+              >
+                Editor Settings
+              </Link>
+            </>
+          )}
+
+          {/* Mobile auth section */}
+          <div className="border-t border-slate-200 pt-4 mt-4">
+            {user ? (
+              <div className="space-y-2">
+                <div className="px-3 py-2 text-sm text-slate-600">
+                  Logged in as: <span className="font-medium">{user.email}</span>
+                  <span className="ml-2 px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-700">
+                    {user.role}
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    closeMobileMenu();
+                  }}
+                  className="text-slate-600 hover:text-slate-900 block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors"
+                >
+                  Logout
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                onClick={closeMobileMenu}
+                className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
               >
                 Admin Login
               </Link>
