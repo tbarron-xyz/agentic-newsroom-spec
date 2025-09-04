@@ -79,7 +79,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Admin Login</h1>
+            <h1 className="text-3xl font-bold text-slate-800 mb-2">Login</h1>
             <p className="text-slate-600">Enter your credentials to access the editor</p>
           </div>
 
