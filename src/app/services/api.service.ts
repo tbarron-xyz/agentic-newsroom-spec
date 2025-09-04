@@ -49,9 +49,14 @@ export class ApiService {
         localStorage.setItem('accessToken', data.tokens.accessToken);
         localStorage.setItem('refreshToken', data.tokens.refreshToken);
         return true;
+      } else {
+        // JWT verification unsuccessful - remove stored tokens
+        this.logout();
       }
     } catch (error) {
       console.error('Token refresh failed:', error);
+      // JWT verification unsuccessful - remove stored tokens
+      this.logout();
     }
 
     return false;
