@@ -88,12 +88,14 @@ export default function Navigation() {
             >
               Daily Edition
             </Link>
-            <Link
-              href="/editions"
-              className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              All Editions
-            </Link>
+            {user && (
+              <Link
+                href="/editions"
+                className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                All Editions
+              </Link>
+            )}
             <Link
               href="/reporters"
               className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -202,13 +204,15 @@ export default function Navigation() {
           >
             Daily Edition
           </Link>
-          <Link
-            href="/editions"
-            onClick={closeMobileMenu}
-            className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
-          >
-            All Editions
-          </Link>
+          {user && (
+            <Link
+              href="/editions"
+              onClick={closeMobileMenu}
+              className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+            >
+              All Editions
+            </Link>
+          )}
           <Link
             href="/reporters"
             onClick={closeMobileMenu}
