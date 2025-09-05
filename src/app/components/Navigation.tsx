@@ -106,12 +106,14 @@ export default function Navigation() {
             >
               Ads
             </Link>
-            <Link
-              href="/account"
-              className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              Account
-            </Link>
+            {user && (
+              <Link
+                href="/account"
+                className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Account
+              </Link>
+            )}
 
             {/* Admin-only links */}
             {user?.role === 'admin' && (
@@ -221,13 +223,15 @@ export default function Navigation() {
           >
             Ads
           </Link>
-          <Link
-            href="/account"
-            onClick={closeMobileMenu}
-            className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
-          >
-            Account
-          </Link>
+          {user && (
+            <Link
+              href="/account"
+              onClick={closeMobileMenu}
+              className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+            >
+              Account
+            </Link>
+          )}
 
           {/* Admin-only links */}
           {user?.role === 'admin' && (
