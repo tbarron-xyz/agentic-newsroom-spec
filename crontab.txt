@@ -1,0 +1,2 @@
+0 * * * * wget http://localhost:8080/api/cron/articles
+0 0 * * * wget http://localhost:8080/api/cron/edition
