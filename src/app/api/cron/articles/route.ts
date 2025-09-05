@@ -20,7 +20,7 @@ async function initializeServices(): Promise<void> {
   }
 }
 
-// GET /api/cron/15mins - Trigger reporter article generation job
+// GET /api/cron/articles - Trigger reporter article generation job
 export async function GET(request: NextRequest) {
   try {
     console.log('\n=== CRON JOB: REPORTER ARTICLE GENERATION ===');
