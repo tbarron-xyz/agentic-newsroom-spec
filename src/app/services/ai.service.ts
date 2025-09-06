@@ -301,7 +301,7 @@ Make all content professional, factual, and engaging. Ensure proper journalistic
         throw new Error('No response content from AI service');
       }
 
-      return JSON.parse(content);
+      return schema.parse(JSON.parse(content));
     } catch (error) {
       console.error('Error generating structured reporter response:', error);
       throw error;
@@ -375,7 +375,7 @@ Make the content engaging, balanced, and professionally written. Focus on creati
         throw new Error('No response content from AI service');
       }
 
-      const parsedResponse = JSON.parse(content);
+      const parsedResponse = dailyEditionSchema.parse(JSON.parse(content));
 
       // Validate the response structure
       if (!parsedResponse.frontPageHeadline ||
