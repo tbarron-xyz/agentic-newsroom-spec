@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface User {
@@ -24,11 +24,15 @@ export default function AccountPage() {
   const [company, setCompany] = useState('');
   const [bio, setBio] = useState('');
 
+  // Abilities state
+  const [hasReader, setHasReader] = useState(false);
+  const [hasEditor, setHasEditor] = useState(false);
+
   useEffect(() => {
     checkAuthAndLoadUser();
-  }, []);
+  }, [checkAuthAndLoadUser]);
 
-  const checkAuthAndLoadUser = async () => {
+  const checkAuthAndLoadUser = useCallback(async () => {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
@@ -46,7 +50,9 @@ export default function AccountPage() {
         const data = await response.json();
         setUser(data.user);
         // Load existing account info (placeholder - would come from API)
-        loadAccountInfo(data.user.id);
+        loadAccountInfo();
+        // Load abilities
+        loadAbilities();
       } else {
         router.push('/login');
       }
@@ -56,9 +62,9 @@ export default function AccountPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
 
-  const loadAccountInfo = async (userId: string) => {
+  const loadAccountInfo = async () => {
     // Placeholder - in a real app, this would fetch from an API
     // For now, we'll just set some placeholder data
     setFirstName('John');
@@ -66,6 +72,38 @@ export default function AccountPage() {
     setPhone('(555) 123-4567');
     setCompany('Example Corp');
     setBio('News enthusiast and content creator.');
+  };
+
+  const loadAbilities = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) return;
+
+      const [readerResponse, editorResponse] = await Promise.all([
+        fetch('/api/abilities/reader', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }),
+        fetch('/api/abilities/editor', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+      ]);
+
+      if (readerResponse.ok) {
+        const readerData = await readerResponse.json();
+        setHasReader(readerData.hasReader);
+      }
+
+      if (editorResponse.ok) {
+        const editorData = await editorResponse.json();
+        setHasEditor(editorData.hasEditor);
+      }
+    } catch (_error) {
+      console.error('Failed to load abilities');
+    }
   };
 
   const handleSave = async () => {
@@ -81,19 +119,7 @@ export default function AccountPage() {
     }
   };
 
-  const getAccountStatus = (role: string) => {
-    switch (role) {
-      case 'user':
-        return 'Free';
-      case 'reporter':
-        return 'Reporter';
-      case 'editor':
-      case 'admin':
-        return 'Reader';
-      default:
-        return 'Free';
-    }
-  };
+
 
   if (loading) {
     return (
@@ -121,16 +147,37 @@ export default function AccountPage() {
           </div>
 
           <div className="p-6 space-y-8">
-            {/* Account Status */}
+            {/* Account Permissions */}
             <div className="bg-slate-50 rounded-lg p-4">
-              <h2 className="text-lg font-semibold text-slate-800 mb-2">Account Status</h2>
-              <div className="flex items-center space-x-3">
-                <span className="px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                  {getAccountStatus(user.role)}
-                </span>
-                <span className="text-slate-600 text-sm">
-                  Member since {new Date(user.createdAt).toLocaleDateString()}
-                </span>
+              <h2 className="text-lg font-semibold text-slate-800 mb-4">Account Permissions</h2>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="reader-permission"
+                    checked={hasReader}
+                    disabled
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-not-allowed"
+                  />
+                  <label htmlFor="reader-permission" className="text-sm font-medium text-slate-700">
+                    Reader
+                  </label>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
+                    id="editor-permission"
+                    checked={hasEditor}
+                    disabled
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-not-allowed"
+                  />
+                  <label htmlFor="editor-permission" className="text-sm font-medium text-slate-700">
+                    Editor
+                  </label>
+                </div>
+              </div>
+              <div className="mt-4 text-sm text-slate-600">
+                Member since {new Date(user.createdAt).toLocaleDateString()}
               </div>
               {user.role !== 'editor' && user.role !== 'admin' && (
                 <div className="mt-4">
