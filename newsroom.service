@@ -1,0 +1,16 @@
+[Unit]
+Description=Newsroom
+After=network.target
+StartLimitIntervalSec=0
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+User=u
+ExecStart=/home/u/.nvm/nvm-exec npx next start --port=8080
+Environment=NODE_VERSION=24.5.0 NODE_ENV=production
+WorkingDirectory=/home/u/agentic-newsroom-spec
+EnvironmentFile=/home/u/agentic-newsroom-spec/.env.local
+
+[Install]
+WantedBy=multi-user.target
