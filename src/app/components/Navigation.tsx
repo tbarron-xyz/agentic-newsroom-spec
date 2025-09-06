@@ -137,20 +137,12 @@ export default function Navigation() {
 
             {/* Show login/logout based on auth status */}
             {user ? (
-              <div className="flex items-center space-x-4">
-                <span className="text-sm text-slate-600">
-                  Logged in as: <span className="font-medium">{user.email}</span>
-                  <span className="ml-2 px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-700">
-                    {user.role}
-                  </span>
-                </span>
-                <button
-                  onClick={handleLogout}
-                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
+              <button
+                onClick={handleLogout}
+                className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Logout
+              </button>
             ) : (
               <Link
                 href="/login"
@@ -260,23 +252,15 @@ export default function Navigation() {
           {/* Mobile auth section */}
           <div className="border-t border-slate-200 pt-4 mt-4">
             {user ? (
-              <div className="space-y-2">
-                <div className="px-3 py-2 text-sm text-slate-600">
-                  Logged in as: <span className="font-medium">{user.email}</span>
-                  <span className="ml-2 px-2 py-1 text-xs rounded-full bg-slate-100 text-slate-700">
-                    {user.role}
-                  </span>
-                </div>
-                <button
-                  onClick={() => {
-                    handleLogout();
-                    closeMobileMenu();
-                  }}
-                  className="text-slate-600 hover:text-slate-900 block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors"
-                >
-                  Logout
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  handleLogout();
+                  closeMobileMenu();
+                }}
+                className="text-slate-600 hover:text-slate-900 block w-full text-left px-3 py-2 rounded-md text-base font-medium transition-colors"
+              >
+                Logout
+              </button>
             ) : (
               <Link
                 href="/login"
