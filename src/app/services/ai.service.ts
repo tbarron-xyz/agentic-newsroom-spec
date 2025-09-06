@@ -63,7 +63,8 @@ export class AIService {
       factualAccuracy: string;
     };
     socialMediaSummary: string;
-    prompt: string; // Add prompt to the return type
+    prompt: string;
+    tweetIds: string[];
   }> {
     const generationTime = Date.now();
     const articleId = `article_${generationTime}_${Math.random().toString(36).substring(2, 8)}`;
@@ -152,7 +153,7 @@ When generating the article, consider any relevant trends, discussions, or break
         throw new Error('No response content from AI service');
       }
 
-      const parsedResponse = JSON.parse(content);
+      const parsedResponse = reporterArticleSchema.parse(JSON.parse(content));
 
       // Add generated fields
       parsedResponse.id = articleId;
@@ -197,7 +198,8 @@ Make the article engaging, factual, and professionally written. Ensure all quote
           factualAccuracy: 'Information based on preliminary reports'
         },
         socialMediaSummary: `Breaking: Major developments in ${beat} sector capturing widespread attention. Stay tuned for updates! #${beat.replace(/\s+/g, '')}News`,
-        prompt: fallbackPrompt
+        prompt: fallbackPrompt,
+        tweetIds: [] // No tweets used in fallback
       };
     }
   }
