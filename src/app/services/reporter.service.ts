@@ -60,8 +60,8 @@ export class ReporterService {
     // Generate articles based on beats
     const articles: Article[] = [];
 
-    // Generate 1-3 articles per reporter (simulating different stories from different beats)
-    const numArticles = Math.floor(Math.random() * 3) + 1;
+    // Generate 1 article per reporter
+    const numArticles = 1;
 
     for (let i = 0; i < numArticles; i++) {
       try {
@@ -300,8 +300,8 @@ export class ReporterService {
     const keyThemes = new Set<string>();
     let totalWordCount = 0;
 
-    // Generate 1-3 structured articles per reporter
-    const numArticles = Math.floor(Math.random() * 3) + 1;
+    // Generate 1 structured article per reporter
+    const numArticles = 1;
 
     for (let i = 0; i < numArticles; i++) {
       try {
