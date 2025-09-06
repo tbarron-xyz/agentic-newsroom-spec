@@ -28,10 +28,6 @@ export default function AccountPage() {
   const [hasReader, setHasReader] = useState(false);
   const [hasEditor, setHasEditor] = useState(false);
 
-  useEffect(() => {
-    checkAuthAndLoadUser();
-  }, [checkAuthAndLoadUser]);
-
   const checkAuthAndLoadUser = useCallback(async () => {
     try {
       const token = localStorage.getItem('accessToken');
@@ -63,6 +59,10 @@ export default function AccountPage() {
       setLoading(false);
     }
   }, [router]);
+
+  useEffect(() => {
+    checkAuthAndLoadUser();
+  }, [checkAuthAndLoadUser]);
 
   const loadAccountInfo = async () => {
     // Placeholder - in a real app, this would fetch from an API
