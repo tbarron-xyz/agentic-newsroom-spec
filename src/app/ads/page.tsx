@@ -107,7 +107,7 @@ const AdsPage: React.FC = () => {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-8">Ad Entries</h1>
+        <h1 className="text-3xl font-bold mb-8 text-gray-900">Ad Entries</h1>
         <div className="flex justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
@@ -118,7 +118,7 @@ const AdsPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
       <div className="container mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Ad Entries</h1>
+        <h1 className="text-3xl font-bold mb-8 text-gray-900">Ad Entries</h1>
 
       {error && (
         <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
@@ -128,7 +128,7 @@ const AdsPage: React.FC = () => {
 
       {/* Create New Ad Form */}
       <div className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm mb-8">
-        <h2 className="text-xl font-semibold mb-4">Create New Ad</h2>
+        <h2 className="text-xl font-semibold mb-4 text-gray-900">Create New Ad</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -192,7 +192,7 @@ const AdsPage: React.FC = () => {
           ads.map(ad => (
             <div key={ad.id} className="border border-gray-300 rounded-lg p-6 bg-white shadow-sm">
               <div className="flex justify-between items-start mb-4">
-                <h3 className="text-lg font-medium">Ad Entry</h3>
+                <h3 className="text-lg font-medium text-gray-900">Ad Entry</h3>
                 <button
                   onClick={() => deleteAd(ad.id)}
                   className="px-3 py-1 bg-red-600 text-white text-sm rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500"
