@@ -108,6 +108,12 @@ export default function Navigation() {
             >
               Ads
             </Link>
+            <Link
+              href="/pricing"
+              className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Pricing
+            </Link>
             {user && (
               <Link
                 href="/account"
@@ -218,6 +224,13 @@ export default function Navigation() {
             className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
           >
             Ads
+          </Link>
+          <Link
+            href="/pricing"
+            onClick={closeMobileMenu}
+            className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+          >
+            Pricing
           </Link>
           {user && (
             <Link
