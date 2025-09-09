@@ -182,7 +182,7 @@ export default function AccountPage() {
               {user.role !== 'editor' && user.role !== 'admin' && (
                 <div className="mt-4">
                   <a
-                    href={`${process.env.STRIPE_READER_BUY_URL}?prefilled_email=${user.email}`}
+                    href={`${process.env.NEXT_PUBLIC_STRIPE_READER_BUY_URL}?prefilled_email=${user.email}`}
                     className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
                   >
                     Upgrade To Reader
