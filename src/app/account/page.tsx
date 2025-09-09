@@ -26,6 +26,7 @@ export default function AccountPage() {
 
   // Abilities state
   const [hasReader, setHasReader] = useState(false);
+  const [hasReporter, setHasReporter] = useState(false);
   const [hasEditor, setHasEditor] = useState(false);
 
   const checkAuthAndLoadUser = useCallback(async () => {
@@ -79,8 +80,13 @@ export default function AccountPage() {
       const token = localStorage.getItem('accessToken');
       if (!token) return;
 
-      const [readerResponse, editorResponse] = await Promise.all([
+      const [readerResponse, reporterResponse, editorResponse] = await Promise.all([
         fetch('/api/abilities/reader', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }),
+        fetch('/api/abilities/reporter', {
           headers: {
             'Authorization': `Bearer ${token}`
           }
@@ -95,6 +101,11 @@ export default function AccountPage() {
       if (readerResponse.ok) {
         const readerData = await readerResponse.json();
         setHasReader(readerData.hasReader);
+      }
+
+      if (reporterResponse.ok) {
+        const reporterData = await reporterResponse.json();
+        setHasReporter(reporterData.hasReporter);
       }
 
       if (editorResponse.ok) {
@@ -166,6 +177,18 @@ export default function AccountPage() {
                 <div className="flex items-center space-x-3">
                   <input
                     type="checkbox"
+                    id="reporter-permission"
+                    checked={hasReporter}
+                    disabled
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-not-allowed"
+                  />
+                  <label htmlFor="reporter-permission" className="text-sm font-medium text-slate-700">
+                    Reporter
+                  </label>
+                </div>
+                <div className="flex items-center space-x-3">
+                  <input
+                    type="checkbox"
                     id="editor-permission"
                     checked={hasEditor}
                     disabled
@@ -179,16 +202,68 @@ export default function AccountPage() {
               <div className="mt-4 text-sm text-slate-600">
                 Member since {new Date(user.createdAt).toLocaleDateString()}
               </div>
-              {user.role !== 'editor' && user.role !== 'admin' && (
-                <div className="mt-4">
-                  <a
-                    href={`${process.env.NEXT_PUBLIC_STRIPE_READER_BUY_URL}?prefilled_email=${user.email}`}
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                  >
-                    Upgrade To Reader
-                  </a>
-                </div>
-              )}
+              {/* Upgrade Options */}
+              <div className="mt-6 space-y-4">
+                {/* Upgrade to Reporter */}
+                {!hasReporter && (
+                  <div className="border border-slate-200 rounded-lg p-4 bg-white">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-800">Upgrade to Reporter</h3>
+                        <p className="text-xs text-slate-600 mt-1">
+                          Access AI-powered reporting tools and create professional news content
+                        </p>
+                      </div>
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_STRIPE_REPORTER_BUY_URL}?prefilled_email=${user.email}`}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                      >
+                        Upgrade To Reporter
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Upgrade to Editor */}
+                {!hasEditor && (
+                  <div className="border border-slate-200 rounded-lg p-4 bg-white">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-800">Upgrade to Editor</h3>
+                        <p className="text-xs text-slate-600 mt-1">
+                          Full editorial control with advanced publishing tools and team management
+                        </p>
+                      </div>
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_STRIPE_EDITOR_BUY_URL}?prefilled_email=${user.email}`}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                      >
+                        Upgrade To Editor
+                      </a>
+                    </div>
+                  </div>
+                )}
+
+                {/* Upgrade to Reader (existing) */}
+                {!hasReader && (
+                  <div className="border border-slate-200 rounded-lg p-4 bg-white">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-800">Upgrade to Reader</h3>
+                        <p className="text-xs text-slate-600 mt-1">
+                          Premium access to all published content and enhanced reading features
+                        </p>
+                      </div>
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_STRIPE_READER_BUY_URL}?prefilled_email=${user.email}`}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        Upgrade To Reader
+                      </a>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Personal Information */}

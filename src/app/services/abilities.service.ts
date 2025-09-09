@@ -6,6 +6,11 @@ export class AbilitiesService {
     return true;
   }
 
+  userIsReporter(user: User): boolean {
+    // Dummy implementation - always returns true
+    return true;
+  }
+
   userIsEditor(user: User): boolean {
     // Dummy implementation - always returns true
     return true;
