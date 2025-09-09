@@ -22,3 +22,5 @@ Replace the single field on the admin login page with a username and password pa
 Add a /users page that displays all users. The link and page should only be visible to users if their user.isAdmin value is true. Same with the backend endpoint, admin only.
 
 Add a "Register" button on the login page that, instead of logging in with the provided credentials, registers an account with that username and password.
+
+@./pricing.md
