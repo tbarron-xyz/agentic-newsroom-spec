@@ -540,6 +540,12 @@ export class RedisService {
     multi.set(REDIS_KEYS.USER_ROLE(userId), newUser.role);
     console.log('Redis Write: SET', REDIS_KEYS.USER_CREATED_AT(userId), newUser.createdAt.toString());
     multi.set(REDIS_KEYS.USER_CREATED_AT(userId), newUser.createdAt.toString());
+    console.log('Redis Write: SET', REDIS_KEYS.USER_HAS_READER(userId), newUser.hasReader.toString());
+    multi.set(REDIS_KEYS.USER_HAS_READER(userId), newUser.hasReader.toString());
+    console.log('Redis Write: SET', REDIS_KEYS.USER_HAS_REPORTER(userId), newUser.hasReporter.toString());
+    multi.set(REDIS_KEYS.USER_HAS_REPORTER(userId), newUser.hasReporter.toString());
+    console.log('Redis Write: SET', REDIS_KEYS.USER_HAS_EDITOR(userId), newUser.hasEditor.toString());
+    multi.set(REDIS_KEYS.USER_HAS_EDITOR(userId), newUser.hasEditor.toString());
 
     // Create email to user ID mapping
     console.log('Redis Write: SET', REDIS_KEYS.USER_BY_EMAIL(newUser.email), userId);
@@ -551,12 +557,15 @@ export class RedisService {
   }
 
   async getUserById(userId: string): Promise<User | null> {
-    const [email, passwordHash, role, createdAtStr, lastLoginAtStr] = await Promise.all([
+    const [email, passwordHash, role, createdAtStr, lastLoginAtStr, hasReaderStr, hasReporterStr, hasEditorStr] = await Promise.all([
       this.client.get(REDIS_KEYS.USER_EMAIL(userId)),
       this.client.get(REDIS_KEYS.USER_PASSWORD_HASH(userId)),
       this.client.get(REDIS_KEYS.USER_ROLE(userId)),
       this.client.get(REDIS_KEYS.USER_CREATED_AT(userId)),
-      this.client.get(REDIS_KEYS.USER_LAST_LOGIN_AT(userId))
+      this.client.get(REDIS_KEYS.USER_LAST_LOGIN_AT(userId)),
+      this.client.get(REDIS_KEYS.USER_HAS_READER(userId)),
+      this.client.get(REDIS_KEYS.USER_HAS_REPORTER(userId)),
+      this.client.get(REDIS_KEYS.USER_HAS_EDITOR(userId))
     ]);
 
     if (!email || !passwordHash || !role || !createdAtStr) return null;
@@ -567,7 +576,10 @@ export class RedisService {
       passwordHash,
       role: role as User['role'],
       createdAt: parseInt(createdAtStr),
-      lastLoginAt: lastLoginAtStr ? parseInt(lastLoginAtStr) : undefined
+      lastLoginAt: lastLoginAtStr ? parseInt(lastLoginAtStr) : undefined,
+      hasReader: hasReaderStr === 'true',
+      hasReporter: hasReporterStr === 'true',
+      hasEditor: hasEditorStr === 'true'
     };
   }
 
@@ -619,6 +631,12 @@ export class RedisService {
     multi.del(REDIS_KEYS.USER_CREATED_AT(userId));
     console.log('Redis Write: DEL', REDIS_KEYS.USER_LAST_LOGIN_AT(userId));
     multi.del(REDIS_KEYS.USER_LAST_LOGIN_AT(userId));
+    console.log('Redis Write: DEL', REDIS_KEYS.USER_HAS_READER(userId));
+    multi.del(REDIS_KEYS.USER_HAS_READER(userId));
+    console.log('Redis Write: DEL', REDIS_KEYS.USER_HAS_REPORTER(userId));
+    multi.del(REDIS_KEYS.USER_HAS_REPORTER(userId));
+    console.log('Redis Write: DEL', REDIS_KEYS.USER_HAS_EDITOR(userId));
+    multi.del(REDIS_KEYS.USER_HAS_EDITOR(userId));
 
     // Delete email mapping
     console.log('Redis Write: DEL', REDIS_KEYS.USER_BY_EMAIL(user.email));

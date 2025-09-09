@@ -2,17 +2,18 @@ import { User } from '../models/types';
 
 export class AbilitiesService {
   userIsReader(user: User): boolean {
-    // Dummy implementation - always returns true
-    return true;
+    return user.hasReader;
   }
 
   userIsReporter(user: User): boolean {
-    // Dummy implementation - always returns true
-    return true;
+    return user.hasReporter;
   }
 
   userIsEditor(user: User): boolean {
-    // Dummy implementation - always returns true
-    return true;
+    return user.hasEditor;
+  }
+
+  userIsAdmin(user: User): boolean {
+    return user.hasEditor;
   }
 }

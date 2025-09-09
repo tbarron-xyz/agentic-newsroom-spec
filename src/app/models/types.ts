@@ -66,6 +66,9 @@ export interface User {
   role: 'admin' | 'editor' | 'reporter' | 'user';
   createdAt: number;
   lastLoginAt?: number;
+  hasReader: boolean;
+  hasReporter: boolean;
+  hasEditor: boolean;
 }
 
 // Redis key patterns
@@ -115,6 +118,9 @@ export const REDIS_KEYS = {
   USER_ROLE: (userId: string) => `user:${userId}:role`,
   USER_CREATED_AT: (userId: string) => `user:${userId}:created_at`,
   USER_LAST_LOGIN_AT: (userId: string) => `user:${userId}:last_login_at`,
+  USER_HAS_READER: (userId: string) => `user:${userId}:has_reader`,
+  USER_HAS_REPORTER: (userId: string) => `user:${userId}:has_reporter`,
+  USER_HAS_EDITOR: (userId: string) => `user:${userId}:has_editor`,
   USER_BY_EMAIL: (email: string) => `user_by_email:${email}`,
 } as const;
 

@@ -107,7 +107,10 @@ export class AuthService {
     const user = await this.redisService.createUser({
       email,
       passwordHash,
-      role: 'user'
+      role: 'user',
+      hasReader: false,
+      hasReporter: false,
+      hasEditor: false
     });
 
     return user;
