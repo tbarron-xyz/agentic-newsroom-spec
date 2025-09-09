@@ -204,6 +204,26 @@ export default function AccountPage() {
               </div>
               {/* Upgrade Options */}
               <div className="mt-6 space-y-4">
+                {/* Upgrade to Reader (existing) */}
+                {!hasReader && (
+                  <div className="border border-slate-200 rounded-lg p-4 bg-white">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-medium text-slate-800">Upgrade to Reader</h3>
+                        <p className="text-xs text-slate-600 mt-1">
+                          Premium access to all published content and enhanced reading features
+                        </p>
+                      </div>
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_STRIPE_READER_BUY_URL}?prefilled_email=${user.email}`}
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                        Upgrade To Reader
+                      </a>
+                    </div>
+                  </div>
+                )}
+
                 {/* Upgrade to Reporter */}
                 {!hasReporter && (
                   <div className="border border-slate-200 rounded-lg p-4 bg-white">
@@ -239,26 +259,6 @@ export default function AccountPage() {
                         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
                       >
                         Upgrade To Editor
-                      </a>
-                    </div>
-                  </div>
-                )}
-
-                {/* Upgrade to Reader (existing) */}
-                {!hasReader && (
-                  <div className="border border-slate-200 rounded-lg p-4 bg-white">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-sm font-medium text-slate-800">Upgrade to Reader</h3>
-                        <p className="text-xs text-slate-600 mt-1">
-                          Premium access to all published content and enhanced reading features
-                        </p>
-                      </div>
-                      <a
-                        href={`${process.env.NEXT_PUBLIC_STRIPE_READER_BUY_URL}?prefilled_email=${user.email}`}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                      >
-                        Upgrade To Reader
                       </a>
                     </div>
                   </div>
