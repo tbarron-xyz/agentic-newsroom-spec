@@ -35,7 +35,7 @@ export class SchedulerService {
       console.log(`[${new Date().toISOString()}] Starting scheduled newspaper edition generation...`);
 
       try {
-        const edition = await this.editorService.generateNewspaperEdition();
+        const edition = await this.editorService.generateHourlyEdition();
         console.log(`[${new Date().toISOString()}] Successfully generated newspaper edition: ${edition.id}`);
         console.log(`[${new Date().toISOString()}] Edition contains ${edition.stories.length} stories`);
         console.log('Newspaper edition job completed successfully\n');
@@ -97,7 +97,7 @@ export class SchedulerService {
   async triggerNewspaperJob(): Promise<void> {
     console.log('Manually triggering newspaper edition generation...');
     try {
-      const edition = await this.editorService.generateNewspaperEdition();
+      const edition = await this.editorService.generateHourlyEdition();
       console.log(`Manually generated newspaper edition: ${edition.id} with ${edition.stories.length} stories`);
     } catch (error) {
       console.error('Manual newspaper job failed:', error);

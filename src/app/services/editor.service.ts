@@ -8,7 +8,7 @@ export class EditorService {
     private aiService: AIService
   ) {}
 
-  async generateNewspaperEdition(): Promise<NewspaperEdition> {
+  async generateHourlyEdition(): Promise<NewspaperEdition> {
     console.log('Editor: Starting newspaper edition generation...');
 
     // Get all reporters

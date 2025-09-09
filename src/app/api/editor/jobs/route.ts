@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
         result = { message: `Reporter article generation job triggered successfully. Generated ${totalArticles} articles.` };
         break;
       case 'newspaper':
-        const edition = await editorService!.generateNewspaperEdition();
+        const edition = await editorService!.generateHourlyEdition();
         result = { message: `Newspaper edition generation job triggered successfully. Created edition: ${edition.id} with ${edition.stories.length} stories.` };
         break;
       case 'daily':

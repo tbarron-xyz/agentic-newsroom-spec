@@ -20,30 +20,30 @@ async function initializeServices(): Promise<void> {
   }
 }
 
-// GET /api/cron/edition - Trigger daily edition generation job
+// GET /api/cron/edition - Trigger hourly edition generation job
 export async function GET(request: NextRequest) {
   try {
-    console.log('\n=== CRON JOB: DAILY EDITION GENERATION ===');
-    console.log(`[${new Date().toISOString()}] Starting cron-triggered daily edition generation...`);
+    console.log('\n=== CRON JOB: HOURLY EDITION GENERATION ===');
+    console.log(`[${new Date().toISOString()}] Starting cron-triggered hourly edition generation...`);
 
     await initializeServices();
 
-    const dailyEdition = await editorService!.generateDailyEdition();
+    const hourlyEdition = await editorService!.generateHourlyEdition();
 
-    console.log(`[${new Date().toISOString()}] Successfully generated daily edition ${dailyEdition.id}`);
+    console.log(`[${new Date().toISOString()}] Successfully generated hourly edition ${hourlyEdition.id}`);
     console.log('Cron job completed successfully\n');
 
     return NextResponse.json({
       success: true,
-      message: `Daily edition generation job completed successfully. Generated edition ${dailyEdition.id}.`,
-      dailyEditionId: dailyEdition.id
+      message: `hourly edition generation job completed successfully. Generated edition ${hourlyEdition.id}.`,
+      hourlyEditionId: hourlyEdition.id
     });
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Cron job failed:`, error);
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to execute daily edition generation job',
+        error: 'Failed to execute hourly edition generation job',
         details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
