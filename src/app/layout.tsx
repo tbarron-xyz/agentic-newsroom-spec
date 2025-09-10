@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Skylines",
+  title: "Skylines AI Newsroom",
   description: "AI-powered newsroom with automated reporting and editing",
 };
 
