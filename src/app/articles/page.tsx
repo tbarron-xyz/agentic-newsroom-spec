@@ -339,7 +339,7 @@ function ArticlesContent() {
 
         {/* Footer */}
         <div className="text-center mt-12 text-slate-500">
-          <p>AI Newsroom Articles</p>
+          <p>Skylines Articles</p>
         </div>
       </div>
     </div>

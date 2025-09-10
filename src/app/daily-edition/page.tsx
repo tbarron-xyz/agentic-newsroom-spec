@@ -270,7 +270,7 @@ function DailyEditionContent() {
 
         {/* Footer */}
         <div className="text-center mt-12 text-slate-500">
-          <p>AI Newsroom Daily Edition Reader</p>
+          <p>Skylines Daily Edition Reader</p>
         </div>
       </div>
     </div>

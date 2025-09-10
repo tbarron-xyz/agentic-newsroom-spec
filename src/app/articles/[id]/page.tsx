@@ -212,7 +212,7 @@ export default function ArticlePage() {
 
         {/* Footer */}
         <div className="text-center mt-12 text-slate-500">
-          <p>AI Newsroom Article</p>
+          <p>Skylines Article</p>
         </div>
       </div>
     </div>

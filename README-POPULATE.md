@@ -1,6 +1,6 @@
 # Initial Data Population Script
 
-This script populates the AI Newsroom system with initial data including one editor and three specialized reporters.
+This script populates the Skylines system with initial data including one editor and three specialized reporters.
 
 ## Usage
 
@@ -63,7 +63,7 @@ For each reporter:
 
 ## Integration
 
-This script integrates with the existing AI Newsroom services:
+This script integrates with the existing Skylines services:
 - `RedisService` - For data persistence
 - `ReporterService` - For reporter management
 - `AIService` - For AI-powered content generation

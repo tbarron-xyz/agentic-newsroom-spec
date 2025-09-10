@@ -79,7 +79,7 @@ export default function Navigation() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2zM16 2v4M8 2v4M3 10h18" />
                 </svg>
               </div>
-              <span className="text-xl font-bold text-slate-800">AI Newsroom</span>
+              <span className="text-xl font-bold text-slate-800">Skylines</span>
             </Link>
           </div>
 

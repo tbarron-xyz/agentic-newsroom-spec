@@ -11,7 +11,7 @@ export class SchedulerService {
   ) {}
 
   start(): void {
-    console.log('Starting AI Newsroom Scheduler...');
+    console.log('Starting Skylines Scheduler...');
 
     // Every 15 minutes: Generate articles for all reporters
     const reporterJob = new CronJob('*/15 * * * *', async () => {
@@ -73,7 +73,7 @@ export class SchedulerService {
   }
 
   stop(): void {
-    console.log('Stopping AI Newsroom Scheduler...');
+    console.log('Stopping Skylines Scheduler...');
 
     this.jobs.forEach(job => job.stop());
     this.jobs = [];

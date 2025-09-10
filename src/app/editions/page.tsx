@@ -152,7 +152,7 @@ export default function EditionsPage() {
 
         {/* Footer */}
         <div className="text-center mt-12 text-slate-500">
-          <p>AI Newsroom Edition Archive</p>
+          <p>Skylines Edition Archive</p>
         </div>
       </div>
     </div>

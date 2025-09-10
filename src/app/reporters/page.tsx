@@ -593,7 +593,7 @@ export default function ReportersPage() {
 
         {/* Footer */}
         <div className="text-center mt-12 text-slate-500">
-          <p>AI Newsroom Reporter Management Panel</p>
+          <p>Skylines Reporter Management Panel</p>
         </div>
       </div>
     </div>

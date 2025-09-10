@@ -136,7 +136,7 @@ export default function Home() {
               </div>
               <div className="flex-1">
                 <h2 className="text-2xl font-bold text-slate-800 mb-3">
-                  Welcome to AI Newsroom
+                  Welcome to Skylines
                 </h2>
                 <div className="text-slate-700 space-y-3">
                   <p className="text-lg leading-relaxed">
@@ -329,7 +329,7 @@ export default function Home() {
 
         {/* Footer */}
         <div className="text-center mt-12 text-slate-500">
-          <p>AI Newsroom Daily Edition Reader</p>
+          <p>Skylines Daily Edition Reader</p>
         </div>
       </div>
     </div>

@@ -505,7 +505,7 @@ export default function EditorPage() {
 
         {/* Footer */}
         <div className="text-center mt-8 text-slate-500">
-          <p>AI Newsroom Editor Configuration Panel</p>
+          <p>Skylines Editor Configuration Panel</p>
         </div>
       </div>
     </div>
