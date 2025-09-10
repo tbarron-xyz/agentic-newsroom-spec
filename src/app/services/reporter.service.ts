@@ -68,22 +68,23 @@ export class ReporterService {
         const structuredArticle = await this.aiService.generateStructuredArticle(reporter);
         // Extract message texts for the used message IDs
         const messageTexts: string[] = [];
-        if (structuredArticle.messageIds && structuredArticle.messageIds.length > 0) {
+        if (structuredArticle.response.messageIds && structuredArticle.response.messageIds.length > 0) {
           // Note: In a real implementation, we would need access to the original messages
           // For now, we'll store the messageIds and leave messageTexts empty
           // The message texts would need to be retrieved from the MCP client or cached
-          console.log(`Article used message IDs: ${structuredArticle.messageIds.join(', ')}`);
+          console.log(`Article used message IDs: ${structuredArticle.response.messageIds.join(', ')}`);
+          structuredArticle.response.messageIds.forEach(x => messageTexts.push(structuredArticle.messages[x]));
         }
 
         // Convert structured article to simple Article format for storage
         const article: Article = {
-          id: structuredArticle.id,
-          reporterId: structuredArticle.reporterId,
-          headline: structuredArticle.headline,
-          body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
-          generationTime: structuredArticle.generationTime,
+          id: structuredArticle.response.id,
+          reporterId: structuredArticle.response.reporterId,
+          headline: structuredArticle.response.headline,
+          body: `${structuredArticle.response.leadParagraph}\n\n${structuredArticle.response.body}`,
+          generationTime: structuredArticle.response.generationTime,
           prompt: structuredArticle.prompt,
-          messageIds: structuredArticle.messageIds || [],
+          messageIds: structuredArticle.response.messageIds || [],
           messageTexts: messageTexts
         };
         articles.push(article);
@@ -212,164 +213,5 @@ export class ReporterService {
 
     console.log(`Deleted reporter: ${reporterId}`);
     return true;
-  }
-
-  async generateStructuredReporterResponse(reporterId: string): Promise<StructuredReporterResponse> {
-    console.log(`Generating structured response for reporter ${reporterId}...`);
-
-    // Get reporter information
-    const reporter = await this.redisService.getReporter(reporterId);
-    if (!reporter) {
-      throw new Error(`Reporter ${reporterId} not found`);
-    }
-
-    try {
-      // Use AIService method with reporterResponseSchema to generate the complete structured response
-      const parsedResponse = await this.aiService.generateStructuredReporterResponse(reporter, reporterResponseSchema);
-
-      // Add generated fields
-      parsedResponse.reporterId = reporterId;
-      parsedResponse.reporterName = `Reporter ${reporterId}`;
-      parsedResponse.generationTimestamp = Date.now();
-
-      // Add IDs and timestamps to articles
-      parsedResponse.articles = parsedResponse.articles.map((article, index: number) => ({
-        ...article,
-        id: `article_${Date.now()}_${index}_${Math.random().toString(36).substring(2, 8)}`,
-        reporterId: reporterId,
-        generationTime: Date.now()
-      }));
-
-      // Save articles to Redis (convert to simple Article format for storage)
-      for (const structuredArticle of parsedResponse.articles) {
-        const simpleArticle: Article = {
-          id: structuredArticle.id,
-          reporterId: structuredArticle.reporterId,
-          headline: structuredArticle.headline,
-          body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
-          generationTime: structuredArticle.generationTime,
-          prompt: structuredArticle.prompt,
-          messageIds: structuredArticle.messageIds || [],
-          messageTexts: [] // Message texts not available in this context
-        };
-        await this.redisService.saveArticle(simpleArticle);
-      }
-
-      console.log(`Generated ${parsedResponse.articles.length} structured articles for reporter ${reporterId}`);
-      return parsedResponse;
-    } catch (error) {
-      console.error('Error generating structured reporter response:', error);
-      // Fallback to original implementation if schema-based generation fails
-      return this.generateStructuredReporterResponseFallback(reporterId, reporter);
-    }
-  }
-
-  private extractKeyThemes(content: string): string[] {
-    // Simple theme extraction - in a real implementation, this could use NLP
-    const themes: string[] = [];
-    const keywords = ['technology', 'business', 'politics', 'economy', 'health', 'environment', 'sports', 'entertainment'];
-
-    for (const keyword of keywords) {
-      if (content.toLowerCase().includes(keyword)) {
-        themes.push(keyword.charAt(0).toUpperCase() + keyword.slice(1));
-      }
-    }
-
-    return themes.length > 0 ? themes : ['General News'];
-  }
-
-  private async generateReporterFeedback(
-    reporter: Reporter,
-    articles: StructuredArticle[],
-    coverageSummary: { beatsCovered: string[]; totalWordCount: number; keyThemes: string[]; }
-  ): Promise<{
-    positive: string;
-    negative: string;
-    suggestions: string;
-  }> {
-    try {
-      // This would typically use AI to generate feedback, but for now we'll use simple logic
-      const positive = `Successfully covered ${coverageSummary.beatsCovered.length} different beats with ${articles.length} well-structured articles.`;
-      const negative = articles.length === 0 ? 'No articles were generated successfully.' : 'Some articles may benefit from additional fact-checking.';
-      const suggestions = `Consider expanding coverage to include emerging trends in ${reporter.beats.join(', ')}.`;
-
-      return { positive, negative, suggestions };
-    } catch (error) {
-      console.error('Error generating reporter feedback:', error);
-      return {
-        positive: 'Articles generated successfully',
-        negative: 'Feedback generation encountered issues',
-        suggestions: 'Review article quality and source diversity'
-      };
-    }
-  }
-
-  private async generateStructuredReporterResponseFallback(reporterId: string, reporter: Reporter): Promise<StructuredReporterResponse> {
-    console.log(`Using fallback implementation for reporter ${reporterId}...`);
-
-    const generationTimestamp = Date.now();
-    const structuredArticles: StructuredArticle[] = [];
-    const beatsCovered = new Set<string>();
-    const keyThemes = new Set<string>();
-    let totalWordCount = 0;
-
-    // Generate 1 structured article per reporter
-    const numArticles = 1;
-
-    for (let i = 0; i < numArticles; i++) {
-      try {
-        const structuredArticle = await this.aiService.generateStructuredArticle(reporter);
-        structuredArticles.push(structuredArticle);
-
-        // Track coverage data
-        beatsCovered.add(structuredArticle.beat);
-        totalWordCount += structuredArticle.wordCount;
-
-        // Extract key themes from article content (simplified)
-        const themes = this.extractKeyThemes(structuredArticle.body);
-        themes.forEach(theme => keyThemes.add(theme));
-
-        console.log(`Generated structured article: "${structuredArticle.headline}"`);
-      } catch (error) {
-        console.error(`Failed to generate structured article ${i + 1} for reporter ${reporterId}:`, error);
-      }
-    }
-
-    // Generate coverage summary and feedback
-    const coverageSummary = {
-      beatsCovered: Array.from(beatsCovered),
-      totalWordCount,
-      keyThemes: Array.from(keyThemes)
-    };
-
-    const modelFeedback = await this.generateReporterFeedback(reporter, structuredArticles, coverageSummary);
-
-    const response = {
-      reporterId,
-      reporterName: `Reporter ${reporterId}`,
-      articles: structuredArticles,
-      totalArticlesGenerated: structuredArticles.length,
-      generationTimestamp,
-      coverageSummary,
-      modelFeedback
-    };
-
-    // Save articles to Redis (convert to simple Article format for storage)
-    for (const structuredArticle of structuredArticles) {
-      const simpleArticle: Article = {
-        id: structuredArticle.id,
-        reporterId: structuredArticle.reporterId,
-        headline: structuredArticle.headline,
-        body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
-        generationTime: structuredArticle.generationTime,
-        prompt: structuredArticle.prompt,
-        messageIds: structuredArticle.messageIds || [],
-        messageTexts: [] // Message texts not available in fallback
-      };
-      await this.redisService.saveArticle(simpleArticle);
-    }
-
-    console.log(`Generated ${structuredArticles.length} structured articles for reporter ${reporterId} (fallback)`);
-    return response;
   }
 }

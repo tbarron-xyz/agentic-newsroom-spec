@@ -236,7 +236,7 @@ export class RedisService {
     if (!reporterId) return null;
 
     // Parse messageIds and messageTexts JSON
-    let messageIds: string[] = [];
+    let messageIds: number[] = [];
     let messageTexts: string[] = [];
 
     if (messageIdsJson) {

@@ -63,7 +63,7 @@ async function testAdIntegration() {
     const article = await aiService.generateStructuredArticle(mockReporter);
 
     console.log('Article generated successfully!');
-    console.log('Article headline:', article.headline);
+    console.log('Article headline:', article.response.headline);
     console.log('Article prompt length:', article.prompt.length);
 
     // Check if the most recent ad prompt is in the article prompt

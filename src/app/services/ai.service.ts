@@ -48,7 +48,7 @@ export class AIService {
 
 
 
-  async generateStructuredArticle(reporter: Reporter): Promise<{
+  async generateStructuredArticle(reporter: Reporter): Promise<{response: {
     id: string;
     reporterId: string;
     beat: string;
@@ -65,9 +65,10 @@ export class AIService {
       factualAccuracy: string;
     };
     socialMediaSummary: string;
-    prompt: string;
-    messageIds: string[];
-  }> {
+    messageIds: number[];
+  }, prompt: string,
+    messages: string[];
+}> {
     const generationTime = Date.now();
     const articleId = `article_${generationTime}_${Math.random().toString(36).substring(2, 8)}`;
     const beat = reporter.beats[Math.floor(Math.random() * reporter.beats.length)];
@@ -177,9 +178,8 @@ When generating the article, first scan the social media context for messages re
       parsedResponse.beat = beat;
       parsedResponse.generationTime = generationTime;
       parsedResponse.wordCount = parsedResponse.body.split(' ').length;
-      parsedResponse.prompt = fullPrompt; // Add the full prompt
 
-      return parsedResponse;
+      return { response: parsedResponse, prompt: fullPrompt, messages: socialMediaMessages.map(x => x.text)} ;
     } catch (error) {
       console.error('Error generating structured article:', error);
       // Return fallback structured article
@@ -197,7 +197,7 @@ User: Create a comprehensive news article about recent developments in the ${bea
 
 Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible.`;
 
-      return {
+      return {response: {
         id: articleId,
         reporterId: reporter.id,
         beat,
@@ -214,9 +214,8 @@ Make the article engaging, factual, and professionally written. Ensure all quote
           factualAccuracy: 'Information based on preliminary reports'
         },
         socialMediaSummary: `Breaking: Major developments in ${beat} sector capturing widespread attention. Stay tuned for updates! #${beat.replace(/\s+/g, '')}News`,
-        prompt: fallbackPrompt,
-        messageIds: [] // No tweets used in fallback
-      };
+        messageIds: [], // No tweets used in fallback,
+      }, messages:[], prompt:fallbackPrompt};
     }
   }
 
@@ -287,42 +286,42 @@ User: Given the following articles and editorial guidelines: "${editorPrompt}", 
     }
   }
 
-  async generateStructuredReporterResponse<T>(reporter: Reporter, schema: ZodSchema<T>): Promise<T> {
-    try {
-      const response = await this.openai.chat.completions.create({
-        model: this.modelName,
-        messages: [
-          {
-            role: 'system',
-            content: `You are a professional news reporter creating comprehensive structured news content. Generate a complete reporter response with multiple articles, coverage analysis, and editorial feedback. Focus on: ${reporter.prompt}`
-          },
-          {
-            role: 'user',
-            content: `Create a comprehensive reporter response for reporter covering beats: ${reporter.beats.join(', ')}.
+//   async generateStructuredReporterResponse<T>(reporter: Reporter, schema: ZodSchema<T>): Promise<T> {
+//     try {
+//       const response = await this.openai.chat.completions.create({
+//         model: this.modelName,
+//         messages: [
+//           {
+//             role: 'system',
+//             content: `You are a professional news reporter creating comprehensive structured news content. Generate a complete reporter response with multiple articles, coverage analysis, and editorial feedback. Focus on: ${reporter.prompt}`
+//           },
+//           {
+//             role: 'user',
+//             content: `Create a comprehensive reporter response for reporter covering beats: ${reporter.beats.join(', ')}.
 
-Generate 1-3 articles for each beat, with complete journalistic structure including headlines, lead paragraphs, detailed bodies, key quotes, sources, and reporter notes.
+// Generate 1-3 articles for each beat, with complete journalistic structure including headlines, lead paragraphs, detailed bodies, key quotes, sources, and reporter notes.
 
-Then provide:
-1. Coverage summary analyzing which beats were covered and key themes
-2. Model feedback with positive aspects, negative aspects, and suggestions for improvement
+// Then provide:
+// 1. Coverage summary analyzing which beats were covered and key themes
+// 2. Model feedback with positive aspects, negative aspects, and suggestions for improvement
 
-Make all content professional, factual, and engaging. Ensure proper journalistic standards are maintained throughout.`
-          }
-        ],
-        response_format: zodResponseFormat(schema, "reporter_response")
-      });
+// Make all content professional, factual, and engaging. Ensure proper journalistic standards are maintained throughout.`
+//           }
+//         ],
+//         response_format: zodResponseFormat(schema, "reporter_response")
+//       });
 
-      const content = response.choices[0]?.message?.content?.trim();
-      if (!content) {
-        throw new Error('No response content from AI service');
-      }
+//       const content = response.choices[0]?.message?.content?.trim();
+//       if (!content) {
+//         throw new Error('No response content from AI service');
+//       }
 
-      return schema.parse(JSON.parse(content));
-    } catch (error) {
-      console.error('Error generating structured reporter response:', error);
-      throw error;
-    }
-  }
+//       return schema.parse(JSON.parse(content));
+//     } catch (error) {
+//       console.error('Error generating structured reporter response:', error);
+//       throw error;
+//     }
+//   }
 
   async selectNotableEditions(editions: Array<{id: string; articles: Array<{headline: string; body: string}>}>, editorPrompt: string): Promise<{
     content: {

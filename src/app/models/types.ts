@@ -17,7 +17,7 @@ export interface Article {
   body: string;
   generationTime: number; // milliseconds since epoch
   prompt: string; // The full prompt used to generate this article
-  messageIds: string[]; // Indices of social media messages used
+  messageIds: number[]; // Indices of social media messages used
   messageTexts: string[]; // Text content of the messages that were used
 }
 
