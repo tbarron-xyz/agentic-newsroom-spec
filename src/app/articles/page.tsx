@@ -11,6 +11,8 @@ interface Article {
   body: string;
   generationTime: number;
   prompt: string;
+  messageIds: string[];
+  messageTexts: string[];
 }
 
 interface User {
@@ -30,6 +32,7 @@ function ArticlesContent() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedPrompts, setExpandedPrompts] = useState<Set<string>>(new Set());
+  const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
   const [user, setUser] = useState<User | null>(null);
   const [hasReaderAccess, setHasReaderAccess] = useState(false);
 
@@ -151,6 +154,16 @@ function ArticlesContent() {
     setExpandedPrompts(newExpanded);
   };
 
+  const toggleMessages = (articleId: string) => {
+    const newExpanded = new Set(expandedMessages);
+    if (newExpanded.has(articleId)) {
+      newExpanded.delete(articleId);
+    } else {
+      newExpanded.add(articleId);
+    }
+    setExpandedMessages(newExpanded);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
@@ -246,6 +259,45 @@ function ArticlesContent() {
                     {article.body}
                   </p>
                 </div>
+
+                {/* Source Messages Section */}
+                {article.messageTexts && article.messageTexts.length > 0 && (
+                  <div className="mt-6 pt-6 border-t border-slate-200">
+                    <button
+                      onClick={() => toggleMessages(article.id)}
+                      className="flex items-center text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+                    >
+                      <svg
+                        className={`w-4 h-4 mr-2 transition-transform ${expandedMessages.has(article.id) ? 'rotate-90' : ''}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                      </svg>
+                      {expandedMessages.has(article.id) ? 'Hide Source Messages' : `Show Source Messages (${article.messageTexts.length})`}
+                    </button>
+
+                    {expandedMessages.has(article.id) && (
+                      <div className="mt-4 space-y-4">
+                        <h4 className="text-sm font-semibold text-slate-700">Social Media Messages Used:</h4>
+                        {article.messageTexts.map((message, index) => (
+                          <div key={index} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                            <div className="flex items-center justify-between mb-2">
+                              <span className="text-xs font-medium text-slate-500">Message {index + 1}</span>
+                              {article.messageIds && article.messageIds[index] && (
+                                <span className="text-xs text-slate-400">ID: {article.messageIds[index]}</span>
+                              )}
+                            </div>
+                            <div className="text-sm text-slate-700 whitespace-pre-wrap">
+                              {message}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {/* Prompt Section */}
                 <div className="mt-6 pt-6 border-t border-slate-200">
