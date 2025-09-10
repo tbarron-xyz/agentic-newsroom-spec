@@ -5,6 +5,8 @@ import { zodResponseFormat } from 'openai/helpers/zod';
 import { ZodSchema } from 'zod';
 import { dailyEditionSchema, reporterArticleSchema } from '../models/schemas';
 import { RedisService } from './redis.service';
+import { writeFile } from 'fs/promises';
+import { join } from 'path';
 
 export class AIService {
   private openai: OpenAI;
@@ -152,6 +154,15 @@ When generating the article, consider any relevant trends, discussions, or break
       const content = response.choices[0]?.message?.content?.trim();
       if (!content) {
         throw new Error('No response content from AI service');
+      }
+
+      // Save the entire AI response to JSON file
+      try {
+        const responseFilePath = join(process.cwd(), 'api_responses', `article_${generationTime}.json`);
+        await writeFile(responseFilePath, JSON.stringify(response, null, 2));
+      } catch (error) {
+        console.warn('Failed to save AI response to file:', error);
+        // Continue with article generation even if file save fails
       }
 
       const parsedResponse = reporterArticleSchema.parse(JSON.parse(content));
