@@ -167,6 +167,39 @@ export class RedisService {
     return articles;
   }
 
+  async getAllArticles(limit?: number): Promise<Article[]> {
+    const reporterIds = await this.client.sMembers(REDIS_KEYS.REPORTERS);
+
+    // Collect all articles with their timestamps
+    const allArticles: { article: Article; timestamp: number }[] = [];
+
+    for (const reporterId of reporterIds) {
+      const articleIds = await this.client.ZRANGE(
+        REDIS_KEYS.ARTICLES_BY_REPORTER(reporterId),
+        0,
+        -1
+      );
+
+      for (const articleId of articleIds) {
+        const article = await this.getArticle(articleId);
+        if (article) {
+          allArticles.push({
+            article,
+            timestamp: article.generationTime
+          });
+        }
+      }
+    }
+
+    // Sort by timestamp (most recent first)
+    allArticles.sort((a, b) => b.timestamp - a.timestamp);
+
+    // Apply limit if specified
+    const limitedArticles = limit ? allArticles.slice(0, limit) : allArticles;
+
+    return limitedArticles.map(item => item.article);
+  }
+
   async getArticlesInTimeRange(reporterId: string, startTime: number, endTime: number): Promise<Article[]> {
     const articleIds = await this.client.zRangeByScore(
       REDIS_KEYS.ARTICLES_BY_REPORTER(reporterId),

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 
 interface Article {
@@ -13,22 +13,107 @@ interface Article {
   prompt: string;
 }
 
+interface User {
+  id: string;
+  email: string;
+  role: 'admin' | 'editor' | 'reporter' | 'user';
+  hasReader: boolean;
+  hasReporter: boolean;
+  hasEditor: boolean;
+}
+
 function ArticlesContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const reporterId = searchParams.get('reporterId');
   const [articles, setArticles] = useState<Article[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [expandedPrompts, setExpandedPrompts] = useState<Set<string>>(new Set());
+  const [user, setUser] = useState<User | null>(null);
+  const [hasReaderAccess, setHasReaderAccess] = useState(false);
+
+  // Check user authentication and reader access
+  useEffect(() => {
+    checkUserAccess();
+  }, []);
+
+  const checkUserAccess = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        if (!reporterId) {
+          // If no reporterId and not logged in, redirect to login
+          router.push('/login');
+          return;
+        }
+        return;
+      }
+
+      // Check reader ability if no reporterId (all articles view)
+      if (!reporterId) {
+        const response = await fetch('/api/abilities/reader', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setHasReaderAccess(data.hasReader);
+          if (!data.hasReader) {
+            setError('Reader permission required to view all articles');
+            setLoading(false);
+            return;
+          }
+        } else {
+          setError('Failed to verify permissions');
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Get user info for display
+      const userResponse = await fetch('/api/auth/verify', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        setUser(userData.user);
+      }
+    } catch (error) {
+      console.error('Error checking user access:', error);
+      if (!reporterId) {
+        setError('Authentication required');
+      }
+    }
+  };
 
   const fetchArticles = useCallback(async () => {
     try {
-      const response = await fetch(`/api/articles?reporterId=${reporterId}`);
+      let response;
+      if (reporterId) {
+        // Fetch articles by specific reporter
+        response = await fetch(`/api/articles?reporterId=${reporterId}`);
+      } else {
+        // Fetch all articles (requires reader permission, checked above)
+        const token = localStorage.getItem('accessToken');
+        response = await fetch('/api/articles/all', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+      }
+
       if (response.ok) {
         const data = await response.json();
         setArticles(data);
       } else {
-        setError('Failed to load articles');
+        const errorData = await response.json();
+        setError(errorData.error || 'Failed to load articles');
       }
     } catch (error) {
       setError('Error loading articles');
@@ -41,8 +126,10 @@ function ArticlesContent() {
   useEffect(() => {
     if (reporterId) {
       fetchArticles();
+    } else if (hasReaderAccess) {
+      fetchArticles();
     }
-  }, [reporterId, fetchArticles]);
+  }, [reporterId, fetchArticles, hasReaderAccess]);
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('en-US', {
@@ -95,19 +182,28 @@ function ArticlesContent() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-4xl font-bold text-slate-800 mb-2">
-              Articles by Reporter
+              {reporterId ? 'Articles by Reporter' : 'All Articles'}
             </h1>
             <p className="text-slate-600 text-lg">
-              {reporterId ? `Reporter ${reporterId.split('_')[2] || reporterId}` : 'Unknown Reporter'}
+              {reporterId ? `Reporter ${reporterId.split('_')[2] || reporterId}` : 'Chronological list of all published articles'}
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <Link
-              href="/reporters"
-              className="px-6 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium"
-            >
-              ← Back to Reporters
-            </Link>
+            {reporterId ? (
+              <Link
+                href="/reporters"
+                className="px-6 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium"
+              >
+                ← Back to Reporters
+              </Link>
+            ) : (
+              <Link
+                href="/"
+                className="px-6 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium"
+              >
+                ← Back to Daily Edition
+              </Link>
+            )}
           </div>
         </div>
 
@@ -121,7 +217,9 @@ function ArticlesContent() {
                 </svg>
               </div>
               <h3 className="text-xl font-semibold text-slate-800 mb-2">No Articles Found</h3>
-              <p className="text-slate-600">This reporter hasn't written any articles yet.</p>
+              <p className="text-slate-600">
+                {reporterId ? "This reporter hasn't written any articles yet." : "No articles have been published yet."}
+              </p>
             </div>
           ) : (
             articles.map((article) => (

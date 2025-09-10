@@ -105,6 +105,14 @@ export default function Navigation() {
             >
               Reporters
             </Link>
+            {user?.hasReader && (
+              <Link
+                href="/articles"
+                className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Articles
+              </Link>
+            )}
             <Link
               href="/ads"
               className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -221,6 +229,15 @@ export default function Navigation() {
           >
             Reporters
           </Link>
+          {user?.hasReader && (
+            <Link
+              href="/articles"
+              onClick={closeMobileMenu}
+              className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+            >
+              Articles
+            </Link>
+          )}
           <Link
             href="/ads"
             onClick={closeMobileMenu}
