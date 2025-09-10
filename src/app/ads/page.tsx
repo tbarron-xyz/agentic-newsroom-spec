@@ -134,6 +134,39 @@ const AdsPage: React.FC = () => {
           </p>
         </div>
 
+        {/* Pricing Section */}
+        <div className="mb-8 p-6 bg-green-50 border border-green-200 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4 text-green-900">Pricing</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="p-4 bg-white border border-green-200 rounded-lg">
+              <h3 className="text-lg font-medium text-green-900 mb-2">Fixed-Text Ad</h3>
+              <p className="text-2xl font-bold text-green-600 mb-2">$5/mo</p>
+              <p className="text-green-800 mb-4">
+                One fixed-text advertisement that appears in relevant news articles.
+              </p>
+              <ul className="text-green-800 text-sm space-y-1">
+                <li>• Static content placement</li>
+                <li>• Guaranteed exposure in targeted articles</li>
+                <li>• Basic performance tracking</li>
+              </ul>
+            </div>
+
+            <div className="p-4 bg-white border border-green-200 rounded-lg">
+              <h3 className="text-lg font-medium text-green-900 mb-2">AI-Tuned Ad</h3>
+              <p className="text-2xl font-bold text-green-600 mb-2">$20/mo</p>
+              <p className="text-green-800 mb-4">
+                One dynamically tuned advertisement that uses AI to adapt to its context for maximum impact.
+              </p>
+              <ul className="text-green-800 text-sm space-y-1">
+                <li>• AI-powered content optimization</li>
+                <li>• Contextual adaptation for relevance</li>
+                <li>• Advanced analytics and reporting</li>
+                <li>• Maximum engagement potential</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
       {error && (
         <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
