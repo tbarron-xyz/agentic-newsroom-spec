@@ -119,7 +119,11 @@ export class AIService {
 
       const systemPrompt = `You are a professional journalist creating structured news articles. Generate comprehensive, well-researched articles with proper journalistic structure including lead paragraphs, key quotes, sources, and reporter notes. Focus on: ${reporter.prompt}`;
 
-      const userPrompt = `Create a comprehensive news article about recent developments in the ${beat} sector. Include:
+      const userPrompt = `Create a comprehensive news article about recent developments in the ${beat} sector. 
+      
+First, scan the provided social media messages for any that include information relevant to the ${beat} topic. Include the numeric IDs of the relevant messages in the "messageIds" response field.
+
+Include:
 
 1. A compelling headline
 2. A strong lead paragraph (2-3 sentences)
@@ -128,11 +132,11 @@ export class AIService {
 5. 3-5 credible sources
 6. A brief social media summary (under 280 characters)
 7. Reporter notes on research quality, source diversity, and factual accuracy
-8. messageIds: List the indices (1, 2, 3, etc.) of the social media messages from the context below that you actually used to inform or write this article. If you used multiple messages, separate them with commas (e.g., "1,3,5"). If you didn't use any specific messages, use an empty array.
+8. messageIds: List the indices (1, 2, 3, etc.) of only the relevant messages you identified and actually used to inform or write this article. If you didn't find any relevant messages or didn't use any specific messages, use an empty array.
 
 Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible.${socialMediaContext}
 
-When generating the article, consider any relevant trends, discussions, or breaking news from the social media context provided above. Incorporate insights from these discussions where appropriate to make the article more timely and relevant.`;
+When generating the article, first scan the social media context for messages relevant to ${beat}, then incorporate insights from only those relevant discussions where appropriate to make the article more timely and relevant.`;
 
       const fullPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
 
