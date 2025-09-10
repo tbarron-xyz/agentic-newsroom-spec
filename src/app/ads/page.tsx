@@ -120,6 +120,20 @@ const AdsPage: React.FC = () => {
       <div className="container mx-auto">
         <h1 className="text-3xl font-bold mb-8 text-gray-900">Ad Entries</h1>
 
+        {/* Informational Section */}
+        <div className="mb-8 p-6 bg-blue-50 border border-blue-200 rounded-lg">
+          <h2 className="text-xl font-semibold mb-4 text-blue-900">How Ads Work</h2>
+          <p className="text-blue-800 mb-4">
+            Each ad you create may be placed into a reporter's article generation prompt. This provides valuable exposure for your business by potentially influencing how your product is discussed in news articles.
+          </p>
+          <p className="text-blue-800 mb-4">
+            Benefits include increased positive exposure and the ability to shape consumers' understanding of your product through contextual mentions in relevant news content.
+          </p>
+          <p className="text-blue-800">
+            <strong>Contact us for pricing information and to get started with your ad campaign.</strong>
+          </p>
+        </div>
+
       {error && (
         <div className="mb-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
           {error}
