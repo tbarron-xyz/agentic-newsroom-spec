@@ -66,6 +66,13 @@ export class ReporterService {
     for (let i = 0; i < numArticles; i++) {
       try {
         const structuredArticle = await this.aiService.generateStructuredArticle(reporter);
+
+        // Check if messageIds is empty - if so, skip generating and saving this article
+        if (!structuredArticle.response.messageIds || structuredArticle.response.messageIds.length === 0) {
+          console.log(`Skipping article generation for reporter ${reporterId} - no messageIds returned`);
+          continue;
+        }
+
         // Extract message texts for the used message IDs
         const messageTexts: string[] = [];
         if (structuredArticle.response.messageIds && structuredArticle.response.messageIds.length > 0) {

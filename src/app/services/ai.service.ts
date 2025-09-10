@@ -122,7 +122,7 @@ export class AIService {
 
       const userPrompt = `Create a comprehensive news article about recent developments in the ${beat} sector. 
       
-First, scan the provided social media messages for any that include information relevant to the ${beat} topic. Include the numeric IDs of the relevant messages in the "messageIds" response field.
+First, scan the provided social media messages for any that include information relevant to the ${beat} topic. Include the numeric IDs of the relevant messages in the "messageIds" response field. If there are zero relevant social media messages, stop processing and return empty strings for the rest of the fields.
 
 Include:
 

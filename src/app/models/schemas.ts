@@ -18,6 +18,7 @@ export const dailyEditionSchema = z.object({
 });
 
 export const reporterArticleSchema = z.object({
+    messageIds: z.array(z.number()).describe("The indexes of the social media messages used to write this article"),
     id: z.string(),
     reporterId: z.string(),
     beat: z.string(),
@@ -34,7 +35,6 @@ export const reporterArticleSchema = z.object({
         factualAccuracy: z.string()
     }),
     socialMediaSummary: z.string(),
-    messageIds: z.array(z.number()).describe("The indexes of the social media messages used to write this article"),
 });
 
 export const reporterResponseSchema = z.object({
