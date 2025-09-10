@@ -85,12 +85,6 @@ export default function Navigation() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link
-              href="/"
-              className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-            >
-              Daily Edition
-            </Link>
             {user && (
               <Link
                 href="/editions"
@@ -206,13 +200,6 @@ export default function Navigation() {
       {/* Mobile menu */}
       <div className={`${isMobileMenuOpen ? 'block' : 'hidden'} md:hidden`}>
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3 bg-white border-t border-slate-200">
-          <Link
-            href="/"
-            onClick={closeMobileMenu}
-            className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
-          >
-            Daily Edition
-          </Link>
           {user && (
             <Link
               href="/editions"
