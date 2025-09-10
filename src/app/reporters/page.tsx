@@ -68,7 +68,12 @@ export default function ReportersPage() {
 
   const fetchReporters = async () => {
     try {
-      const response = await fetch('/api/reporters');
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch('/api/reporters', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       if (response.ok) {
         const data = await response.json();
         setReporters(data);
@@ -88,10 +93,12 @@ export default function ReportersPage() {
     setMessage('');
 
     try {
+      const token = localStorage.getItem('accessToken');
       const response = await fetch(`/api/reporters/${reporter.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           beats: reporter.beats,
@@ -121,10 +128,12 @@ export default function ReportersPage() {
     setMessage('');
 
     try {
+      const token = localStorage.getItem('accessToken');
       const response = await fetch('/api/reporters', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(newReporter),
       });
@@ -156,8 +165,12 @@ export default function ReportersPage() {
     setMessage('');
 
     try {
+      const token = localStorage.getItem('accessToken');
       const response = await fetch(`/api/reporters/${reporterId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (response.ok) {
