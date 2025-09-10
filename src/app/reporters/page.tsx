@@ -9,6 +9,15 @@ interface Reporter {
   prompt: string;
 }
 
+interface User {
+  id: string;
+  email: string;
+  role: 'admin' | 'editor' | 'reporter' | 'user';
+  hasReader: boolean;
+  hasReporter: boolean;
+  hasEditor: boolean;
+}
+
 export default function ReportersPage() {
   const [reporters, setReporters] = useState<Reporter[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,11 +26,45 @@ export default function ReportersPage() {
   const [message, setMessage] = useState('');
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newReporter, setNewReporter] = useState({ beats: [] as string[], prompt: '' });
+  const [user, setUser] = useState<User | null>(null);
+  const [userLoading, setUserLoading] = useState(true);
+
+  // Check user authentication and abilities
+  useEffect(() => {
+    checkUserAuth();
+  }, []);
 
   // Fetch reporters on component mount
   useEffect(() => {
-    fetchReporters();
-  }, []);
+    if (!userLoading) {
+      fetchReporters();
+    }
+  }, [userLoading]);
+
+  const checkUserAuth = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setUserLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/auth/verify', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+    } finally {
+      setUserLoading(false);
+    }
+  };
 
   const fetchReporters = async () => {
     try {
@@ -173,6 +216,9 @@ export default function ReportersPage() {
     });
   };
 
+  // Check if user has reporter permission
+  const hasReporterPermission = user?.hasReporter === true;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
@@ -206,15 +252,24 @@ export default function ReportersPage() {
 
         {/* Create New Reporter Button */}
         <div className="mb-6">
-          <button
-            onClick={() => setShowCreateForm(!showCreateForm)}
-            className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center space-x-2"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            <span>{showCreateForm ? 'Cancel' : 'Create New Reporter'}</span>
-          </button>
+          {hasReporterPermission ? (
+            <button
+              onClick={() => setShowCreateForm(!showCreateForm)}
+              className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors font-medium flex items-center space-x-2"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>{showCreateForm ? 'Cancel' : 'Create New Reporter'}</span>
+            </button>
+          ) : (
+            <div className="px-6 py-3 bg-gray-300 text-gray-500 rounded-lg font-medium flex items-center space-x-2 cursor-not-allowed">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span>Create New Reporter (Requires Reporter Permission)</span>
+            </div>
+          )}
         </div>
 
         {/* Create Reporter Form */}
@@ -378,19 +433,31 @@ export default function ReportersPage() {
                       </svg>
                       <span>View Articles</span>
                     </Link>
-                    <button
-                      onClick={() => setEditingReporter(editingReporter?.id === reporter.id ? null : reporter)}
-                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-                    >
-                      {editingReporter?.id === reporter.id ? 'Cancel' : 'Edit'}
-                    </button>
-                    <button
-                      onClick={() => deleteReporter(reporter.id)}
-                      disabled={saving}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
-                    >
-                      Delete
-                    </button>
+                    {hasReporterPermission ? (
+                      <button
+                        onClick={() => setEditingReporter(editingReporter?.id === reporter.id ? null : reporter)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      >
+                        {editingReporter?.id === reporter.id ? 'Cancel' : 'Edit'}
+                      </button>
+                    ) : (
+                      <div className="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg font-medium cursor-not-allowed">
+                        Edit
+                      </div>
+                    )}
+                    {hasReporterPermission ? (
+                      <button
+                        onClick={() => deleteReporter(reporter.id)}
+                        disabled={saving}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
+                      >
+                        Delete
+                      </button>
+                    ) : (
+                      <div className="px-4 py-2 bg-gray-300 text-gray-500 rounded-lg font-medium cursor-not-allowed">
+                        Delete
+                      </div>
+                    )}
                   </div>
                 </div>
 

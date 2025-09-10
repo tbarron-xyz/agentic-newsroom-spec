@@ -7,7 +7,10 @@ import Link from 'next/link';
 interface User {
   id: string;
   email: string;
-  role: 'admin' | 'editor' | 'reporter';
+  role: 'admin' | 'editor' | 'reporter' | 'user';
+  hasReader: boolean;
+  hasReporter: boolean;
+  hasEditor: boolean;
 }
 
 export default function Navigation() {
