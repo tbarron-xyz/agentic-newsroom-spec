@@ -58,7 +58,7 @@ async function checkReporterPermission(request: NextRequest): Promise<{ user: an
   return { user };
 }
 
-// GET /api/reporters/[id] - Get specific reporter (read-only access for all authenticated users)
+// GET /api/reporters/[id] - Get specific reporter (public read-only access)
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -66,24 +66,6 @@ export async function GET(
   try {
     const { id: reporterId } = await params;
     await initializeServices();
-
-    // Basic authentication check (allow viewing for all authenticated users)
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authorization token required' },
-        { status: 401 }
-      );
-    }
-
-    const token = authHeader.substring(7);
-    const user = await authService!.getUserFromToken(token);
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
 
     const reporter = await redisService!.getReporter(reporterId);
     if (!reporter) {
