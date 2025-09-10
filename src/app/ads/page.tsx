@@ -142,11 +142,11 @@ const AdsPage: React.FC = () => {
               <h3 className="text-lg font-medium text-green-900 mb-2">Fixed-Text Ad</h3>
               <p className="text-2xl font-bold text-green-600 mb-2">$5/mo</p>
               <p className="text-green-800 mb-4">
-                One fixed-text advertisement that appears in relevant news articles.
+                One fixed-text advertisement that appears in relevant reporter prompts.
               </p>
               <ul className="text-green-800 text-sm space-y-1">
                 <li>• Static content placement</li>
-                <li>• Guaranteed exposure in targeted articles</li>
+                <li>• Guaranteed exposure in targeted prompts</li>
                 <li>• Basic performance tracking</li>
               </ul>
             </div>
