@@ -17,6 +17,8 @@ export interface Article {
   body: string;
   generationTime: number; // milliseconds since epoch
   prompt: string; // The full prompt used to generate this article
+  messageIds: string[]; // Indices of social media messages used
+  messageTexts: string[]; // Text content of the messages that were used
 }
 
 export interface NewspaperEdition {
@@ -91,6 +93,8 @@ export const REDIS_KEYS = {
   ARTICLE_BODY: (articleId: string) => `article:${articleId}:body`,
   ARTICLE_TIME: (articleId: string) => `article:${articleId}:time`,
   ARTICLE_PROMPT: (articleId: string) => `article:${articleId}:prompt`,
+  ARTICLE_MESSAGE_IDS: (articleId: string) => `article:${articleId}:message_ids`,
+  ARTICLE_MESSAGE_TEXTS: (articleId: string) => `article:${articleId}:message_texts`,
 
   // Newspaper Editions
   EDITIONS: 'editions',

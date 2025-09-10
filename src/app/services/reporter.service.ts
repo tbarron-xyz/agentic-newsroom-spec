@@ -66,6 +66,15 @@ export class ReporterService {
     for (let i = 0; i < numArticles; i++) {
       try {
         const structuredArticle = await this.aiService.generateStructuredArticle(reporter);
+        // Extract message texts for the used message IDs
+        const messageTexts: string[] = [];
+        if (structuredArticle.messageIds && structuredArticle.messageIds.length > 0) {
+          // Note: In a real implementation, we would need access to the original messages
+          // For now, we'll store the messageIds and leave messageTexts empty
+          // The message texts would need to be retrieved from the MCP client or cached
+          console.log(`Article used message IDs: ${structuredArticle.messageIds.join(', ')}`);
+        }
+
         // Convert structured article to simple Article format for storage
         const article: Article = {
           id: structuredArticle.id,
@@ -73,7 +82,9 @@ export class ReporterService {
           headline: structuredArticle.headline,
           body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
           generationTime: structuredArticle.generationTime,
-          prompt: structuredArticle.prompt
+          prompt: structuredArticle.prompt,
+          messageIds: structuredArticle.messageIds || [],
+          messageTexts: messageTexts
         };
         articles.push(article);
         console.log(`Generated article: "${article.headline}"`);
@@ -237,7 +248,9 @@ export class ReporterService {
           headline: structuredArticle.headline,
           body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
           generationTime: structuredArticle.generationTime,
-          prompt: structuredArticle.prompt
+          prompt: structuredArticle.prompt,
+          messageIds: structuredArticle.messageIds || [],
+          messageTexts: [] // Message texts not available in this context
         };
         await this.redisService.saveArticle(simpleArticle);
       }
@@ -349,7 +362,9 @@ export class ReporterService {
         headline: structuredArticle.headline,
         body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
         generationTime: structuredArticle.generationTime,
-        prompt: structuredArticle.prompt
+        prompt: structuredArticle.prompt,
+        messageIds: structuredArticle.messageIds || [],
+        messageTexts: [] // Message texts not available in fallback
       };
       await this.redisService.saveArticle(simpleArticle);
     }

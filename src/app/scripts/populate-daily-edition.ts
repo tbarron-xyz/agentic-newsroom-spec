@@ -67,7 +67,9 @@ async function populateDailyEdition(): Promise<void> {
             headline: structuredArticle.headline,
             body: `${structuredArticle.leadParagraph}\n\n${structuredArticle.body}`,
             generationTime: structuredArticle.generationTime,
-            prompt: structuredArticle.prompt
+            prompt: structuredArticle.prompt,
+            messageIds: structuredArticle.messageIds || [],
+            messageTexts: [] // Message texts not populated in this script
           };
           await redisService.saveArticle(article);
           allArticles.push(article);

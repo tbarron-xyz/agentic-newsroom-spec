@@ -64,7 +64,7 @@ export class AIService {
     };
     socialMediaSummary: string;
     prompt: string;
-    tweetIds: string[];
+    messageIds: string[];
   }> {
     const generationTime = Date.now();
     const articleId = `article_${generationTime}_${Math.random().toString(36).substring(2, 8)}`;
@@ -126,6 +126,7 @@ export class AIService {
 5. 3-5 credible sources
 6. A brief social media summary (under 280 characters)
 7. Reporter notes on research quality, source diversity, and factual accuracy
+8. messageIds: List the indices (1, 2, 3, etc.) of the social media messages from the context below that you actually used to inform or write this article. If you used multiple messages, separate them with commas (e.g., "1,3,5"). If you didn't use any specific messages, use an empty array.
 
 Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible.${socialMediaContext}
 
@@ -199,7 +200,7 @@ Make the article engaging, factual, and professionally written. Ensure all quote
         },
         socialMediaSummary: `Breaking: Major developments in ${beat} sector capturing widespread attention. Stay tuned for updates! #${beat.replace(/\s+/g, '')}News`,
         prompt: fallbackPrompt,
-        tweetIds: [] // No tweets used in fallback
+        messageIds: [] // No tweets used in fallback
       };
     }
   }

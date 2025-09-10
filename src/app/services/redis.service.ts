@@ -138,6 +138,10 @@ export class RedisService {
     multi.set(REDIS_KEYS.ARTICLE_TIME(articleId), article.generationTime.toString());
     console.log('Redis Write: SET', REDIS_KEYS.ARTICLE_PROMPT(articleId), article.prompt);
     multi.set(REDIS_KEYS.ARTICLE_PROMPT(articleId), article.prompt);
+    console.log('Redis Write: SET', REDIS_KEYS.ARTICLE_MESSAGE_IDS(articleId), JSON.stringify(article.messageIds));
+    multi.set(REDIS_KEYS.ARTICLE_MESSAGE_IDS(articleId), JSON.stringify(article.messageIds));
+    console.log('Redis Write: SET', REDIS_KEYS.ARTICLE_MESSAGE_TEXTS(articleId), JSON.stringify(article.messageTexts));
+    multi.set(REDIS_KEYS.ARTICLE_MESSAGE_TEXTS(articleId), JSON.stringify(article.messageTexts));
 
     await multi.exec();
   }
@@ -182,11 +186,13 @@ export class RedisService {
   }
 
   async getArticle(articleId: string): Promise<Article | null> {
-    const [headline, body, timeStr, prompt] = await Promise.all([
+    const [headline, body, timeStr, prompt, messageIdsJson, messageTextsJson] = await Promise.all([
       this.client.get(REDIS_KEYS.ARTICLE_HEADLINE(articleId)),
       this.client.get(REDIS_KEYS.ARTICLE_BODY(articleId)),
       this.client.get(REDIS_KEYS.ARTICLE_TIME(articleId)),
-      this.client.get(REDIS_KEYS.ARTICLE_PROMPT(articleId))
+      this.client.get(REDIS_KEYS.ARTICLE_PROMPT(articleId)),
+      this.client.get(REDIS_KEYS.ARTICLE_MESSAGE_IDS(articleId)),
+      this.client.get(REDIS_KEYS.ARTICLE_MESSAGE_TEXTS(articleId))
     ]);
 
     if (!headline || !body || !timeStr) return null;
@@ -196,13 +202,37 @@ export class RedisService {
     const reporterId = await this.findReporterForArticle(articleId);
     if (!reporterId) return null;
 
+    // Parse messageIds and messageTexts JSON
+    let messageIds: string[] = [];
+    let messageTexts: string[] = [];
+
+    if (messageIdsJson) {
+      try {
+        messageIds = JSON.parse(messageIdsJson);
+      } catch (error) {
+        console.error('Error parsing messageIds JSON:', error);
+        messageIds = [];
+      }
+    }
+
+    if (messageTextsJson) {
+      try {
+        messageTexts = JSON.parse(messageTextsJson);
+      } catch (error) {
+        console.error('Error parsing messageTexts JSON:', error);
+        messageTexts = [];
+      }
+    }
+
     return {
       id: articleId,
       reporterId,
       headline,
       body,
       generationTime: parseInt(timeStr),
-      prompt: prompt || 'Prompt not available (generated before prompt storage was implemented)'
+      prompt: prompt || 'Prompt not available (generated before prompt storage was implemented)',
+      messageIds,
+      messageTexts
     };
   }
 

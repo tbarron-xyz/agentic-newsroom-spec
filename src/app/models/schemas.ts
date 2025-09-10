@@ -35,7 +35,7 @@ export const reporterArticleSchema = z.object({
     }),
     socialMediaSummary: z.string(),
     prompt: z.string(),
-    tweetIds: z.array(z.string()).describe("The indexes of the tweets used to write this article"),
+    messageIds: z.array(z.string()).describe("The indexes of the social media messages used to write this article"),
 });
 
 export const reporterResponseSchema = z.object({
