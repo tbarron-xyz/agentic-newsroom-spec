@@ -118,7 +118,7 @@ export class AIService {
         socialMediaContext = `\n\nRecent social media discussions related to ${beat}:\n${formattedMessages.join('\n')}`;
       }
 
-      const systemPrompt = `You are a professional journalist creating structured news articles. Generate comprehensive, well-researched articles with proper journalistic structure including lead paragraphs, key quotes, sources, and reporter notes. Focus on: ${reporter.prompt}`;
+      const systemPrompt = `You are a professional journalist creating structured news articles. Generate comprehensive, well-researched articles with proper journalistic structure including lead paragraphs, key quotes, sources, and reporter notes. ${reporter.prompt}`;
 
       const userPrompt = `Create a comprehensive news article about recent developments in the ${beat} sector. 
       

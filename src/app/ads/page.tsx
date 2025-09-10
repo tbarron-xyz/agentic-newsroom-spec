@@ -152,7 +152,7 @@ const AdsPage: React.FC = () => {
             </div>
 
             <div className="p-4 bg-white border border-green-200 rounded-lg">
-              <h3 className="text-lg font-medium text-green-900 mb-2">AI-Tuned Ad</h3>
+              <h3 className="text-lg font-medium text-green-900 mb-2">Contextually Aware Ad</h3>
               <p className="text-2xl font-bold text-green-600 mb-2">$20/mo</p>
               <p className="text-green-800 mb-4">
                 One dynamically tuned advertisement that uses AI to adapt to its context for maximum impact.
