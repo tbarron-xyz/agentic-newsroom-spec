@@ -11,6 +11,8 @@ interface Article {
   body: string;
   generationTime: number;
   prompt: string;
+  messageIds: string[];
+  messageTexts: string[];
 }
 
 export default function ArticlePage() {
@@ -20,6 +22,7 @@ export default function ArticlePage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showPrompt, setShowPrompt] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
 
   const fetchArticle = useCallback(async () => {
     try {
@@ -132,6 +135,45 @@ export default function ArticlePage() {
               {article.body}
             </div>
           </div>
+
+          {/* Message Texts Section */}
+          {article.messageTexts && article.messageTexts.length > 0 && (
+            <div className="mt-8 pt-8 border-t border-slate-200">
+              <button
+                onClick={() => setShowMessages(!showMessages)}
+                className="flex items-center text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+              >
+                <svg
+                  className={`w-4 h-4 mr-2 transition-transform ${showMessages ? 'rotate-90' : ''}`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+                {showMessages ? 'Hide Source Messages' : `Show Source Messages (${article.messageTexts.length})`}
+              </button>
+
+              {showMessages && (
+                <div className="mt-4 space-y-4">
+                  <h4 className="text-sm font-semibold text-slate-700">Social Media Messages Used:</h4>
+                  {article.messageTexts.map((message, index) => (
+                    <div key={index} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs font-medium text-slate-500">Message {index + 1}</span>
+                        {article.messageIds && article.messageIds[index] && (
+                          <span className="text-xs text-slate-400">ID: {article.messageIds[index]}</span>
+                        )}
+                      </div>
+                      <div className="text-sm text-slate-700 whitespace-pre-wrap">
+                        {message}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Prompt Section */}
           <div className="mt-8 pt-8 border-t border-slate-200">
