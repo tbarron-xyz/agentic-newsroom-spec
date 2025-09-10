@@ -237,10 +237,10 @@ export default function PricingPage() {
 
             <div>
               <h3 className="text-xl font-semibold text-slate-800 mb-3">
-                Is there a free trial?
+                How are articles sourced?
               </h3>
               <p className="text-slate-600">
-                The Free tier gives you access to recent content. For paid features, we offer a 7-day trial on all premium plans.
+                Every article cites the specific social media messages that the reporter used as sources in its writing.
               </p>
             </div>
           </div>
