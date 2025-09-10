@@ -1,7 +1,11 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { RedisService } from '../../services/redis.service';
+import { AuthService } from '../../services/auth.service';
+import { AbilitiesService } from '../../services/abilities.service';
 
 let redisService: RedisService | null = null;
+let authService: AuthService | null = null;
+let abilitiesService: AbilitiesService | null = null;
 
 async function getRedisService(): Promise<RedisService> {
   if (!redisService) {
@@ -11,11 +15,45 @@ async function getRedisService(): Promise<RedisService> {
   return redisService;
 }
 
-// GET /api/daily-editions - Get all daily editions
-export async function GET() {
+async function getAuthService(): Promise<AuthService> {
+  if (!authService) {
+    const redis = await getRedisService();
+    authService = new AuthService(redis);
+  }
+  return authService;
+}
+
+async function getAbilitiesService(): Promise<AbilitiesService> {
+  if (!abilitiesService) {
+    abilitiesService = new AbilitiesService();
+  }
+  return abilitiesService;
+}
+
+// GET /api/daily-editions - Get daily editions (limited for non-Reader users)
+export async function GET(request: NextRequest) {
   try {
     const redisService = await getRedisService();
-    const dailyEditions = await redisService.getDailyEditions();
+
+    // Check authentication and Reader ability
+    let hasReaderAccess = false;
+    const authHeader = request.headers.get('authorization');
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+      const authService = await getAuthService();
+      const user = await authService.getUserFromToken(token);
+
+      if (user) {
+        const abilitiesService = await getAbilitiesService();
+        hasReaderAccess = abilitiesService.userIsReader(user);
+      }
+    }
+
+    // If user is not authenticated or doesn't have Reader ability, limit to 3 results
+    const limit = hasReaderAccess ? undefined : 3;
+    const dailyEditions = await redisService.getDailyEditions(limit);
+
     return NextResponse.json(dailyEditions);
   } catch (error) {
     console.error('Error fetching daily editions:', error);
