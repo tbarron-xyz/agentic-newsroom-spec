@@ -28,16 +28,57 @@ interface DailyEdition {
   prompt: string;
 }
 
+interface User {
+  id: string;
+  email: string;
+  role: 'admin' | 'editor' | 'reporter' | 'user';
+  hasReader: boolean;
+  hasReporter: boolean;
+  hasEditor: boolean;
+}
+
 export default function Home() {
   const [dailyEditions, setDailyEditions] = useState<DailyEdition[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedEdition, setSelectedEdition] = useState<DailyEdition | null>(null);
   const [message, setMessage] = useState('');
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Check authentication status
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
 
   // Fetch daily editions on component mount
   useEffect(() => {
     fetchDailyEditions();
   }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setAuthLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/auth/verify', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
 
   const fetchDailyEditions = async () => {
     try {
@@ -71,7 +112,7 @@ export default function Home() {
     });
   };
 
-  if (loading) {
+  if (loading || authLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -82,6 +123,39 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
       <div className="max-w-7xl mx-auto">
+        {/* Welcome Box for Non-Authenticated Users */}
+        {!user && (
+          <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8 shadow-lg">
+            <div className="flex items-start space-x-4">
+              <div className="flex-shrink-0">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h2 className="text-2xl font-bold text-slate-800 mb-3">
+                  Welcome to AI Newsroom
+                </h2>
+                <div className="text-slate-700 space-y-3">
+                  <p className="text-lg leading-relaxed">
+                    Each article in our newsroom is sourced from real messages on the Bluesky social media platform's firehose - a continuous stream of public posts and conversations.
+                  </p>
+                  <p className="text-lg leading-relaxed">
+                    Every article clearly states which specific social media messages were used to write and inform the content, ensuring transparency about our AI-powered reporting process.
+                  </p>
+                  <div className="mt-4 p-4 bg-white/50 rounded-lg border border-blue-200">
+                    <p className="text-sm text-slate-600 italic">
+                      "Our commitment is to provide accurate, sourced journalism powered by artificial intelligence while maintaining full transparency about our data sources."
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Page Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-slate-800 mb-2">

@@ -73,7 +73,7 @@ export class ReporterService {
           // For now, we'll store the messageIds and leave messageTexts empty
           // The message texts would need to be retrieved from the MCP client or cached
           console.log(`Article used message IDs: ${structuredArticle.response.messageIds.join(', ')}`);
-          structuredArticle.response.messageIds.forEach(x => messageTexts.push(structuredArticle.messages[x]));
+          structuredArticle.response.messageIds.forEach(x => messageTexts.push(structuredArticle.messages[x-1])); // -1 because ai service does a +1
         }
 
         // Convert structured article to simple Article format for storage
