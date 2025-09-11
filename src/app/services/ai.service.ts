@@ -119,24 +119,24 @@ export class AIService {
 
       const systemPrompt = `You are a professional journalist creating structured news articles. Generate comprehensive, well-researched articles with proper journalistic structure including lead paragraphs, key quotes, sources, and reporter notes. ${reporter.prompt}`;
 
-      const userPrompt = `Create a comprehensive news article about recent developments in the ${beat} sector. 
-      
-First, scan the provided social media messages for any that include information relevant to the ${beat} topic. Include the numeric IDs of the relevant messages in the "messageIds" response field. If there are zero relevant social media messages, stop processing and return empty strings for the rest of the fields.
+      const userPrompt = `Create a focused news article about one particular recent development in the ${beat} sector.
 
-Include:
+First, scan the provided social media messages for information relevant to the ${beat} topic. Identify the single most significant or noteworthy recent development from these messages. If there are zero relevant social media messages, stop processing and return empty strings for the rest of the fields.
 
-1. A compelling headline
-2. A strong lead paragraph (2-3 sentences)
-3. A detailed body (300-500 words) with context and analysis
-4. 2-4 key quotes from relevant sources
-5. 3-5 credible sources
-6. A brief social media summary (under 280 characters)
-7. Reporter notes on research quality, source diversity, and factual accuracy
-8. messageIds: List the indices (1, 2, 3, etc.) of only the relevant messages you identified and actually used to inform or write this article. If you didn't find any relevant messages or didn't use any specific messages, use an empty array.
+Focus the entire article on this one specific development, providing in-depth coverage rather than broad overview. Include:
 
-Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible.${socialMediaContext}
+1. A compelling headline focused on this specific development
+2. A strong lead paragraph (2-3 sentences) that hooks readers with this particular story
+3. A detailed body (300-500 words) with deep context and analysis of this one development
+4. 2-4 key quotes specifically related to this development
+5. 3-5 credible sources focused on this particular development
+6. A brief social media summary (under 280 characters) about this specific story
+7. Reporter notes on research quality, source diversity, and factual accuracy for this development
+8. messageIds: List the indices (1, 2, 3, etc.) of only the relevant messages you identified and actually used to inform or write this article about this specific development. If you didn't find any relevant messages or didn't use any specific messages, use an empty array.
 
-When generating the article, first scan the social media context for messages relevant to ${beat}, then incorporate insights from only those relevant discussions where appropriate to make the article more timely and relevant.`;
+Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible. Focus exclusively on this one development to create a more targeted and impactful piece.${socialMediaContext}
+
+When generating the article, first scan the social media context for messages relevant to ${beat}, identify the most significant single development, then focus the entire article on that specific development to create a more targeted and impactful story.`;
 
       const fullPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
 
