@@ -74,26 +74,33 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center px-4">
-      <div className="max-w-md w-full">
-        <div className="bg-white rounded-2xl shadow-xl p-8">
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-slate-800 mb-2">Login</h1>
-            <p className="text-slate-600">Enter your credentials to access the editor</p>
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center px-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 animate-pulse"></div>
+      <div className="absolute top-0 left-0 w-96 h-96 bg-gradient-to-br from-cyan-400/30 to-blue-500/30 rounded-full blur-3xl animate-bounce"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-gradient-to-tl from-purple-400/30 to-pink-500/30 rounded-full blur-3xl animate-bounce" style={{animationDelay: '1s'}}></div>
+
+      <div className="max-w-md w-full relative z-10">
+        <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-3xl shadow-2xl p-8 relative overflow-hidden">
+          {/* Sheen effect */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-pulse"></div>
+          <div className="text-center mb-8 relative z-10">
+            <h1 className="text-4xl font-bold text-white mb-2 drop-shadow-lg">Welcome Back</h1>
+            <p className="text-white/80 text-lg">Enter your credentials to access the editor</p>
           </div>
 
-          <div className="px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 mb-6">
-            <p className="text-blue-800 text-sm mb-2">
-              <strong>New users:</strong> Enter the email and password you wish to register with, then click Register.
+          <div className="px-4 py-3 rounded-lg bg-white/10 border border-white/20 mb-6 backdrop-blur-sm">
+            <p className="text-white/90 text-sm mb-2">
+              <strong className="text-cyan-300">New users:</strong> Enter the email and password you wish to register with, then click Register.
             </p>
-            <p className="text-blue-800 text-sm">
-              <strong>Existing users:</strong> Enter your existing email and password, then click Login.
+            <p className="text-white/90 text-sm">
+              <strong className="text-cyan-300">Existing users:</strong> Enter your existing email and password, then click Login.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">
                 Email
               </label>
               <input
@@ -101,14 +108,14 @@ export default function LoginPage() {
                 id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all duration-300 backdrop-blur-sm"
                 placeholder="Enter your email"
                 required
               />
             </div>
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-white/90 mb-2">
                 Password
               </label>
               <input
@@ -116,34 +123,36 @@ export default function LoginPage() {
                 id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/60 focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-all duration-300 backdrop-blur-sm"
                 placeholder="Enter your password"
                 required
               />
             </div>
 
             {error && (
-              <div className="px-4 py-3 rounded-lg bg-red-50 border border-red-200">
-                <p className="text-red-800 text-sm">{error}</p>
+              <div className="px-4 py-3 rounded-xl bg-red-500/20 border border-red-400/30 backdrop-blur-sm">
+                <p className="text-red-300 text-sm">{error}</p>
               </div>
             )}
 
             <button
               type="submit"
               disabled={loading || isRegistering}
-              className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-cyan-400 hover:to-blue-500 focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 relative overflow-hidden group"
             >
-              {loading ? 'Logging in...' : 'Login'}
+              <span className="relative z-10">{loading ? 'Logging in...' : 'Login'}</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
             </button>
           </form>
 
-          <div className="mt-4">
+          <div className="mt-4 relative z-10">
             <button
               onClick={handleRegister}
               disabled={loading || isRegistering}
-              className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 px-4 rounded-xl font-semibold hover:from-purple-400 hover:to-pink-500 focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25 relative overflow-hidden group"
             >
-              {isRegistering ? 'Registering...' : 'Register'}
+              <span className="relative z-10">{isRegistering ? 'Registering...' : 'Register'}</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
             </button>
           </div>
         </div>
