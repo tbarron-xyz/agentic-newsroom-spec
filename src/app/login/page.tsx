@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { apiService } from '../services/api.service';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -37,7 +36,7 @@ export default function LoginPage() {
         const data = await response.json();
         setError(data.message || 'Invalid email or password');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.');
     } finally {
       setLoading(false);
@@ -67,7 +66,7 @@ export default function LoginPage() {
         const data = await response.json();
         setError(data.message || 'Registration failed');
       }
-    } catch (err) {
+    } catch {
       setError('An error occurred. Please try again.');
     } finally {
       setIsRegistering(false);

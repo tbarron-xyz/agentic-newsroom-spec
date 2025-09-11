@@ -112,7 +112,7 @@ export default function AccountPage() {
         const editorData = await editorResponse.json();
         setHasEditor(editorData.hasEditor);
       }
-    } catch (_error) {
+    } catch {
       console.error('Failed to load abilities');
     }
   };
@@ -123,7 +123,7 @@ export default function AccountPage() {
       // Placeholder - in a real app, this would save to an API
       await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
       alert('Account information saved successfully!');
-    } catch (error) {
+    } catch {
       alert('Failed to save account information.');
     } finally {
       setSaving(false);

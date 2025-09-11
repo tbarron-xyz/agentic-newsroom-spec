@@ -59,7 +59,7 @@ async function checkReporterPermission(request: NextRequest): Promise<{ user: an
 }
 
 // GET /api/reporters - Get all reporters (public read-only access)
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     await initializeServices();
 

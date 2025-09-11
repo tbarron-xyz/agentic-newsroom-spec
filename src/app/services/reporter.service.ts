@@ -1,44 +1,6 @@
 import { Reporter, Article } from '../models/types';
 import { RedisService } from './redis.service';
 import { AIService } from './ai.service';
-import { reporterResponseSchema } from '../models/schemas';
-
-type StructuredArticle = Awaited<ReturnType<AIService['generateStructuredArticle']>>;
-
-type StructuredReporterResponse = {
-  reporterId: string;
-  reporterName: string;
-  articles: Array<{
-    id: string;
-    reporterId: string;
-    beat: string;
-    headline: string;
-    leadParagraph: string;
-    body: string;
-    keyQuotes: string[];
-    sources: string[];
-    wordCount: number;
-    generationTime: number;
-    reporterNotes: {
-      researchQuality: string;
-      sourceDiversity: string;
-      factualAccuracy: string;
-    };
-    socialMediaSummary: string;
-  }>;
-  totalArticlesGenerated: number;
-  generationTimestamp: number;
-  coverageSummary: {
-    beatsCovered: string[];
-    totalWordCount: number;
-    keyThemes: string[];
-  };
-  modelFeedback: {
-    positive: string;
-    negative: string;
-    suggestions: string;
-  };
-};
 
 export class ReporterService {
   constructor(
@@ -76,9 +38,6 @@ export class ReporterService {
         // Extract message texts for the used message IDs
         const messageTexts: string[] = [];
         if (structuredArticle.response.messageIds && structuredArticle.response.messageIds.length > 0) {
-          // Note: In a real implementation, we would need access to the original messages
-          // For now, we'll store the messageIds and leave messageTexts empty
-          // The message texts would need to be retrieved from the MCP client or cached
           console.log(`Article used message IDs: ${structuredArticle.response.messageIds.join(', ')}`);
           structuredArticle.response.messageIds.forEach(x => messageTexts.push(structuredArticle.messages[x-1])); // -1 because ai service does a +1
         }

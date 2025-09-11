@@ -21,7 +21,7 @@ async function initializeServices(): Promise<void> {
 }
 
 // GET /api/cron/daily - Trigger daily edition generation job
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     console.log('\n=== CRON JOB: DAILY EDITION GENERATION ===');
     console.log(`[${new Date().toISOString()}] Starting cron-triggered daily edition generation...`);

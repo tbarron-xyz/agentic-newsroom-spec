@@ -2,7 +2,6 @@ import { Reporter, Article, REDIS_KEYS } from '../models/types';
 import OpenAI from 'openai';
 import { McpBskyClient } from "mcp-bsky-jetstream/client/dist/McpBskyClient.js";
 import { zodResponseFormat } from 'openai/helpers/zod';
-import { ZodSchema } from 'zod';
 import { dailyEditionSchema, reporterArticleSchema } from '../models/schemas';
 import { RedisService } from './redis.service';
 import { writeFile } from 'fs/promises';

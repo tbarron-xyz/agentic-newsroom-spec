@@ -33,15 +33,10 @@ function ArticlesContent() {
   const [error, setError] = useState('');
   const [expandedPrompts, setExpandedPrompts] = useState<Set<string>>(new Set());
   const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
-  const [user, setUser] = useState<User | null>(null);
+  const [_user, setUser] = useState<User | null>(null);
   const [hasReaderAccess, setHasReaderAccess] = useState(false);
 
-  // Check user authentication and reader access
-  useEffect(() => {
-    checkUserAccess();
-  }, []);
-
-  const checkUserAccess = async () => {
+  const checkUserAccess = useCallback(async () => {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
@@ -93,7 +88,12 @@ function ArticlesContent() {
         setError('Authentication required');
       }
     }
-  };
+  }, [reporterId, router]);
+
+  // Check user authentication and reader access
+  useEffect(() => {
+    checkUserAccess();
+  }, [checkUserAccess]);
 
   const fetchArticles = useCallback(async () => {
     try {

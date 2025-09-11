@@ -7,7 +7,7 @@ const endpointSecret = process.env["stripeSubSecret"];
 export async function POST(request: NextRequest) {
     // TODO: Handle Stripe webhook for customer.subscription.created
 
-    const event = request.body;
+    const _event = request.body;
     let stripeEvent;
     if (endpointSecret) {
         // Get the signature sent by Stripe
@@ -27,12 +27,12 @@ export async function POST(request: NextRequest) {
     // Handle the event
     switch (stripeEvent.type) {
         case 'payment_intent.succeeded':
-        const paymentIntent = stripeEvent.data.object;
+        const _paymentIntent = stripeEvent.data.object;
         // Then define and call a method to handle the successful payment intent.
         // handlePaymentIntentSucceeded(paymentIntent);
         break;
         case 'payment_method.attached':
-        const paymentMethod = stripeEvent.data.object;
+        const _paymentMethod = stripeEvent.data.object;
         // Then define and call a method to handle the successful attachment of a PaymentMethod.
         // handlePaymentMethodAttached(paymentMethod);
         break;

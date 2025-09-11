@@ -15,7 +15,7 @@ export default function UsersPage() {
   const [users, setUsers] = useState<SafeUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [_currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
     checkAuthAndFetchUsers();

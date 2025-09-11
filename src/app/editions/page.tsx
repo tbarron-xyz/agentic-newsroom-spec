@@ -122,7 +122,7 @@ export default function EditionsPage() {
                 <div className="mb-6">
                   <h4 className="text-sm font-semibold text-slate-700 mb-2">Articles</h4>
                   <div className="space-y-4">
-                    {edition.stories.map((article: Article, index: number) => (
+                    {edition.stories.map((article: Article, _index: number) => (
                       <div key={article.id} className="border border-slate-200 rounded-lg p-4">
                         <h5 className="font-semibold text-slate-800 mb-2">{article.headline}</h5>
                         <p className="text-slate-600 text-sm leading-relaxed">{article.body}</p>

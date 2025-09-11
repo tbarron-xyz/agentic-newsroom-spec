@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { RedisService } from '../../services/redis.service';
 import { AdEntry } from '../../models/types';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const redis = new RedisService();
     await redis.connect();
