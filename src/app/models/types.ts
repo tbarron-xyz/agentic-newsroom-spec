@@ -2,6 +2,7 @@ export interface Editor {
   bio: string;
   prompt: string;
   modelName: string;
+  messageSliceCount: number;
 }
 
 export interface Reporter {
@@ -81,6 +82,7 @@ export const REDIS_KEYS = {
   // Editor
   EDITOR_BIO: 'editor:bio',
   EDITOR_PROMPT: 'editor:prompt',
+  EDITOR_MESSAGE_SLICE_COUNT: 'editor:message_slice_count',
 
   // Reporters
   REPORTERS: 'reporters',

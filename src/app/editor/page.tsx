@@ -7,6 +7,7 @@ interface EditorData {
   bio: string;
   prompt: string;
   modelName: string;
+  messageSliceCount: number;
 }
 
 interface JobStatus {
@@ -24,7 +25,7 @@ interface JobStatus {
 }
 
 export default function EditorPage() {
-  const [editorData, setEditorData] = useState<EditorData>({ bio: '', prompt: '', modelName: '' });
+  const [editorData, setEditorData] = useState<EditorData>({ bio: '', prompt: '', modelName: '', messageSliceCount: 200 });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -289,6 +290,37 @@ export default function EditorPage() {
               />
               <p className="text-sm text-slate-500 mt-2">
                 Specify the AI model to use for content generation. This setting affects all AI operations in the newsroom.
+              </p>
+            </div>
+          </div>
+
+          {/* Message Slice Count Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-slate-800">Message Slice Count</h2>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-6">
+              <input
+                type="number"
+                value={editorData.messageSliceCount}
+                onChange={(e) => setEditorData({ ...editorData, messageSliceCount: parseInt(e.target.value) || 200 })}
+                placeholder="Enter message slice count (e.g., 200)"
+                min="1"
+                max="1000"
+                className={`w-full p-4 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 ${
+                  isAdmin
+                    ? 'focus:ring-2 focus:ring-orange-500 focus:border-transparent'
+                    : 'bg-slate-100 cursor-not-allowed opacity-60'
+                }`}
+                readOnly={!isAdmin}
+              />
+              <p className="text-sm text-slate-500 mt-2">
+                Number of recent messages to fetch from the MCP server for article generation (1-1000). Higher values provide more context but may slow down processing.
               </p>
             </div>
           </div>

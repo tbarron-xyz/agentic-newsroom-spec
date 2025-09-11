@@ -99,10 +99,24 @@ export class AIService {
         // Continue with article generation even if ad fetch fails
       }
 
+      // Get configurable message slice count from Redis
+      let messageSliceCount = 200; // Default fallback
+      try {
+        const redis = new RedisService();
+        await redis.connect();
+        const editor = await redis.getEditor();
+        await redis.disconnect();
+        if (editor) {
+          messageSliceCount = editor.messageSliceCount;
+        }
+      } catch (error) {
+        console.warn('Failed to fetch message slice count from Redis, using default:', error);
+      }
+
       // Format social media messages for the prompt with ad insertion
       let socialMediaContext = '';
       if (socialMediaMessages.length > 0) {
-        const messages = socialMediaMessages.slice(-200);
+        const messages = socialMediaMessages.slice(-messageSliceCount);
         const formattedMessages: string[] = [];
 
         for (let i = 0; i < messages.length; i++) {
