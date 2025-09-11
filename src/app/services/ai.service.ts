@@ -86,6 +86,7 @@ export class AIService {
         console.warn('Failed to fetch social media messages:', error);
         // Continue with article generation even if social media fetch fails
       }
+      
 
       // Fetch the most recent ad from data storage
       let mostRecentAd = null;
@@ -112,11 +113,12 @@ export class AIService {
       } catch (error) {
         console.warn('Failed to fetch message slice count from Redis, using default:', error);
       }
+      
+        const messages = socialMediaMessages.slice(-messageSliceCount);
 
       // Format social media messages for the prompt with ad insertion
       let socialMediaContext = '';
       if (socialMediaMessages.length > 0) {
-        const messages = socialMediaMessages.slice(-messageSliceCount);
         const formattedMessages: string[] = [];
 
         for (let i = 0; i < messages.length; i++) {
@@ -192,7 +194,7 @@ When generating the article, first scan the social media context for messages re
       parsedResponse.generationTime = generationTime;
       parsedResponse.wordCount = parsedResponse.body.split(' ').length;
 
-      return { response: parsedResponse, prompt: fullPrompt, messages: socialMediaMessages.map(x => x.text)} ;
+      return { response: parsedResponse, prompt: fullPrompt, messages: messages.map(x => x.text)} ;
     } catch (error) {
       console.error('Error generating structured article:', error);
       // Return fallback structured article
