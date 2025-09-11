@@ -31,7 +31,9 @@ export async function GET() {
       bio: editor?.bio || '',
       prompt: editor?.prompt || '',
       modelName: editor?.modelName || 'gpt-5-nano',
-      messageSliceCount: editor?.messageSliceCount || 200
+      messageSliceCount: editor?.messageSliceCount || 200,
+      articleGenerationPeriodMinutes: editor?.articleGenerationPeriodMinutes || 15,
+      lastArticleGenerationTime: editor?.lastArticleGenerationTime || null
     });
   } catch (error) {
     console.error('Error fetching editor data:', error);
@@ -66,7 +68,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { bio, prompt, modelName, messageSliceCount } = body;
+    const { bio, prompt, modelName, messageSliceCount, articleGenerationPeriodMinutes } = body;
 
     if (typeof bio !== 'string' || typeof prompt !== 'string' || typeof modelName !== 'string') {
       return NextResponse.json(
@@ -82,14 +84,28 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    if (typeof articleGenerationPeriodMinutes !== 'number' || articleGenerationPeriodMinutes < 1 || articleGenerationPeriodMinutes > 1440) {
+      return NextResponse.json(
+        { error: 'articleGenerationPeriodMinutes must be a number between 1 and 1440' },
+        { status: 400 }
+      );
+    }
+
     const redisService = await getRedisService();
-    await redisService.saveEditor({ bio, prompt, modelName, messageSliceCount });
+    await redisService.saveEditor({
+      bio,
+      prompt,
+      modelName,
+      messageSliceCount,
+      articleGenerationPeriodMinutes
+    });
 
     return NextResponse.json({
       bio,
       prompt,
       modelName,
       messageSliceCount,
+      articleGenerationPeriodMinutes,
       message: 'Editor data updated successfully'
     });
   } catch (error) {

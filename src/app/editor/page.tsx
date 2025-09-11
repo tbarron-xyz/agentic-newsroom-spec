@@ -8,6 +8,8 @@ interface EditorData {
   prompt: string;
   modelName: string;
   messageSliceCount: number;
+  articleGenerationPeriodMinutes: number;
+  lastArticleGenerationTime: number | null;
 }
 
 interface JobStatus {
@@ -25,7 +27,14 @@ interface JobStatus {
 }
 
 export default function EditorPage() {
-  const [editorData, setEditorData] = useState<EditorData>({ bio: '', prompt: '', modelName: '', messageSliceCount: 200 });
+  const [editorData, setEditorData] = useState<EditorData>({
+    bio: '',
+    prompt: '',
+    modelName: '',
+    messageSliceCount: 200,
+    articleGenerationPeriodMinutes: 15,
+    lastArticleGenerationTime: null
+  });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState('');
@@ -322,6 +331,58 @@ export default function EditorPage() {
               <p className="text-sm text-slate-500 mt-2">
                 Number of recent messages to fetch from the MCP server for article generation (1-1000). Higher values provide more context but may slow down processing.
               </p>
+            </div>
+          </div>
+
+          {/* Article Generation Period Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-slate-800">Article Generation Period</h2>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Generation Interval (minutes)
+                </label>
+                <input
+                  type="number"
+                  value={editorData.articleGenerationPeriodMinutes}
+                  onChange={(e) => setEditorData({ ...editorData, articleGenerationPeriodMinutes: parseInt(e.target.value) || 15 })}
+                  placeholder="Enter generation period in minutes (e.g., 15)"
+                  min="1"
+                  max="1440"
+                  className={`w-full p-4 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 ${
+                    isAdmin
+                      ? 'focus:ring-2 focus:ring-red-500 focus:border-transparent'
+                      : 'bg-slate-100 cursor-not-allowed opacity-60'
+                  }`}
+                  readOnly={!isAdmin}
+                />
+                <p className="text-sm text-slate-500 mt-2">
+                  Minimum time interval between article generation runs (1-1440 minutes). The cron job will skip generation if this duration hasn't elapsed since the last run.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Last Generation Time
+                </label>
+                <input
+                  type="text"
+                  value={editorData.lastArticleGenerationTime ? new Date(editorData.lastArticleGenerationTime).toLocaleString() : 'Never'}
+                  placeholder="No generation has occurred yet"
+                  className="w-full p-4 border border-slate-200 rounded-lg text-slate-800 bg-slate-100 cursor-not-allowed"
+                  readOnly
+                />
+                <p className="text-sm text-slate-500 mt-2">
+                  Timestamp of the last successful article generation run. This field is automatically updated by the system.
+                </p>
+              </div>
             </div>
           </div>
 

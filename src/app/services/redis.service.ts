@@ -52,15 +52,23 @@ export class RedisService {
     multi.set(REDIS_KEYS.MODEL_NAME, editor.modelName);
     console.log('Redis Write: SET', REDIS_KEYS.EDITOR_MESSAGE_SLICE_COUNT, editor.messageSliceCount.toString());
     multi.set(REDIS_KEYS.EDITOR_MESSAGE_SLICE_COUNT, editor.messageSliceCount.toString());
+    console.log('Redis Write: SET', REDIS_KEYS.ARTICLE_GENERATION_PERIOD_MINUTES, editor.articleGenerationPeriodMinutes.toString());
+    multi.set(REDIS_KEYS.ARTICLE_GENERATION_PERIOD_MINUTES, editor.articleGenerationPeriodMinutes.toString());
+    if (editor.lastArticleGenerationTime !== undefined) {
+      console.log('Redis Write: SET', REDIS_KEYS.LAST_ARTICLE_GENERATION_TIME, editor.lastArticleGenerationTime.toString());
+      multi.set(REDIS_KEYS.LAST_ARTICLE_GENERATION_TIME, editor.lastArticleGenerationTime.toString());
+    }
     await multi.exec();
   }
 
   async getEditor(): Promise<Editor | null> {
-    const [bio, prompt, modelName, messageSliceCountStr] = await Promise.all([
+    const [bio, prompt, modelName, messageSliceCountStr, articleGenerationPeriodMinutesStr, lastArticleGenerationTimeStr] = await Promise.all([
       this.client.get(REDIS_KEYS.EDITOR_BIO),
       this.client.get(REDIS_KEYS.EDITOR_PROMPT),
       this.client.get(REDIS_KEYS.MODEL_NAME),
-      this.client.get(REDIS_KEYS.EDITOR_MESSAGE_SLICE_COUNT)
+      this.client.get(REDIS_KEYS.EDITOR_MESSAGE_SLICE_COUNT),
+      this.client.get(REDIS_KEYS.ARTICLE_GENERATION_PERIOD_MINUTES),
+      this.client.get(REDIS_KEYS.LAST_ARTICLE_GENERATION_TIME)
     ]);
 
     if (!bio || !prompt) return null;
@@ -69,7 +77,9 @@ export class RedisService {
       bio,
       prompt,
       modelName: modelName || 'gpt-5-nano', // Default fallback
-      messageSliceCount: messageSliceCountStr ? parseInt(messageSliceCountStr) : 200 // Default fallback
+      messageSliceCount: messageSliceCountStr ? parseInt(messageSliceCountStr) : 200, // Default fallback
+      articleGenerationPeriodMinutes: articleGenerationPeriodMinutesStr ? parseInt(articleGenerationPeriodMinutesStr) : 15, // Default fallback
+      lastArticleGenerationTime: lastArticleGenerationTimeStr ? parseInt(lastArticleGenerationTimeStr) : undefined // Optional field
     };
   }
 

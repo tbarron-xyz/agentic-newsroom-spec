@@ -3,6 +3,8 @@ export interface Editor {
   prompt: string;
   modelName: string;
   messageSliceCount: number;
+  articleGenerationPeriodMinutes: number;
+  lastArticleGenerationTime?: number; // milliseconds since epoch, optional for backward compatibility
 }
 
 export interface Reporter {
@@ -83,6 +85,8 @@ export const REDIS_KEYS = {
   EDITOR_BIO: 'editor:bio',
   EDITOR_PROMPT: 'editor:prompt',
   EDITOR_MESSAGE_SLICE_COUNT: 'editor:message_slice_count',
+  ARTICLE_GENERATION_PERIOD_MINUTES: 'article_generation:period_minutes',
+  LAST_ARTICLE_GENERATION_TIME: 'article_generation:last_time',
 
   // Reporters
   REPORTERS: 'reporters',

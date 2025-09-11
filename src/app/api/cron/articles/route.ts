@@ -28,8 +28,41 @@ export async function GET(_request: NextRequest) {
 
     await initializeServices();
 
+    // Check if we should skip generation based on time constraints
+    const editor = await redisService!.getEditor();
+    const currentTime = Date.now();
+
+    if (editor?.lastArticleGenerationTime && editor?.articleGenerationPeriodMinutes) {
+      const timeSinceLastGeneration = (currentTime - editor.lastArticleGenerationTime) / (1000 * 60); // Convert to minutes
+      const requiredInterval = editor.articleGenerationPeriodMinutes;
+
+      if (timeSinceLastGeneration < requiredInterval) {
+        const remainingMinutes = Math.ceil(requiredInterval - timeSinceLastGeneration);
+        console.log(`[${new Date().toISOString()}] Skipping generation - only ${timeSinceLastGeneration.toFixed(1)} minutes have passed since last run. Need ${requiredInterval} minutes. ${remainingMinutes} minutes remaining.`);
+        console.log('Cron job skipped due to time constraints\n');
+
+        return NextResponse.json({
+          success: true,
+          message: `Article generation skipped - ${remainingMinutes} minutes remaining until next allowed generation.`,
+          skipped: true,
+          nextGenerationInMinutes: remainingMinutes
+        });
+      }
+    }
+
+    // Proceed with generation
     const results = await reporterService!.generateAllReporterArticles();
     const totalArticles = Object.values(results).reduce((sum, articles) => sum + articles.length, 0);
+
+    // Update the last generation time
+    if (editor) {
+      const updatedEditor = {
+        ...editor,
+        lastArticleGenerationTime: currentTime
+      };
+      await redisService!.saveEditor(updatedEditor);
+      console.log(`[${new Date().toISOString()}] Updated last generation time to ${new Date(currentTime).toISOString()}`);
+    }
 
     console.log(`[${new Date().toISOString()}] Successfully generated ${totalArticles} articles`);
     console.log('Cron job completed successfully\n');
@@ -37,7 +70,8 @@ export async function GET(_request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `Reporter article generation job completed successfully. Generated ${totalArticles} articles.`,
-      totalArticles
+      totalArticles,
+      lastGenerationTime: currentTime
     });
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Cron job failed:`, error);
