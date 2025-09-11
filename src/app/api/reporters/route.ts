@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { beats, prompt } = body;
+    const { beats, prompt, enabled } = body;
 
     if (!Array.isArray(beats) || typeof prompt !== 'string') {
       return NextResponse.json(
@@ -95,7 +95,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const reporter = await reporterService!.createReporter({ beats, prompt });
+    const reporter = await reporterService!.createReporter({
+      beats,
+      prompt,
+      enabled: enabled ?? true // Default to true if not specified
+    });
 
     return NextResponse.json({
       ...reporter,

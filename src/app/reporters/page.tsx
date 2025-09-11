@@ -7,6 +7,7 @@ interface Reporter {
   id: string;
   beats: string[];
   prompt: string;
+  enabled: boolean;
 }
 
 interface User {
@@ -229,8 +230,39 @@ export default function ReportersPage() {
     });
   };
 
-  // Check if user has reporter permission
+  const toggleReporterStatus = async (reporterId: string) => {
+    setSaving(true);
+    setMessage('');
+
+    try {
+      const token = localStorage.getItem('accessToken');
+      const response = await fetch(`/api/reporters/${reporterId}/toggle`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setMessage(data.message);
+        setTimeout(() => setMessage(''), 3000);
+        fetchReporters(); // Refresh the list
+      } else {
+        const error = await response.json();
+        setMessage(error.error || 'Failed to toggle reporter status');
+      }
+    } catch (error) {
+      setMessage('Error toggling reporter status');
+      console.error('Error toggling reporter status:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Check permissions
   const hasReporterPermission = user?.hasReporter === true;
+  const hasEditorPermission = user?.hasEditor === true;
 
   if (loading) {
     return (
@@ -397,11 +429,11 @@ export default function ReportersPage() {
 
         {/* Message */}
         {message && (
-          <div className="mb-6 px-6 py-4 rounded-lg text-center font-medium ${
+          <div className={`mb-6 px-6 py-4 rounded-lg text-center font-medium ${
             message.includes('successfully')
               ? 'bg-green-100 text-green-800'
               : 'bg-red-100 text-red-800'
-          }">
+          }`}>
             {message}
           </div>
         )}
@@ -423,15 +455,24 @@ export default function ReportersPage() {
               <div key={reporter.id} className="bg-white rounded-2xl shadow-xl p-8">
                 <div className="flex items-start justify-between mb-6">
                   <div className="flex items-center space-x-3">
-                    <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className={`w-10 h-10 rounded-full flex items-center justify-center ${reporter.enabled ? 'bg-blue-100' : 'bg-gray-100'}`}>
+                      <svg className={`w-5 h-5 ${reporter.enabled ? 'text-blue-600' : 'text-gray-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-slate-800">
-                        Reporter {reporter.id.split('_')[2] || reporter.id}
-                      </h3>
+                      <div className="flex items-center space-x-2">
+                        <h3 className={`text-xl font-semibold ${reporter.enabled ? 'text-slate-800' : 'text-slate-500'}`}>
+                          Reporter {reporter.id.split('_')[2] || reporter.id}
+                        </h3>
+                        <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                          reporter.enabled
+                            ? 'bg-green-100 text-green-800'
+                            : 'bg-red-100 text-red-800'
+                        }`}>
+                          {reporter.enabled ? 'Enabled' : 'Disabled'}
+                        </span>
+                      </div>
                       <p className="text-slate-600">{reporter.beats.length} beat{reporter.beats.length !== 1 ? 's' : ''}</p>
                     </div>
                   </div>
@@ -446,6 +487,22 @@ export default function ReportersPage() {
                       </svg>
                       <span>View Articles</span>
                     </Link>
+                    {hasEditorPermission ? (
+                      <button
+                        onClick={() => toggleReporterStatus(reporter.id)}
+                        disabled={saving}
+                        className={`px-4 py-2 rounded-lg transition-colors font-medium flex items-center space-x-1 ${
+                          reporter.enabled
+                            ? 'bg-orange-600 text-white hover:bg-orange-700'
+                            : 'bg-green-600 text-white hover:bg-green-700'
+                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={reporter.enabled ? "M13 10V3L4 14h7v7l9-11h-7z" : "M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"} />
+                        </svg>
+                        <span>{reporter.enabled ? 'Disable' : 'Enable'}</span>
+                      </button>
+                    ) : null}
                     {hasReporterPermission ? (
                       <button
                         onClick={() => setEditingReporter(editingReporter?.id === reporter.id ? null : reporter)}

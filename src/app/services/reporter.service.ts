@@ -79,12 +79,19 @@ export class ReporterService {
       throw new Error('No reporters available to generate articles');
     }
 
-    console.log(`Found ${reporters.length} reporters`);
+    // Filter to only enabled reporters
+    const enabledReporters = reporters.filter(reporter => reporter.enabled);
+    console.log(`Found ${reporters.length} total reporters, ${enabledReporters.length} enabled`);
+
+    if (enabledReporters.length === 0) {
+      console.log('No enabled reporters available to generate articles');
+      return {};
+    }
 
     const results: { [reporterId: string]: Article[] } = {};
 
-    // Generate articles for each reporter
-    for (const reporter of reporters) {
+    // Generate articles for each enabled reporter
+    for (const reporter of enabledReporters) {
       try {
         const articles = await this.generateArticlesForReporter(reporter.id);
         results[reporter.id] = articles;
@@ -95,7 +102,7 @@ export class ReporterService {
     }
 
     const totalArticles = Object.values(results).reduce((sum, articles) => sum + articles.length, 0);
-    console.log(`Generated ${totalArticles} articles across ${reporters.length} reporters`);
+    console.log(`Generated ${totalArticles} articles across ${enabledReporters.length} enabled reporters`);
 
     return results;
   }
@@ -130,7 +137,8 @@ export class ReporterService {
     const reporterId = await this.redisService.generateId('reporter');
     const reporter: Reporter = {
       id: reporterId,
-      ...reporterData
+      ...reporterData,
+      enabled: reporterData.enabled ?? true // Default to true if not specified
     };
 
     await this.redisService.saveReporter(reporter);

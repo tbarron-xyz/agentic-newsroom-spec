@@ -101,7 +101,7 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { beats, prompt } = body;
+    const { beats, prompt, enabled } = body;
 
     if (!Array.isArray(beats) || typeof prompt !== 'string') {
       return NextResponse.json(
@@ -110,7 +110,7 @@ export async function PUT(
       );
     }
 
-    const updatedReporter = await reporterService!.updateReporter(reporterId, { beats, prompt });
+    const updatedReporter = await reporterService!.updateReporter(reporterId, { beats, prompt, enabled });
 
     if (!updatedReporter) {
       return NextResponse.json(

@@ -11,6 +11,7 @@ export interface Reporter {
   id: string;
   beats: string[];
   prompt: string;
+  enabled: boolean;
 }
 
 export interface Article {
@@ -92,6 +93,7 @@ export const REDIS_KEYS = {
   REPORTERS: 'reporters',
   REPORTER_BEATS: (id: string) => `reporter:${id}:beats`,
   REPORTER_PROMPT: (id: string) => `reporter:${id}:prompt`,
+  REPORTER_ENABLED: (id: string) => `reporter:${id}:enabled`,
 
   // Articles
   ARTICLES_BY_REPORTER: (reporterId: string) => `articles:${reporterId}`,

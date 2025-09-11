@@ -55,7 +55,8 @@ async function testAdIntegration() {
     const mockReporter = {
       id: 'test_reporter',
       beats: ['Technology', 'Business'],
-      prompt: 'Focus on innovative tech developments and business impacts'
+      prompt: 'Focus on innovative tech developments and business impacts',
+      enabled: true
     };
 
     // Generate an article

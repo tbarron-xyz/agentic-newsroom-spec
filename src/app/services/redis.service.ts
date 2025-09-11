@@ -96,6 +96,8 @@ export class RedisService {
     });
     console.log('Redis Write: SET', REDIS_KEYS.REPORTER_PROMPT(reporter.id), reporter.prompt);
     multi.set(REDIS_KEYS.REPORTER_PROMPT(reporter.id), reporter.prompt);
+    console.log('Redis Write: SET', REDIS_KEYS.REPORTER_ENABLED(reporter.id), reporter.enabled.toString());
+    multi.set(REDIS_KEYS.REPORTER_ENABLED(reporter.id), reporter.enabled.toString());
     await multi.exec();
   }
 
@@ -114,17 +116,22 @@ export class RedisService {
   }
 
   async getReporter(id: string): Promise<Reporter | null> {
-    const [beats, prompt] = await Promise.all([
+    const [beats, prompt, enabledStr] = await Promise.all([
       this.client.sMembers(REDIS_KEYS.REPORTER_BEATS(id)),
-      this.client.get(REDIS_KEYS.REPORTER_PROMPT(id))
+      this.client.get(REDIS_KEYS.REPORTER_PROMPT(id)),
+      this.client.get(REDIS_KEYS.REPORTER_ENABLED(id))
     ]);
 
     if (!prompt) return null;
 
+    // Default to true for backward compatibility with existing reporters
+    const enabled = enabledStr === null ? true : enabledStr === 'true';
+
     return {
       id,
       beats,
-      prompt
+      prompt,
+      enabled
     };
   }
 
