@@ -35,6 +35,7 @@ export const reporterArticleSchema = z.object({
         factualAccuracy: z.string()
     }),
     socialMediaSummary: z.string(),
+    potentialMessageIds: z.array(z.number()).describe("The indexes of potentially related social media messages")
 });
 
 export const reporterResponseSchema = z.object({

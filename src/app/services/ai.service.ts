@@ -65,6 +65,7 @@ export class AIService {
     };
     socialMediaSummary: string;
     messageIds: number[];
+    potentialMessageIds: number[];
   }, prompt: string,
     messages: string[];
 }> {
@@ -153,7 +154,7 @@ Focus the entire article on this one specific development, providing in-depth co
 
 Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible. Focus exclusively on this one development to create a more targeted and impactful piece.${socialMediaContext}
 
-When generating the article, first scan the social media context for messages relevant to your available beats, choose the most appropriate beat for the best story available, identify the most significant single development within that beat, then focus the entire article on that specific development to create a more targeted and impactful story.`;
+When generating the article, first scan the social media context for messages relevant to your available beats, choose the most appropriate beat for the best story available, identify the most significant single development within that beat, then focus the entire article on that specific development to create a more targeted and impactful story. After writing the article, re-scan the social media messages for any that may be potentially related to your story; include their numeric indices in the "potentialMessageIds" field.`;
 
       const fullPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
 
@@ -231,7 +232,7 @@ Make the article engaging, factual, and professionally written. Ensure all quote
           factualAccuracy: 'Information based on preliminary reports'
         },
         socialMediaSummary: `Breaking: Major developments in ${fallbackBeat} sector capturing widespread attention. Stay tuned for updates! #${fallbackBeat.replace(/\s+/g, '')}News`,
-        messageIds: [], // No tweets used in fallback,
+        messageIds: [],potentialMessageIds:[], // No tweets used in fallback,
       }, messages:[], prompt:fallbackPrompt};
     }
   }

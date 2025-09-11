@@ -39,7 +39,7 @@ export class ReporterService {
         const messageTexts: string[] = [];
         if (structuredArticle.response.messageIds && structuredArticle.response.messageIds.length > 0) {
           console.log(`Article used message IDs: ${structuredArticle.response.messageIds.join(', ')}`);
-          structuredArticle.response.messageIds.forEach(x => messageTexts.push(structuredArticle.messages[x-1])); // -1 because ai service does a +1
+          structuredArticle.response.messageIds.concat(structuredArticle.response.potentialMessageIds).forEach(x => messageTexts.push(structuredArticle.messages[x-1])); // -1 because ai service does a +1
         }
 
         // Convert structured article to simple Article format for storage
