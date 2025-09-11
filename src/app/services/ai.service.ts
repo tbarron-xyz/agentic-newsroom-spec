@@ -70,7 +70,7 @@ export class AIService {
 }> {
     const generationTime = Date.now();
     const articleId = `article_${generationTime}_${Math.random().toString(36).substring(2, 8)}`;
-    const beat = reporter.beats[Math.floor(Math.random() * reporter.beats.length)];
+    const beatsList = reporter.beats.join(', ');
 
     try {
       // Fetch recent social media messages to inform article generation
@@ -130,14 +130,14 @@ export class AIService {
           }
         }
 
-        socialMediaContext = `\n\nRecent social media discussions related to ${beat}:\n${formattedMessages.join('\n')}`;
+        socialMediaContext = `\n\nRecent social media discussions:\n${formattedMessages.join('\n')}`;
       }
 
       const systemPrompt = `You are a professional journalist creating structured news articles. Generate comprehensive, well-researched articles with proper journalistic structure including lead paragraphs, key quotes, sources, and reporter notes. ${reporter.prompt}`;
 
-      const userPrompt = `Create a focused news article about one particular recent development in the ${beat} sector.
+      const userPrompt = `Create a focused news article about one particular recent development. You have access to these beats: ${beatsList}. Choose one beat from this list and focus your article on a recent development within that chosen beat.
 
-First, scan the provided social media messages for information relevant to the ${beat} topic. Identify the single most significant or noteworthy recent development from these messages. If there are zero relevant social media messages, stop processing and return empty strings for the rest of the fields.
+First, scan the provided social media messages for information relevant to any of your available beats. Identify the single most significant or noteworthy recent development from these messages that aligns with one of your assigned beats. If there are zero relevant social media messages, stop processing and return empty strings for the rest of the fields.
 
 Focus the entire article on this one specific development, providing in-depth coverage rather than broad overview. Include:
 
@@ -148,11 +148,12 @@ Focus the entire article on this one specific development, providing in-depth co
 5. 3-5 credible sources focused on this particular development
 6. A brief social media summary (under 280 characters) about this specific story
 7. Reporter notes on research quality, source diversity, and factual accuracy for this development
-8. messageIds: List the indices (1, 2, 3, etc.) of only the relevant messages you identified and actually used to inform or write this article about this specific development. If you didn't find any relevant messages or didn't use any specific messages, use an empty array.
+8. beat: Specify which beat from your assigned list you chose for this article
+9. messageIds: List the indices (1, 2, 3, etc.) of only the relevant messages you identified and actually used to inform or write this article about this specific development. If you didn't find any relevant messages or didn't use any specific messages, use an empty array.
 
 Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible. Focus exclusively on this one development to create a more targeted and impactful piece.${socialMediaContext}
 
-When generating the article, first scan the social media context for messages relevant to ${beat}, identify the most significant single development, then focus the entire article on that specific development to create a more targeted and impactful story.`;
+When generating the article, first scan the social media context for messages relevant to your available beats, choose the most appropriate beat for the best story available, identify the most significant single development within that beat, then focus the entire article on that specific development to create a more targeted and impactful story.`;
 
       const fullPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
 
@@ -190,7 +191,6 @@ When generating the article, first scan the social media context for messages re
       // Add generated fields
       parsedResponse.id = articleId;
       parsedResponse.reporterId = reporter.id;
-      parsedResponse.beat = beat;
       parsedResponse.generationTime = generationTime;
       parsedResponse.wordCount = parsedResponse.body.split(' ').length;
 
@@ -198,9 +198,10 @@ When generating the article, first scan the social media context for messages re
     } catch (error) {
       console.error('Error generating structured article:', error);
       // Return fallback structured article
+      const fallbackBeat = reporter.beats[0] || 'General News';
       const fallbackPrompt = `System: You are a professional journalist creating structured news articles. Generate comprehensive, well-researched articles with proper journalistic structure including lead paragraphs, key quotes, sources, and reporter notes. Focus on: ${reporter.prompt}
 
-User: Create a comprehensive news article about recent developments in the ${beat} sector. Include:
+User: Create a comprehensive news article about recent developments. You have access to these beats: ${beatsList}. Choose one beat from this list and focus your article on a recent development within that chosen beat. Include:
 
 1. A compelling headline
 2. A strong lead paragraph (2-3 sentences)
@@ -209,18 +210,19 @@ User: Create a comprehensive news article about recent developments in the ${bea
 5. 3-5 credible sources
 6. A brief social media summary (under 280 characters)
 7. Reporter notes on research quality, source diversity, and factual accuracy
+8. beat: Specify which beat from your assigned list you chose for this article
 
 Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible.`;
 
       return {response: {
         id: articleId,
         reporterId: reporter.id,
-        beat,
-        headline: `Breaking News in ${beat}`,
-        leadParagraph: `Recent developments in the ${beat} sector have captured significant attention from industry experts and the general public.`,
-        body: `A significant development has occurred in the ${beat} sector, capturing widespread attention and prompting discussion among industry experts and the general public. The situation continues to evolve with potential implications for various stakeholders. Further details are expected to emerge as the story develops.`,
-        keyQuotes: [`"This development represents a significant shift in the ${beat} landscape," said an industry expert.`],
-        sources: [`Industry Report on ${beat}`, 'Market Analysis Publication'],
+        beat: fallbackBeat,
+        headline: `Breaking News in ${fallbackBeat}`,
+        leadParagraph: `Recent developments in the ${fallbackBeat} sector have captured significant attention from industry experts and the general public.`,
+        body: `A significant development has occurred in the ${fallbackBeat} sector, capturing widespread attention and prompting discussion among industry experts and the general public. The situation continues to evolve with potential implications for various stakeholders. Further details are expected to emerge as the story develops.`,
+        keyQuotes: [`"This development represents a significant shift in the ${fallbackBeat} landscape," said an industry expert.`],
+        sources: [`Industry Report on ${fallbackBeat}`, 'Market Analysis Publication'],
         wordCount: 85,
         generationTime,
         reporterNotes: {
@@ -228,7 +230,7 @@ Make the article engaging, factual, and professionally written. Ensure all quote
           sourceDiversity: 'Limited source diversity due to breaking news nature',
           factualAccuracy: 'Information based on preliminary reports'
         },
-        socialMediaSummary: `Breaking: Major developments in ${beat} sector capturing widespread attention. Stay tuned for updates! #${beat.replace(/\s+/g, '')}News`,
+        socialMediaSummary: `Breaking: Major developments in ${fallbackBeat} sector capturing widespread attention. Stay tuned for updates! #${fallbackBeat.replace(/\s+/g, '')}News`,
         messageIds: [], // No tweets used in fallback,
       }, messages:[], prompt:fallbackPrompt};
     }
