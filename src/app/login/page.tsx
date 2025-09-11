@@ -82,6 +82,15 @@ export default function LoginPage() {
             <p className="text-slate-600">Enter your credentials to access the editor</p>
           </div>
 
+          <div className="px-4 py-3 rounded-lg bg-blue-50 border border-blue-200 mb-6">
+            <p className="text-blue-800 text-sm mb-2">
+              <strong>New users:</strong> Enter the email and password you wish to register with, then click Register.
+            </p>
+            <p className="text-blue-800 text-sm">
+              <strong>Existing users:</strong> Enter your existing email and password, then click Login.
+            </p>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
