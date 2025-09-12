@@ -134,10 +134,17 @@ export default function AccountPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-slate-600">Loading account...</p>
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center relative overflow-hidden">
+        {/* Floating background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        </div>
+
+        <div className="text-center relative z-10">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mx-auto"></div>
+          <p className="mt-4 text-white/80">Loading account...</p>
         </div>
       </div>
     );
@@ -148,19 +155,26 @@ export default function AccountPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 relative overflow-hidden">
+      {/* Floating background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
+        <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20">
           {/* Header */}
-          <div className="px-6 py-4 border-b border-slate-200">
-            <h1 className="text-2xl font-bold text-slate-800">Account Settings</h1>
-            <p className="text-slate-600 mt-1">Manage your account information and preferences</p>
+          <div className="px-6 py-4 border-b border-white/20">
+            <h1 className="text-2xl font-bold text-white">Account Settings</h1>
+            <p className="text-white/80 mt-1">Manage your account information and preferences</p>
           </div>
 
           <div className="p-6 space-y-8">
             {/* Account Permissions */}
-            <div className="bg-slate-50 rounded-lg p-4">
-              <h2 className="text-lg font-semibold text-slate-800 mb-4">Account Permissions</h2>
+            <div className="backdrop-blur-xl bg-white/5 rounded-xl p-6 border border-white/10">
+              <h2 className="text-lg font-semibold text-white mb-4">Account Permissions</h2>
               <div className="space-y-3">
                 <div className="flex items-center space-x-3">
                   <input
@@ -168,9 +182,9 @@ export default function AccountPage() {
                     id="reader-permission"
                     checked={hasReader}
                     disabled
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-not-allowed"
+                    className="h-4 w-4 text-white focus:ring-white border-white/30 rounded cursor-not-allowed bg-white/10"
                   />
-                  <label htmlFor="reader-permission" className="text-sm font-medium text-slate-700">
+                  <label htmlFor="reader-permission" className="text-sm font-medium text-white/90">
                     Reader
                   </label>
                 </div>
@@ -180,9 +194,9 @@ export default function AccountPage() {
                     id="reporter-permission"
                     checked={hasReporter}
                     disabled
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-not-allowed"
+                    className="h-4 w-4 text-white focus:ring-white border-white/30 rounded cursor-not-allowed bg-white/10"
                   />
-                  <label htmlFor="reporter-permission" className="text-sm font-medium text-slate-700">
+                  <label htmlFor="reporter-permission" className="text-sm font-medium text-white/90">
                     Reporter
                   </label>
                 </div>
@@ -192,33 +206,34 @@ export default function AccountPage() {
                     id="editor-permission"
                     checked={hasEditor}
                     disabled
-                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded cursor-not-allowed"
+                    className="h-4 w-4 text-white focus:ring-white border-white/30 rounded cursor-not-allowed bg-white/10"
                   />
-                  <label htmlFor="editor-permission" className="text-sm font-medium text-slate-700">
+                  <label htmlFor="editor-permission" className="text-sm font-medium text-white/90">
                     Editor
                   </label>
                 </div>
               </div>
-              <div className="mt-4 text-sm text-slate-600">
+              <div className="mt-4 text-sm text-white/70">
                 Member since {new Date(user.createdAt).toLocaleDateString()}
               </div>
               {/* Upgrade Options */}
               <div className="mt-6 space-y-4">
                 {/* Upgrade to Reader (existing) */}
                 {!hasReader && (
-                  <div className="border border-slate-200 rounded-lg p-4 bg-white">
+                  <div className="backdrop-blur-xl bg-white/5 rounded-xl p-4 border border-white/10">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-sm font-medium text-slate-800">Upgrade to Reader</h3>
-                        <p className="text-xs text-slate-600 mt-1">
+                        <h3 className="text-sm font-medium text-white">Upgrade to Reader</h3>
+                        <p className="text-xs text-white/70 mt-1">
                           Premium access to all published content and enhanced reading features
                         </p>
                       </div>
                       <a
                         href={`${process.env.NEXT_PUBLIC_STRIPE_READER_BUY_URL}?prefilled_email=${user.email}`}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        className="group relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 overflow-hidden transition-all duration-300"
                       >
-                        Upgrade To Reader
+                        <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                        <span className="relative">Upgrade To Reader</span>
                       </a>
                     </div>
                   </div>
@@ -226,19 +241,20 @@ export default function AccountPage() {
 
                 {/* Upgrade to Reporter */}
                 {!hasReporter && (
-                  <div className="border border-slate-200 rounded-lg p-4 bg-white">
+                  <div className="backdrop-blur-xl bg-white/5 rounded-xl p-4 border border-white/10">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-sm font-medium text-slate-800">Upgrade to Reporter</h3>
-                        <p className="text-xs text-slate-600 mt-1">
+                        <h3 className="text-sm font-medium text-white">Upgrade to Reporter</h3>
+                        <p className="text-xs text-white/70 mt-1">
                           Access AI-powered reporting tools and create professional news content
                         </p>
                       </div>
                       <a
                         href={`${process.env.NEXT_PUBLIC_STRIPE_REPORTER_BUY_URL}?prefilled_email=${user.email}`}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                        className="group relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 overflow-hidden transition-all duration-300"
                       >
-                        Upgrade To Reporter
+                        <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                        <span className="relative">Upgrade To Reporter</span>
                       </a>
                     </div>
                   </div>
@@ -246,19 +262,20 @@ export default function AccountPage() {
 
                 {/* Upgrade to Editor */}
                 {!hasEditor && (
-                  <div className="border border-slate-200 rounded-lg p-4 bg-white">
+                  <div className="backdrop-blur-xl bg-white/5 rounded-xl p-4 border border-white/10">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="text-sm font-medium text-slate-800">Upgrade to Editor</h3>
-                        <p className="text-xs text-slate-600 mt-1">
+                        <h3 className="text-sm font-medium text-white">Upgrade to Editor</h3>
+                        <p className="text-xs text-white/70 mt-1">
                           Full editorial control with advanced publishing tools and team management
                         </p>
                       </div>
                       <a
                         href={`${process.env.NEXT_PUBLIC_STRIPE_EDITOR_BUY_URL}?prefilled_email=${user.email}`}
-                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
+                        className="group relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 overflow-hidden transition-all duration-300"
                       >
-                        Upgrade To Editor
+                        <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                        <span className="relative">Upgrade To Editor</span>
                       </a>
                     </div>
                   </div>
@@ -267,11 +284,11 @@ export default function AccountPage() {
             </div>
 
             {/* Personal Information */}
-            <div>
-              <h2 className="text-lg font-semibold text-slate-800 mb-4">Personal Information</h2>
+            <div className="backdrop-blur-xl bg-white/5 rounded-xl p-6 border border-white/10">
+              <h2 className="text-lg font-semibold text-white mb-4">Personal Information</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-slate-700 mb-2">
+                  <label htmlFor="firstName" className="block text-sm font-medium text-white/90 mb-2">
                     First Name
                   </label>
                   <input
@@ -279,13 +296,13 @@ export default function AccountPage() {
                     id="firstName"
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2 backdrop-blur-xl bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
                     placeholder="Enter your first name"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-slate-700 mb-2">
+                  <label htmlFor="lastName" className="block text-sm font-medium text-white/90 mb-2">
                     Last Name
                   </label>
                   <input
@@ -293,13 +310,13 @@ export default function AccountPage() {
                     id="lastName"
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2 backdrop-blur-xl bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
                     placeholder="Enter your last name"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+                  <label htmlFor="email" className="block text-sm font-medium text-white/90 mb-2">
                     Email Address
                   </label>
                   <input
@@ -307,13 +324,13 @@ export default function AccountPage() {
                     id="email"
                     value={user.email}
                     disabled
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md bg-slate-50 text-slate-500 cursor-not-allowed"
+                    className="w-full px-3 py-2 backdrop-blur-xl bg-white/5 border border-white/10 rounded-lg text-white/70 cursor-not-allowed"
                   />
-                  <p className="text-xs text-slate-500 mt-1">Email cannot be changed</p>
+                  <p className="text-xs text-white/50 mt-1">Email cannot be changed</p>
                 </div>
 
                 <div>
-                  <label htmlFor="phone" className="block text-sm font-medium text-slate-700 mb-2">
+                  <label htmlFor="phone" className="block text-sm font-medium text-white/90 mb-2">
                     Phone Number
                   </label>
                   <input
@@ -321,13 +338,13 @@ export default function AccountPage() {
                     id="phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2 backdrop-blur-xl bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
                     placeholder="Enter your phone number"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label htmlFor="company" className="block text-sm font-medium text-slate-700 mb-2">
+                  <label htmlFor="company" className="block text-sm font-medium text-white/90 mb-2">
                     Company/Organization
                   </label>
                   <input
@@ -335,13 +352,13 @@ export default function AccountPage() {
                     id="company"
                     value={company}
                     onChange={(e) => setCompany(e.target.value)}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2 backdrop-blur-xl bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300"
                     placeholder="Enter your company or organization"
                   />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label htmlFor="bio" className="block text-sm font-medium text-slate-700 mb-2">
+                  <label htmlFor="bio" className="block text-sm font-medium text-white/90 mb-2">
                     Bio
                   </label>
                   <textarea
@@ -349,7 +366,7 @@ export default function AccountPage() {
                     value={bio}
                     onChange={(e) => setBio(e.target.value)}
                     rows={4}
-                    className="w-full px-3 py-2 border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                    className="w-full px-3 py-2 backdrop-blur-xl bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/50 focus:ring-2 focus:ring-white/50 focus:border-white/50 transition-all duration-300 resize-none"
                     placeholder="Tell us a bit about yourself"
                   />
                 </div>
@@ -357,34 +374,33 @@ export default function AccountPage() {
             </div>
 
             {/* Account Activity */}
-            <div>
-              <h2 className="text-lg font-semibold text-slate-800 mb-4">Account Activity</h2>
-              <div className="bg-slate-50 rounded-lg p-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-slate-600">Last Login</p>
-                    <p className="font-medium text-slate-800">
-                      {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Never'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-slate-600">Account Created</p>
-                    <p className="font-medium text-slate-800">
-                      {new Date(user.createdAt).toLocaleString()}
-                    </p>
-                  </div>
+            <div className="backdrop-blur-xl bg-white/5 rounded-xl p-6 border border-white/10">
+              <h2 className="text-lg font-semibold text-white mb-4">Account Activity</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-white/70">Last Login</p>
+                  <p className="font-medium text-white">
+                    {user.lastLoginAt ? new Date(user.lastLoginAt).toLocaleString() : 'Never'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-white/70">Account Created</p>
+                  <p className="font-medium text-white">
+                    {new Date(user.createdAt).toLocaleString()}
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Save Button */}
-            <div className="flex justify-end pt-6 border-t border-slate-200">
+            <div className="flex justify-end pt-6 border-t border-white/20">
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="px-6 py-2 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="group relative inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {saving ? 'Saving...' : 'Save Changes'}
+                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                <span className="relative">{saving ? 'Saving...' : 'Save Changes'}</span>
               </button>
             </div>
           </div>
