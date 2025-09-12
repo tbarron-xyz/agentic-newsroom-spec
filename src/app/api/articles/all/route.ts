@@ -42,8 +42,23 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Get all articles
-    const articles = await redisService.getAllArticles();
+    // Parse and validate results parameter
+    const { searchParams } = new URL(request.url);
+    const resultsParam = searchParams.get('results');
+    let limit = 100; // default
+    if (resultsParam) {
+      const parsed = parseInt(resultsParam, 10);
+      if (isNaN(parsed) || parsed <= 0) {
+        return NextResponse.json(
+          { error: 'results parameter must be a positive integer' },
+          { status: 400 }
+        );
+      }
+      limit = parsed;
+    }
+
+    // Get all articles with limit
+    const articles = await redisService.getAllArticles(limit);
 
     return NextResponse.json(articles);
   } catch (error) {
