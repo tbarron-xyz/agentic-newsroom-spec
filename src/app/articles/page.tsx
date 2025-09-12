@@ -166,87 +166,107 @@ function ArticlesContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/30 relative z-10"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        </div>
+        <div className="text-center relative z-10">
+          <div className="w-16 h-16 backdrop-blur-xl bg-red-500/20 border border-red-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-red-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-slate-800 mb-2">Error Loading Articles</h2>
-          <p className="text-slate-600">{error}</p>
+          <h2 className="text-xl font-semibold text-white/90 mb-2">Error Loading Articles</h2>
+          <p className="text-white/70">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 py-8 px-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+      </div>
+      <div className="max-w-4xl mx-auto relative z-10">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-4xl font-bold text-slate-800 mb-2">
-              {reporterId ? 'Articles by Reporter' : 'All Articles'}
-            </h1>
-            <p className="text-slate-600 text-lg">
-              {reporterId ? `Reporter ${reporterId.split('_')[2] || reporterId}` : 'Chronological list of all published articles'}
-            </p>
-          </div>
-          <div className="flex items-center space-x-4">
-            {reporterId ? (
-              <Link
-                href="/reporters"
-                className="px-6 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium"
-              >
-                ← Back to Reporters
-              </Link>
-            ) : (
-              <Link
-                href="/"
-                className="px-6 py-3 bg-slate-100 text-slate-700 rounded-lg hover:bg-slate-200 transition-colors font-medium"
-              >
-                ← Back to Daily Edition
-              </Link>
-            )}
+        <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 mb-8 shadow-2xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-white/90 mb-2">
+                {reporterId ? 'Articles by Reporter' : 'All Articles'}
+              </h1>
+              <p className="text-white/70 text-lg">
+                {reporterId ? `Reporter ${reporterId.split('_')[2] || reporterId}` : 'Chronological list of all published articles'}
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              {reporterId ? (
+                <Link
+                  href="/reporters"
+                  className="relative px-6 py-3 backdrop-blur-sm bg-white/10 border border-white/20 rounded-xl font-medium text-white/90 hover:bg-white/20 transition-all duration-300"
+                >
+                  ← Back to Reporters
+                </Link>
+              ) : (
+                <Link
+                  href="/"
+                  className="relative px-6 py-3 backdrop-blur-sm bg-white/10 border border-white/20 rounded-xl font-medium text-white/90 hover:bg-white/20 transition-all duration-300"
+                >
+                  ← Back to Daily Edition
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 
         {/* Articles List */}
         <div className="space-y-6">
           {articles.length === 0 ? (
-            <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-12 text-center shadow-2xl">
+              <div className="w-16 h-16 backdrop-blur-sm bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold text-slate-800 mb-2">No Articles Found</h3>
-              <p className="text-slate-600">
+              <h3 className="text-xl font-semibold text-white/90 mb-2">No Articles Found</h3>
+              <p className="text-white/70">
                 {reporterId ? "This reporter hasn't written any articles yet." : "No articles have been published yet."}
               </p>
             </div>
           ) : (
             articles.map((article) => (
-              <div key={article.id} className="bg-white rounded-2xl shadow-xl p-8">
+              <div key={article.id} className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl hover:bg-white/15 transition-all duration-300">
                 <div className="mb-4">
                   <Link
                     href={`/articles/${article.id}`}
                     className="block group"
                   >
-                    <h2 className="text-2xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">
+                    <h2 className="text-2xl font-bold text-white/90 mb-2 group-hover:text-white transition-colors">
                       {article.headline}
                     </h2>
                   </Link>
-                  <div className="flex items-center text-sm text-slate-500">
+                  <div className="flex items-center text-sm text-white/70">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
@@ -255,17 +275,17 @@ function ArticlesContent() {
                 </div>
 
                 <div className="prose prose-slate max-w-none">
-                  <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                  <p className="text-white/80 leading-relaxed whitespace-pre-wrap">
                     {article.body}
                   </p>
                 </div>
 
                 {/* Source Messages Section */}
                 {article.messageTexts && article.messageTexts.length > 0 && (
-                  <div className="mt-6 pt-6 border-t border-slate-200">
+                  <div className="mt-6 pt-6 border-t border-white/20">
                     <button
                       onClick={() => toggleMessages(article.id)}
-                      className="flex items-center text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+                      className="flex items-center text-sm font-medium text-white/70 hover:text-white transition-colors"
                     >
                       <svg
                         className={`w-4 h-4 mr-2 transition-transform ${expandedMessages.has(article.id) ? 'rotate-90' : ''}`}
@@ -280,16 +300,16 @@ function ArticlesContent() {
 
                     {expandedMessages.has(article.id) && (
                       <div className="mt-4 space-y-4">
-                        <h4 className="text-sm font-semibold text-slate-700">Social Media Messages Used:</h4>
+                        <h4 className="text-sm font-semibold text-white/90">Social Media Messages Used:</h4>
                         {article.messageTexts.map((message, index) => (
-                          <div key={index} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                          <div key={index} className="p-4 backdrop-blur-sm bg-white/5 border border-white/10 rounded-lg">
                             <div className="flex items-center justify-between mb-2">
-                              <span className="text-xs font-medium text-slate-500">Message {index + 1}</span>
+                              <span className="text-xs font-medium text-white/70">Message {index + 1}</span>
                               {article.messageIds && article.messageIds[index] && (
-                                <span className="text-xs text-slate-400">ID: {article.messageIds[index]}</span>
+                                <span className="text-xs text-white/50">ID: {article.messageIds[index]}</span>
                               )}
                             </div>
-                            <div className="text-sm text-slate-700 whitespace-pre-wrap">
+                            <div className="text-sm text-white/80 whitespace-pre-wrap">
                               {message}
                             </div>
                           </div>
@@ -300,10 +320,10 @@ function ArticlesContent() {
                 )}
 
                 {/* Prompt Section */}
-                <div className="mt-6 pt-6 border-t border-slate-200">
+                <div className="mt-6 pt-6 border-t border-white/20">
                   <button
                     onClick={() => togglePrompt(article.id)}
-                    className="flex items-center text-sm font-medium text-slate-600 hover:text-slate-800 transition-colors"
+                    className="flex items-center text-sm font-medium text-white/70 hover:text-white transition-colors"
                   >
                     <svg
                       className={`w-4 h-4 mr-2 transition-transform ${expandedPrompts.has(article.id) ? 'rotate-90' : ''}`}
@@ -317,17 +337,17 @@ function ArticlesContent() {
                   </button>
 
                   {expandedPrompts.has(article.id) && (
-                    <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-                      <h4 className="text-sm font-semibold text-slate-700 mb-2">AI Generation Prompt:</h4>
-                      <pre className="text-xs text-slate-600 whitespace-pre-wrap font-mono leading-relaxed">
+                    <div className="mt-4 p-4 backdrop-blur-sm bg-white/5 border border-white/10 rounded-lg">
+                      <h4 className="text-sm font-semibold text-white/90 mb-2">AI Generation Prompt:</h4>
+                      <pre className="text-xs text-white/70 whitespace-pre-wrap font-mono leading-relaxed">
                         {article.prompt}
                       </pre>
                     </div>
                   )}
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-slate-200">
-                  <div className="flex items-center justify-between text-sm text-slate-500">
+                <div className="mt-6 pt-6 border-t border-white/20">
+                  <div className="flex items-center justify-between text-sm text-white/70">
                     <span>Article ID: {article.id}</span>
                     <span>Reporter: {article.reporterId}</span>
                   </div>
@@ -338,7 +358,7 @@ function ArticlesContent() {
         </div>
 
         {/* Footer */}
-        <div className="text-center mt-12 text-slate-500">
+        <div className="text-center mt-12 text-white/50">
           <p>Skylines Articles</p>
         </div>
       </div>
@@ -349,8 +369,14 @@ function ArticlesContent() {
 export default function ArticlesPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/30 relative z-10"></div>
       </div>
     }>
       <ArticlesContent />

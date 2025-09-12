@@ -114,39 +114,51 @@ export default function Home() {
 
   if (loading || authLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center relative overflow-hidden">
+        {/* Animated background elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+        </div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white/30 relative z-10"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-8 px-4">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 py-8 px-4 relative overflow-hidden">
+      {/* Animated background elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
+        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-500"></div>
+      </div>
+      <div className="max-w-7xl mx-auto relative z-10">
         {/* Welcome Box for Non-Authenticated Users */}
         {!user && (
-          <div className="mb-8 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-8 shadow-lg">
+          <div className="mb-8 backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
             <div className="flex items-start space-x-4">
               <div className="flex-shrink-0">
-                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-12 h-12 backdrop-blur-sm bg-white/20 rounded-full flex items-center justify-center">
+                  <svg className="w-6 h-6 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 </div>
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-slate-800 mb-3">
+                <h2 className="text-2xl font-bold text-white/90 mb-3">
                   Welcome to Skylines AI Newsroom
                 </h2>
-                <div className="text-slate-700 space-y-3">
+                <div className="text-white/80 space-y-3">
                   <p className="text-lg leading-relaxed">
                     Each article in our newsroom is sourced from real messages on the Bluesky social media platform's firehose - a continuous stream of public posts and conversations.
                   </p>
                   <p className="text-lg leading-relaxed">
                     Every article clearly states which specific social media messages were used to write and inform the content, ensuring transparency about our AI-powered reporting process.
                   </p>
-                  <div className="mt-4 p-4 bg-white/50 rounded-lg border border-blue-200">
-                    <p className="text-sm text-slate-600 italic">
+                  <div className="mt-4 p-4 backdrop-blur-sm bg-white/5 rounded-lg border border-white/10">
+                    <p className="text-sm text-white/70 italic">
                       "Our commitment is to provide accurate, sourced journalism powered by artificial intelligence while maintaining full transparency about our data sources."
                     </p>
                   </div>
@@ -158,55 +170,55 @@ export default function Home() {
 
         {/* Page Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-slate-800 mb-2">
+          <h1 className="text-4xl font-bold text-white/90 mb-2">
             Daily Edition
           </h1>
-            <p className="text-slate-600 text-lg">
+            <p className="text-white/70 text-lg">
               Read today's comprehensive newspaper edition
             </p>
         </div>
 
         {/* Message */}
         {message && (
-          <div className="mb-6 px-6 py-4 rounded-lg text-center font-medium bg-red-100 text-red-800">
+          <div className="mb-6 px-6 py-4 backdrop-blur-sm rounded-xl text-center font-medium bg-red-500/20 border border-red-500/30 text-red-200">
             {message}
           </div>
         )}
 
         {dailyEditions.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-12 text-center shadow-2xl">
+            <div className="w-16 h-16 backdrop-blur-sm bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-white/70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2zM16 2v4M8 2v4M3 10h18" />
               </svg>
             </div>
-            <h3 className="text-xl font-semibold text-slate-800 mb-2">No Daily Editions Available</h3>
-            <p className="text-slate-600">Daily editions are generated automatically. Check back later!</p>
+            <h3 className="text-xl font-semibold text-white/90 mb-2">No Daily Editions Available</h3>
+            <p className="text-white/70">Daily editions are generated automatically. Check back later!</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             {/* Edition Selector */}
             <div className="lg:col-span-1">
-              <div className="bg-white rounded-2xl shadow-xl p-6">
-                <h2 className="text-xl font-semibold text-slate-800 mb-4">Available Editions</h2>
+              <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-6 shadow-2xl">
+                <h2 className="text-xl font-semibold text-white/90 mb-4">Available Editions</h2>
                 <div className="space-y-2">
                   {dailyEditions.map((edition) => (
                     <button
                       key={edition.id}
                       onClick={() => setSelectedEdition(edition)}
-                      className={`w-full text-left px-4 py-3 rounded-lg transition-colors ${
+                      className={`w-full text-left px-4 py-3 backdrop-blur-sm rounded-xl transition-all duration-300 ${
                         selectedEdition?.id === edition.id
-                          ? 'bg-blue-100 text-blue-800 border-2 border-blue-200'
-                          : 'bg-slate-50 text-slate-700 hover:bg-slate-100'
+                          ? 'bg-white/20 border-2 border-white/30 text-white'
+                          : 'bg-white/5 border border-white/10 text-white/80 hover:bg-white/10'
                       }`}
                     >
                       <div className="font-medium text-sm">
                         {edition.newspaperName || 'Daily Edition'}
                       </div>
-                      <div className="text-xs text-slate-500 mt-1">
+                      <div className="text-xs text-white/60 mt-1">
                         {formatDate(edition.generationTime)}
                       </div>
-                      <div className="text-xs text-slate-500">
+                      <div className="text-xs text-white/60">
                         {edition.topics.length} topics
                       </div>
                     </button>
@@ -220,23 +232,23 @@ export default function Home() {
               {selectedEdition && (
                 <div className="space-y-8">
                   {/* Front Page */}
-                  <div className="bg-white rounded-2xl shadow-xl p-8">
-                    <div className="border-b border-slate-200 pb-6 mb-6">
+                  <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
+                    <div className="border-b border-white/20 pb-6 mb-6">
                       <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-3xl font-bold text-slate-800">
+                        <h2 className="text-3xl font-bold text-white/90">
                           {selectedEdition.newspaperName || 'Daily Edition'}
                         </h2>
-                        <span className="text-sm text-slate-500">
+                        <span className="text-sm text-white/70">
                           {formatDate(selectedEdition.generationTime)}
                         </span>
                       </div>
-                      <h1 className="text-4xl font-bold text-slate-900 mb-4 leading-tight">
+                      <h1 className="text-4xl font-bold text-white mb-4 leading-tight">
                         {selectedEdition.frontPageHeadline}
                       </h1>
                     </div>
 
                     <div className="prose prose-lg max-w-none">
-                      <p className="text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      <p className="text-white/80 leading-relaxed whitespace-pre-wrap">
                         {selectedEdition.frontPageArticle}
                       </p>
                     </div>
@@ -244,52 +256,52 @@ export default function Home() {
 
                   {/* Topics */}
                   <div className="space-y-6">
-                    <h2 className="text-2xl font-bold text-slate-800">Today's Stories</h2>
+                    <h2 className="text-2xl font-bold text-white/90">Today's Stories</h2>
                     {selectedEdition.topics.map((topic, index) => (
-                      <div key={index} className="bg-white rounded-2xl shadow-xl p-8">
+                      <div key={index} className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
                         <div className="mb-4">
                           <div className="flex items-center space-x-3 mb-2">
-                            <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                              <span className="text-sm font-semibold text-blue-600">
+                            <div className="w-8 h-8 backdrop-blur-sm bg-white/20 rounded-full flex items-center justify-center">
+                              <span className="text-sm font-semibold text-white/80">
                                 {index + 1}
                               </span>
                             </div>
-                            <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-sm font-medium">
+                            <span className="px-3 py-1 backdrop-blur-sm bg-white/10 border border-white/20 text-white/80 rounded-full text-sm font-medium">
                               {topic.name}
                             </span>
                           </div>
-                          <h3 className="text-2xl font-bold text-slate-800 mb-2">
+                          <h3 className="text-2xl font-bold text-white/90 mb-2">
                             {topic.headline}
                           </h3>
-                          <p className="text-sm text-slate-600 italic">
+                          <p className="text-sm text-white/70 italic">
                             {topic.oneLineSummary}
                           </p>
                         </div>
 
                         <div className="prose prose-lg max-w-none mb-6">
-                          <p className="text-slate-700 leading-relaxed mb-4">
+                          <p className="text-white/80 leading-relaxed mb-4">
                             {topic.newsStoryFirstParagraph}
                           </p>
-                          <p className="text-slate-700 leading-relaxed">
+                          <p className="text-white/80 leading-relaxed">
                             {topic.newsStorySecondParagraph}
                           </p>
                         </div>
 
                         {/* Social Media & Comments */}
-                        <div className="border-t border-slate-200 pt-6 space-y-4">
+                        <div className="border-t border-white/20 pt-6 space-y-4">
                           <div>
-                            <h4 className="text-sm font-semibold text-slate-700 mb-2">Social Media Buzz</h4>
-                            <p className="text-slate-600 italic">"{topic.supportingSocialMediaMessage}"</p>
+                            <h4 className="text-sm font-semibold text-white/90 mb-2">Social Media Buzz</h4>
+                            <p className="text-white/70 italic">"{topic.supportingSocialMediaMessage}"</p>
                           </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                              <h4 className="text-sm font-semibold text-red-600 mb-2">Skeptical View</h4>
-                              <p className="text-slate-600 text-sm italic">"{topic.skepticalComment}"</p>
+                              <h4 className="text-sm font-semibold text-red-300 mb-2">Skeptical View</h4>
+                              <p className="text-white/80 text-sm italic">"{topic.skepticalComment}"</p>
                             </div>
                             <div>
-                              <h4 className="text-sm font-semibold text-green-600 mb-2">Supportive View</h4>
-                              <p className="text-slate-600 text-sm italic">"{topic.gullibleComment}"</p>
+                              <h4 className="text-sm font-semibold text-green-300 mb-2">Supportive View</h4>
+                              <p className="text-white/80 text-sm italic">"{topic.gullibleComment}"</p>
                             </div>
                           </div>
                         </div>
@@ -299,25 +311,25 @@ export default function Home() {
 
                   {/* Model Feedback */}
                   {selectedEdition.modelFeedbackAboutThePrompt.positive && (
-                    <div className="bg-white rounded-2xl shadow-xl p-8">
-                      <h2 className="text-2xl font-bold text-slate-800 mb-6">Editorial Notes</h2>
+                    <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
+                      <h2 className="text-2xl font-bold text-white/90 mb-6">Editorial Notes</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
-                          <h3 className="text-lg font-semibold text-green-600 mb-3">What Worked Well</h3>
-                          <p className="text-slate-700">{selectedEdition.modelFeedbackAboutThePrompt.positive}</p>
+                          <h3 className="text-lg font-semibold text-green-300 mb-3">What Worked Well</h3>
+                          <p className="text-white/80">{selectedEdition.modelFeedbackAboutThePrompt.positive}</p>
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-red-600 mb-3">Areas for Improvement</h3>
-                          <p className="text-slate-700">{selectedEdition.modelFeedbackAboutThePrompt.negative}</p>
+                          <h3 className="text-lg font-semibold text-red-300 mb-3">Areas for Improvement</h3>
+                          <p className="text-white/80">{selectedEdition.modelFeedbackAboutThePrompt.negative}</p>
                         </div>
                       </div>
                     </div>
                   )}
 
                   {/* Generation Prompt */}
-                  <div className="bg-white rounded-2xl shadow-xl p-8">
-                    <h2 className="text-2xl font-bold text-slate-800 mb-6">Generation Prompt</h2>
-                    <div className="bg-slate-50 rounded-lg p-4 text-sm text-slate-600 font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
+                  <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
+                    <h2 className="text-2xl font-bold text-white/90 mb-6">Generation Prompt</h2>
+                    <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-lg p-4 text-sm text-white/70 font-mono whitespace-pre-wrap max-h-64 overflow-y-auto">
                       {selectedEdition.prompt}
                     </div>
                   </div>
@@ -328,7 +340,7 @@ export default function Home() {
         )}
 
         {/* Footer */}
-        <div className="text-center mt-12 text-slate-500">
+        <div className="text-center mt-12 text-white/50">
           <p>Skylines AI Newsroom Daily Edition Reader</p>
         </div>
       </div>
