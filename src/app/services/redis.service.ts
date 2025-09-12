@@ -417,9 +417,9 @@ export class RedisService {
 
   async getDailyEditions(limit?: number): Promise<DailyEdition[]> {
     const count = limit || -1;
-    const dailyEditionIds = await this.client.ZRANGE(REDIS_KEYS.DAILY_EDITIONS, 0, count == -1 ? count : count - 1);
+    const dailyEditionIds = await this.client.ZRANGE(REDIS_KEYS.DAILY_EDITIONS, 0, count == -1 ? count : count - 1, { REV: true });
     // Reverse to get most recent first
-    dailyEditionIds.reverse();
+    // dailyEditionIds.reverse();
 
     const dailyEditions: DailyEdition[] = [];
     for (const dailyEditionId of dailyEditionIds) {
