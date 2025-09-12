@@ -1,6 +1,57 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+
+interface User {
+  id: string;
+  email: string;
+  role: 'admin' | 'editor' | 'reporter' | 'user';
+  hasReader: boolean;
+  hasReporter: boolean;
+  hasEditor: boolean;
+}
+
 export default function PricingPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkAuthStatus();
+  }, []);
+
+  const checkAuthStatus = async () => {
+    try {
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch('/api/auth/verify', {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    } catch (error) {
+      console.error('Auth check failed:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getButtonLink = () => {
+    return user ? '/account' : '/login';
+  };
+
+  const getButtonText = (baseText: string) => {
+    return user ? baseText : `Login to ${baseText.toLowerCase()}`;
+  };
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 py-12 px-4 relative overflow-hidden">
       {/* Animated background elements */}
@@ -58,10 +109,12 @@ export default function PricingPage() {
               </li>
             </ul>
 
-            <button className="w-full bg-gradient-to-r from-slate-500 to-slate-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-slate-400 hover:to-slate-500 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-lg hover:shadow-slate-500/25 relative overflow-hidden group">
-              <span className="relative z-10">Get Started Free</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-            </button>
+            <Link href={getButtonLink()}>
+              <button className="w-full bg-gradient-to-r from-slate-500 to-slate-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-slate-400 hover:to-slate-500 focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-lg hover:shadow-slate-500/25 relative overflow-hidden group">
+                <span className="relative z-10">{getButtonText('Get Started Free')}</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+              </button>
+            </Link>
           </div>
 
           {/* Reader Tier */}
@@ -113,10 +166,12 @@ export default function PricingPage() {
               </li>
             </ul>
 
-            <button className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-cyan-400 hover:to-blue-500 focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 relative overflow-hidden group">
-              <span className="relative z-10">Start Reading</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-            </button>
+            <Link href={getButtonLink()}>
+              <button className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-cyan-400 hover:to-blue-500 focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 relative overflow-hidden group">
+                <span className="relative z-10">{getButtonText('Start Reading')}</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+              </button>
+            </Link>
           </div>
 
           {/* Reporter Tier */}
@@ -162,10 +217,12 @@ export default function PricingPage() {
               </li>
             </ul>
 
-            <button className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-400 hover:to-pink-500 focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25 relative overflow-hidden group">
-              <span className="relative z-10">Start Reporting</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-            </button>
+            <Link href={getButtonLink()}>
+              <button className="w-full bg-gradient-to-r from-purple-500 to-pink-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-purple-400 hover:to-pink-500 focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-lg hover:shadow-purple-500/25 relative overflow-hidden group">
+                <span className="relative z-10">{getButtonText('Start Reporting')}</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+              </button>
+            </Link>
           </div>
 
           {/* Editor Tier */}
@@ -217,10 +274,12 @@ export default function PricingPage() {
               </li>
             </ul>
 
-            <button className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-yellow-400 hover:to-orange-500 focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/25 relative overflow-hidden group">
-              <span className="relative z-10">Start Editing</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
-            </button>
+            <Link href={getButtonLink()}>
+              <button className="w-full bg-gradient-to-r from-yellow-500 to-orange-600 text-white py-3 px-6 rounded-xl font-semibold hover:from-yellow-400 hover:to-orange-500 focus:ring-2 focus:ring-yellow-400 focus:ring-offset-2 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 hover:shadow-lg hover:shadow-yellow-500/25 relative overflow-hidden group">
+                <span className="relative z-10">{getButtonText('Start Editing')}</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
+              </button>
+            </Link>
           </div>
         </div>
 
