@@ -6,6 +6,7 @@ import { Event } from '../models/types';
 interface SafeEvent {
   id: string;
   reporterId: string;
+  title: string;
   createdTime: number;
   updatedTime: number;
   facts: string[];
@@ -189,56 +190,36 @@ export default function EventsPage() {
               <thead className="backdrop-blur-xl bg-white/5">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    Event ID
+                    Title
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    Reporter
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    Created
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    Updated
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    Facts Count
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-white/70 uppercase tracking-wider w-1/2">
                     Facts
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                    Details
                   </th>
                 </tr>
               </thead>
               <tbody className="backdrop-blur-xl bg-white/5 divide-y divide-white/10">
                 {events.map((event) => (
                   <tr key={event.id} className="hover:bg-white/5 transition-colors duration-200">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-white">
-                      {event.id}
+                    <td className="px-6 py-4 text-sm font-medium text-white">
+                      <div className="font-semibold">{event.title}</div>
+                      <div className="text-xs text-white/60 mt-1">ID: {event.id}</div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
-                      {event.reporterId}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
-                      {formatDate(event.createdTime)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
-                      {formatDate(event.updatedTime)}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
-                      {event.facts.length}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-white/70 max-w-xs">
+                    <td className="px-6 py-4 text-sm text-white/70 w-1/2 text-center">
                       <div className="space-y-1">
-                        {event.facts.slice(0, 3).map((fact, index) => (
+                        {event.facts.map((fact, index) => (
                           <div key={index} className="text-xs">
                             • {fact}
                           </div>
                         ))}
-                        {event.facts.length > 3 && (
-                          <div className="text-xs text-white/50">
-                            ... and {event.facts.length - 3} more
-                          </div>
-                        )}
                       </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
+                      Reporter: {event.reporterId}<br/>
+                      Created: {formatDate(event.createdTime)}<br/>
+                      Updated: {formatDate(event.updatedTime)}
                     </td>
                   </tr>
                 ))}

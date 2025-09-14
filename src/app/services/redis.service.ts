@@ -320,6 +320,8 @@ export class RedisService {
     });
 
     // Store event data
+    console.log('Redis Write: SET', REDIS_KEYS.EVENT_TITLE(eventId), event.title);
+    multi.set(REDIS_KEYS.EVENT_TITLE(eventId), event.title);
     console.log('Redis Write: SET', REDIS_KEYS.EVENT_CREATED_TIME(eventId), event.createdTime.toString());
     multi.set(REDIS_KEYS.EVENT_CREATED_TIME(eventId), event.createdTime.toString());
     console.log('Redis Write: SET', REDIS_KEYS.EVENT_UPDATED_TIME(eventId), event.updatedTime.toString());
@@ -385,13 +387,14 @@ export class RedisService {
   }
 
   async getEvent(eventId: string): Promise<Event | null> {
-    const [createdTimeStr, updatedTimeStr, factsJson] = await Promise.all([
+    const [title, createdTimeStr, updatedTimeStr, factsJson] = await Promise.all([
+      this.client.get(REDIS_KEYS.EVENT_TITLE(eventId)),
       this.client.get(REDIS_KEYS.EVENT_CREATED_TIME(eventId)),
       this.client.get(REDIS_KEYS.EVENT_UPDATED_TIME(eventId)),
       this.client.get(REDIS_KEYS.EVENT_FACTS(eventId))
     ]);
 
-    if (!createdTimeStr || !updatedTimeStr || !factsJson) return null;
+    if (!title || !createdTimeStr || !updatedTimeStr || !factsJson) return null;
 
     // Extract reporter ID from the events sorted set
     const reporterId = await this.findReporterForEvent(eventId);
@@ -411,6 +414,7 @@ export class RedisService {
     return {
       id: eventId,
       reporterId,
+      title,
       createdTime: parseInt(createdTimeStr),
       updatedTime: parseInt(updatedTimeStr),
       facts

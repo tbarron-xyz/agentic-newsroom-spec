@@ -525,7 +525,10 @@ Return the events in JSON format with this structure:
       const parsedResponse = eventGenerationResponseSchema.parse(JSON.parse(content));
 
       return {
-        events: parsedResponse.events,
+        events: parsedResponse.events.map(event => ({
+          ...event,
+          id: event.id || undefined
+        })),
         fullPrompt
       };
     } catch (error) {

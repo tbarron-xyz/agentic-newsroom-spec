@@ -68,6 +68,7 @@ export const userSchema = z.object({
 export const eventSchema = z.object({
     id: z.string(),
     reporterId: z.string(),
+    title: z.string(),
     createdTime: z.number(),
     updatedTime: z.number(),
     facts: z.array(z.string())

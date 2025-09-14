@@ -60,6 +60,7 @@ export interface DailyEdition {
 export interface Event {
   id: string;
   reporterId: string;
+  title: string;
   createdTime: number; // milliseconds since epoch
   updatedTime: number; // milliseconds since epoch
   facts: string[]; // JSON list of strings
@@ -126,6 +127,7 @@ export const REDIS_KEYS = {
 
   // Events
   EVENTS_BY_REPORTER: (reporterId: string) => `events:${reporterId}`,
+  EVENT_TITLE: (eventId: string) => `event:${eventId}:title`,
   EVENT_CREATED_TIME: (eventId: string) => `event:${eventId}:created_time`,
   EVENT_UPDATED_TIME: (eventId: string) => `event:${eventId}:updated_time`,
   EVENT_FACTS: (eventId: string) => `event:${eventId}:facts`,

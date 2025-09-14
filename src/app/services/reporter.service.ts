@@ -223,6 +223,7 @@ export class ReporterService {
           const newEvent: Event = {
             id: eventId,
             reporterId,
+            title: aiEvent.title,
             createdTime: now,
             updatedTime: now,
             facts: aiEvent.facts
@@ -230,7 +231,7 @@ export class ReporterService {
 
           await this.redisService.saveEvent(newEvent);
           generatedEvents.push(newEvent);
-          console.log(`Created new event: ${eventId} with ${aiEvent.facts.length} facts`);
+          console.log(`Created new event: ${eventId} with title "${aiEvent.title}" and ${aiEvent.facts.length} facts`);
         }
       } catch (error) {
         console.error(`Failed to process event for reporter ${reporterId}:`, error);
