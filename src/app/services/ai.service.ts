@@ -417,7 +417,7 @@ User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive 
     }
   }
 
-  async generateEvents(reporterId: string, lastEvents: Event[]): Promise<{
+  async generateEvents(reporter: Reporter, lastEvents: Event[]): Promise<{
     events: Array<{
       id?: string;
       title: string;
@@ -467,9 +467,11 @@ User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive 
         ? messages.map((msg, index) => `${index + 1}. "${msg.text}"`).join('\n')
         : 'No social media messages available.';
 
-      const systemPrompt = `You are an AI journalist tasked with identifying and tracking important events and developments. Your goal is to create structured event records that capture key facts about ongoing stories and developments.`;
+      const beatsList = reporter.beats.join(', ');
 
-      const userPrompt = `Based on the recent social media messages and the reporter's previous events, identify up to 5 significant events or developments that should be tracked. For each event:
+      const systemPrompt = `You are an AI journalist tasked with identifying and tracking important events and developments. Your goal is to create structured event records that capture key facts about ongoing stories and developments. You specialize in these beats: ${beatsList}. ${reporter.prompt}`;
+
+      const userPrompt = `Based on the recent social media messages and the reporter's previous events, identify up to 5 significant events or developments that should be tracked. Focus on events and developments that align with your assigned beats: ${beatsList}. For each event:
 
 1. If this matches an existing event from the previous events list, use the existing event's ID and add any new facts to it
 2. If this is a new event, create a new title and initial facts
@@ -482,11 +484,12 @@ Recent Social Media Messages:
 ${socialMediaContext}
 
 Instructions:
-- Review the social media messages for significant developments
+- Review the social media messages for significant developments that align with your assigned beats: ${beatsList}
+- Prioritize events and developments within your beats over general news
 - Match new information to existing events where appropriate, or create new events for new developments
 - For each event, provide a clear title and 1-5 key facts
 - Focus on factual, verifiable information
-- Prioritize events that represent ongoing stories or important developments
+- Prioritize events that represent ongoing stories or important developments within your beats
 - Return up to 5 events maximum
 
 Return the events in JSON format with this structure:

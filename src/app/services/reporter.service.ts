@@ -206,7 +206,7 @@ export class ReporterService {
     console.log(`Reporter ${reporterId}: Found ${lastEvents.length} previous events`);
 
     // Generate events using AI service
-    const eventGenerationResult = await this.aiService.generateEvents(reporterId, lastEvents);
+    const eventGenerationResult = await this.aiService.generateEvents(reporter, lastEvents);
 
     const generatedEvents: Event[] = [];
     const now = Date.now();
