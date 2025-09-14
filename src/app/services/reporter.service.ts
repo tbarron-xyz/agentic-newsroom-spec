@@ -213,10 +213,11 @@ export class ReporterService {
 
     for (const aiEvent of eventGenerationResult.events) {
       try {
-        if (aiEvent.id) {
+        if (aiEvent.index) {
           // Update existing event with new facts
-          console.log(`Updating existing event: ${aiEvent.id}`);
-          await this.redisService.updateEventFacts(aiEvent.id, aiEvent.facts);
+          const previousEventId = lastEvents[aiEvent.index - 1].id;
+          console.log(`Updating existing event: ${previousEventId}`);
+          await this.redisService.updateEventFacts(previousEventId, aiEvent.facts);
         } else {
           // Create new event
           const eventId = await this.redisService.generateId('event');

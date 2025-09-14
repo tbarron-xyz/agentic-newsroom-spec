@@ -76,9 +76,11 @@ export const eventSchema = z.object({
 
 export const eventGenerationResponseSchema = z.object({
     events: z.array(z.object({
-        id: z.string().nullable().optional().describe("Optional for new events"), // Optional for new events
+        index: z.number().nullable().optional().describe("The index of the existing event that this updates. If this is a new event, leave blank"), // Optional for new events
         title: z.string(),
-        facts: z.array(z.string()).max(5) // Max 5 facts per event
+        facts: z.array(z.string()).max(5), // Max 5 facts per event
+        where: z.string().nullable().optional().describe("Where the event took place, if known"),
+        when: z.string().nullable().optional().describe("Date and time the event took place, if known")
     })).max(5) // Max 5 events
 });
 

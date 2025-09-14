@@ -419,7 +419,7 @@ User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive 
 
   async generateEvents(reporter: Reporter, lastEvents: Event[]): Promise<{
     events: Array<{
-      id?: string;
+      index?: number | null;
       title: string;
       facts: string[];
     }>;
@@ -473,7 +473,7 @@ User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive 
 
       const userPrompt = `Based on the recent social media messages and the reporter's previous events, identify up to 5 significant events or developments that should be tracked. Focus on events and developments that align with your assigned beats: ${beatsList}. For each event:
 
-1. If this matches an existing event from the previous events list, use the existing event's ID and add any new facts to it
+1. If this matches an existing event from the previous events list, use the existing event's numerical index and add any new facts to it
 2. If this is a new event, create a new title and initial facts
 3. Each event should have 1-5 key facts that capture the essential information
 
@@ -491,17 +491,7 @@ Instructions:
 - Focus on factual, verifiable information
 - Prioritize events that represent ongoing stories or important developments within your beats
 - Return up to 5 events maximum
-
-Return the events in JSON format with this structure:
-{
-  "events": [
-    {
-      "id": "existing_event_id", // optional, only if matching existing event
-      "title": "Event Title",
-      "facts": ["Fact 1", "Fact 2", "Fact 3"]
-    }
-  ]
-}`;
+`;
 
       const fullPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
 
@@ -528,10 +518,7 @@ Return the events in JSON format with this structure:
       const parsedResponse = eventGenerationResponseSchema.parse(JSON.parse(content));
 
       return {
-        events: parsedResponse.events.map(event => ({
-          ...event,
-          id: event.id || undefined
-        })),
+        events: parsedResponse.events,
         fullPrompt
       };
     } catch (error) {

@@ -337,10 +337,9 @@ export class RedisService {
     const eventIds = await this.client.ZRANGE(
       REDIS_KEYS.EVENTS_BY_REPORTER(reporterId),
       0,
-      count - 1
+      count == -1 ? count : count - 1,
+      {REV: true}
     );
-    // Reverse to get most recent first
-    eventIds.reverse();
 
     const events: Event[] = [];
     for (const eventId of eventIds) {
