@@ -429,7 +429,7 @@ User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive 
       // Format last events for context
       const eventsContext = lastEvents.length > 0
         ? lastEvents.map((event, index) =>
-            `Event ${index + 1}:\nTitle: ${event.id}\nFacts: ${event.facts.join(', ')}\nCreated: ${new Date(event.createdTime).toISOString()}`
+            `Event ${index + 1}:\nTitle: ${event.title}\nFacts: ${event.facts.join(', ')}\nCreated: ${new Date(event.createdTime).toISOString()}`
           ).join('\n\n')
         : 'No previous events available.';
 
