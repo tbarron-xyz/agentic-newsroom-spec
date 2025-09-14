@@ -5,6 +5,7 @@ import {
   Article,
   NewspaperEdition,
   DailyEdition,
+  Event,
   AdEntry,
   User,
   REDIS_KEYS
@@ -301,6 +302,150 @@ export class RedisService {
     }
 
     return null;
+  }
+
+  // Event operations
+  async saveEvent(event: Event): Promise<void> {
+    const eventId = event.id;
+    const multi = this.client.multi();
+
+    // Add to reporter's event sorted set
+    console.log('Redis Write: ZADD', REDIS_KEYS.EVENTS_BY_REPORTER(event.reporterId), {
+      score: event.createdTime,
+      value: eventId
+    });
+    multi.zAdd(REDIS_KEYS.EVENTS_BY_REPORTER(event.reporterId), {
+      score: event.createdTime,
+      value: eventId
+    });
+
+    // Store event data
+    console.log('Redis Write: SET', REDIS_KEYS.EVENT_CREATED_TIME(eventId), event.createdTime.toString());
+    multi.set(REDIS_KEYS.EVENT_CREATED_TIME(eventId), event.createdTime.toString());
+    console.log('Redis Write: SET', REDIS_KEYS.EVENT_UPDATED_TIME(eventId), event.updatedTime.toString());
+    multi.set(REDIS_KEYS.EVENT_UPDATED_TIME(eventId), event.updatedTime.toString());
+    console.log('Redis Write: SET', REDIS_KEYS.EVENT_FACTS(eventId), JSON.stringify(event.facts));
+    multi.set(REDIS_KEYS.EVENT_FACTS(eventId), JSON.stringify(event.facts));
+
+    await multi.exec();
+  }
+
+  async getEventsByReporter(reporterId: string, limit?: number): Promise<Event[]> {
+    const count = limit || -1;
+    const eventIds = await this.client.ZRANGE(
+      REDIS_KEYS.EVENTS_BY_REPORTER(reporterId),
+      0,
+      count - 1
+    );
+    // Reverse to get most recent first
+    eventIds.reverse();
+
+    const events: Event[] = [];
+    for (const eventId of eventIds) {
+      const event = await this.getEvent(eventId);
+      if (event) {
+        events.push(event);
+      }
+    }
+
+    return events;
+  }
+
+  async getAllEvents(limit?: number): Promise<Event[]> {
+    const reporterIds = await this.client.sMembers(REDIS_KEYS.REPORTERS);
+
+    // Collect all events with their timestamps
+    const allEvents: { event: Event; timestamp: number }[] = [];
+
+    for (const reporterId of reporterIds) {
+      const eventIds = await this.client.ZRANGE(
+        REDIS_KEYS.EVENTS_BY_REPORTER(reporterId),
+        0,
+        -1
+      );
+
+      for (const eventId of eventIds) {
+        const event = await this.getEvent(eventId);
+        if (event) {
+          allEvents.push({
+            event,
+            timestamp: event.createdTime
+          });
+        }
+      }
+    }
+
+    // Sort by timestamp (most recent first)
+    allEvents.sort((a, b) => b.timestamp - a.timestamp);
+
+    // Apply limit if specified
+    const limitedEvents = limit ? allEvents.slice(0, limit) : allEvents;
+
+    return limitedEvents.map(item => item.event);
+  }
+
+  async getEvent(eventId: string): Promise<Event | null> {
+    const [createdTimeStr, updatedTimeStr, factsJson] = await Promise.all([
+      this.client.get(REDIS_KEYS.EVENT_CREATED_TIME(eventId)),
+      this.client.get(REDIS_KEYS.EVENT_UPDATED_TIME(eventId)),
+      this.client.get(REDIS_KEYS.EVENT_FACTS(eventId))
+    ]);
+
+    if (!createdTimeStr || !updatedTimeStr || !factsJson) return null;
+
+    // Extract reporter ID from the events sorted set
+    const reporterId = await this.findReporterForEvent(eventId);
+    if (!reporterId) return null;
+
+    // Parse facts JSON
+    let facts: string[] = [];
+    if (factsJson) {
+      try {
+        facts = JSON.parse(factsJson);
+      } catch (error) {
+        console.error('Error parsing event facts JSON:', error);
+        facts = [];
+      }
+    }
+
+    return {
+      id: eventId,
+      reporterId,
+      createdTime: parseInt(createdTimeStr),
+      updatedTime: parseInt(updatedTimeStr),
+      facts
+    };
+  }
+
+  private async findReporterForEvent(eventId: string): Promise<string | null> {
+    const reporterIds = await this.client.sMembers(REDIS_KEYS.REPORTERS);
+
+    for (const reporterId of reporterIds) {
+      const exists = await this.client.zScore(REDIS_KEYS.EVENTS_BY_REPORTER(reporterId), eventId);
+      if (exists !== null) {
+        return reporterId;
+      }
+    }
+
+    return null;
+  }
+
+  async updateEventFacts(eventId: string, newFacts: string[]): Promise<void> {
+    const existingEvent = await this.getEvent(eventId);
+    if (!existingEvent) {
+      throw new Error(`Event ${eventId} not found`);
+    }
+
+    // Merge existing facts with new facts (avoid duplicates)
+    const mergedFacts = [...new Set([...existingEvent.facts, ...newFacts])];
+
+    const multi = this.client.multi();
+    console.log('Redis Write: SET', REDIS_KEYS.EVENT_UPDATED_TIME(eventId), Date.now().toString());
+    multi.set(REDIS_KEYS.EVENT_UPDATED_TIME(eventId), Date.now().toString());
+    console.log('Redis Write: SET', REDIS_KEYS.EVENT_FACTS(eventId), JSON.stringify(mergedFacts));
+    multi.set(REDIS_KEYS.EVENT_FACTS(eventId), JSON.stringify(mergedFacts));
+
+    await multi.exec();
   }
 
   // Newspaper Edition operations

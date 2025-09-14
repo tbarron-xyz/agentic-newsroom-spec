@@ -140,6 +140,12 @@ export default function Navigation() {
                   Users
                 </Link>
                 <Link
+                  href="/events"
+                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Events
+                </Link>
+                <Link
                   href="/editor"
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
@@ -260,6 +266,13 @@ export default function Navigation() {
                 className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
               >
                 Users
+              </Link>
+              <Link
+                href="/events"
+                onClick={closeMobileMenu}
+                className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+              >
+                Events
               </Link>
               <Link
                 href="/editor"

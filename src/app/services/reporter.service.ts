@@ -1,4 +1,4 @@
-import { Reporter, Article } from '../models/types';
+import { Reporter, Article, Event } from '../models/types';
 import { RedisService } from './redis.service';
 import { AIService } from './ai.service';
 
@@ -188,5 +188,97 @@ export class ReporterService {
 
     console.log(`Deleted reporter: ${reporterId}`);
     return true;
+  }
+
+  async generateEventsForReporter(reporterId: string): Promise<Event[]> {
+    console.log(`Reporter ${reporterId}: Starting event generation...`);
+
+    // Get reporter information
+    const reporter = await this.redisService.getReporter(reporterId);
+    if (!reporter) {
+      throw new Error(`Reporter ${reporterId} not found`);
+    }
+
+    console.log(`Reporter ${reporterId}: Generating events for beats: ${reporter.beats.join(', ')}`);
+
+    // Get last 5 events for this reporter
+    const lastEvents = await this.redisService.getEventsByReporter(reporterId, 5);
+    console.log(`Reporter ${reporterId}: Found ${lastEvents.length} previous events`);
+
+    // Generate events using AI service
+    const eventGenerationResult = await this.aiService.generateEvents(reporterId, lastEvents);
+
+    const generatedEvents: Event[] = [];
+    const now = Date.now();
+
+    for (const aiEvent of eventGenerationResult.events) {
+      try {
+        if (aiEvent.id) {
+          // Update existing event with new facts
+          console.log(`Updating existing event: ${aiEvent.id}`);
+          await this.redisService.updateEventFacts(aiEvent.id, aiEvent.facts);
+        } else {
+          // Create new event
+          const eventId = await this.redisService.generateId('event');
+          const newEvent: Event = {
+            id: eventId,
+            reporterId,
+            createdTime: now,
+            updatedTime: now,
+            facts: aiEvent.facts
+          };
+
+          await this.redisService.saveEvent(newEvent);
+          generatedEvents.push(newEvent);
+          console.log(`Created new event: ${eventId} with ${aiEvent.facts.length} facts`);
+        }
+      } catch (error) {
+        console.error(`Failed to process event for reporter ${reporterId}:`, error);
+      }
+    }
+
+    console.log(`Reporter ${reporterId}: Processed ${eventGenerationResult.events.length} events (${generatedEvents.length} new, ${eventGenerationResult.events.length - generatedEvents.length} updated)`);
+    return generatedEvents;
+  }
+
+  async generateAllReporterEvents(): Promise<{ [reporterId: string]: Event[] }> {
+    console.log('Starting event generation for all reporters...');
+
+    // Get all reporters
+    const reporters = await this.redisService.getAllReporters();
+    if (reporters.length === 0) {
+      throw new Error('No reporters available to generate events');
+    }
+
+    // Filter to only enabled reporters
+    const enabledReporters = reporters.filter(reporter => reporter.enabled);
+    console.log(`Found ${reporters.length} total reporters, ${enabledReporters.length} enabled`);
+
+    if (enabledReporters.length === 0) {
+      console.log('No enabled reporters available to generate events');
+      return {};
+    }
+
+    const results: { [reporterId: string]: Event[] } = {};
+
+    // Generate events for each enabled reporter
+    for (const reporter of enabledReporters) {
+      try {
+        const events = await this.generateEventsForReporter(reporter.id);
+        results[reporter.id] = events;
+      } catch (error) {
+        console.error(`Failed to generate events for reporter ${reporter.id}:`, error);
+        results[reporter.id] = [];
+      }
+    }
+
+    const totalEvents = Object.values(results).reduce((sum, events) => sum + events.length, 0);
+    console.log(`Generated ${totalEvents} events across ${enabledReporters.length} enabled reporters`);
+
+    return results;
+  }
+
+  async getReporterEvents(reporterId: string, limit?: number): Promise<Event[]> {
+    return await this.redisService.getEventsByReporter(reporterId, limit);
   }
 }

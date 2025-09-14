@@ -1,8 +1,8 @@
-import { Reporter, Article, REDIS_KEYS } from '../models/types';
+import { Reporter, Article, Event, REDIS_KEYS } from '../models/types';
 import OpenAI from 'openai';
 import { McpBskyClient } from "mcp-bsky-jetstream/client/dist/McpBskyClient.js";
 import { zodResponseFormat } from 'openai/helpers/zod';
-import { dailyEditionSchema, reporterArticleSchema } from '../models/schemas';
+import { dailyEditionSchema, reporterArticleSchema, eventGenerationResponseSchema } from '../models/schemas';
 import { RedisService } from './redis.service';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
@@ -320,7 +320,7 @@ User: Given the following articles and editorial guidelines: "${editorPrompt}", 
         gullibleComment: string;
       }>;
       modelFeedbackAboutThePrompt: { positive: string; negative: string };
-      newspaperName: string;
+      // newspaperName: string;
     };
     fullPrompt: string;
   }> {
@@ -378,8 +378,7 @@ Make the content engaging, balanced, and professionally written. Focus on creati
       if (!parsedResponse.frontPageHeadline ||
           !parsedResponse.frontPageArticle ||
           !Array.isArray(parsedResponse.topics) ||
-          !parsedResponse.modelFeedbackAboutThePrompt ||
-          !parsedResponse.newspaperName) {
+          !parsedResponse.modelFeedbackAboutThePrompt) {
         throw new Error('Invalid response structure from AI service');
       }
 
@@ -414,6 +413,127 @@ Make the content engaging, balanced, and professionally written. Focus on creati
         fullPrompt: `System: You are a newspaper editor creating a comprehensive daily edition. Based on the available newspaper editions, create a structured daily newspaper with front page content, multiple topics, and editorial feedback. Create engaging, professional content that synthesizes the available editions into a cohesive daily newspaper.
 
 User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive daily newspaper edition based on these available newspaper editions.`
+      };
+    }
+  }
+
+  async generateEvents(reporterId: string, lastEvents: Event[]): Promise<{
+    events: Array<{
+      id?: string;
+      title: string;
+      facts: string[];
+    }>;
+    fullPrompt: string;
+  }> {
+    try {
+      // Format last events for context
+      const eventsContext = lastEvents.length > 0
+        ? lastEvents.map((event, index) =>
+            `Event ${index + 1}:\nTitle: ${event.id}\nFacts: ${event.facts.join(', ')}\nCreated: ${new Date(event.createdTime).toISOString()}`
+          ).join('\n\n')
+        : 'No previous events available.';
+
+      // Fetch recent social media messages
+      let socialMediaMessages: Array<{did: string; text: string; time: number}> = [];
+      try {
+        this.mcpClient = new McpBskyClient({
+          serverUrl: process.env.MCP_BSKY_SERVER_URL || 'http://localhost:3001'
+        });
+        await this.mcpClient.connect();
+        socialMediaMessages = await this.mcpClient.getMessages();
+        await this.mcpClient.disconnect();
+      } catch (error) {
+        console.warn('Failed to fetch social media messages for events:', error);
+      }
+
+      // Get configurable message slice count
+      let messageSliceCount = 200; // Default fallback
+      try {
+        const redis = new RedisService();
+        await redis.connect();
+        const editor = await redis.getEditor();
+        await redis.disconnect();
+        if (editor) {
+          messageSliceCount = editor.messageSliceCount;
+        }
+      } catch (error) {
+        console.warn('Failed to fetch message slice count for events, using default:', error);
+      }
+
+      const messages = socialMediaMessages.slice(-messageSliceCount);
+
+      // Format social media messages for the prompt
+      const socialMediaContext = messages.length > 0
+        ? messages.map((msg, index) => `${index + 1}. "${msg.text}"`).join('\n')
+        : 'No social media messages available.';
+
+      const systemPrompt = `You are an AI journalist tasked with identifying and tracking important events and developments. Your goal is to create structured event records that capture key facts about ongoing stories and developments.`;
+
+      const userPrompt = `Based on the recent social media messages and the reporter's previous events, identify up to 5 significant events or developments that should be tracked. For each event:
+
+1. If this matches an existing event from the previous events list, use the existing event's ID and add any new facts to it
+2. If this is a new event, create a new title and initial facts
+3. Each event should have 1-5 key facts that capture the essential information
+
+Previous Events:
+${eventsContext}
+
+Recent Social Media Messages:
+${socialMediaContext}
+
+Instructions:
+- Review the social media messages for significant developments
+- Match new information to existing events where appropriate, or create new events for new developments
+- For each event, provide a clear title and 1-5 key facts
+- Focus on factual, verifiable information
+- Prioritize events that represent ongoing stories or important developments
+- Return up to 5 events maximum
+
+Return the events in JSON format with this structure:
+{
+  "events": [
+    {
+      "id": "existing_event_id", // optional, only if matching existing event
+      "title": "Event Title",
+      "facts": ["Fact 1", "Fact 2", "Fact 3"]
+    }
+  ]
+}`;
+
+      const fullPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
+
+      const response = await this.openai.chat.completions.create({
+        model: this.modelName,
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ],
+        response_format: zodResponseFormat(eventGenerationResponseSchema, "event_generation")
+      });
+
+      const content = response.choices[0]?.message?.content?.trim();
+      if (!content) {
+        throw new Error('No response content from AI service for events');
+      }
+
+      const parsedResponse = eventGenerationResponseSchema.parse(JSON.parse(content));
+
+      return {
+        events: parsedResponse.events,
+        fullPrompt
+      };
+    } catch (error) {
+      console.error('Error generating events:', error);
+      // Return empty events on error
+      return {
+        events: [],
+        fullPrompt: 'Error occurred during event generation'
       };
     }
   }

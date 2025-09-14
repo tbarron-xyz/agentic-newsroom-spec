@@ -57,6 +57,14 @@ export interface DailyEdition {
   prompt: string; // The full prompt used to generate this daily edition
 }
 
+export interface Event {
+  id: string;
+  reporterId: string;
+  createdTime: number; // milliseconds since epoch
+  updatedTime: number; // milliseconds since epoch
+  facts: string[]; // JSON list of strings
+}
+
 export interface AdEntry {
   id: string;
   userId: string;
@@ -115,6 +123,12 @@ export const REDIS_KEYS = {
   DAILY_EDITION_EDITIONS: (dailyEditionId: string) => `daily_edition:${dailyEditionId}:editions`,
   DAILY_EDITION_TIME: (dailyEditionId: string) => `daily_edition:${dailyEditionId}:time`,
   DAILY_EDITION_PROMPT: (dailyEditionId: string) => `daily_edition:${dailyEditionId}:prompt`,
+
+  // Events
+  EVENTS_BY_REPORTER: (reporterId: string) => `events:${reporterId}`,
+  EVENT_CREATED_TIME: (eventId: string) => `event:${eventId}:created_time`,
+  EVENT_UPDATED_TIME: (eventId: string) => `event:${eventId}:updated_time`,
+  EVENT_FACTS: (eventId: string) => `event:${eventId}:facts`,
 
   // Ads
   ADS: 'ads',

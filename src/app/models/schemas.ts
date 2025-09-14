@@ -14,7 +14,7 @@ export const dailyEditionSchema = z.object({
         gullibleComment: z.string(),
     })),
     modelFeedbackAboutThePrompt: z.object({positive: z.string(), negative: z.string()}),
-    newspaperName: z.string(),
+    // newspaperName: z.string(),
 });
 
 export const reporterArticleSchema = z.object({
@@ -63,6 +63,22 @@ export const userSchema = z.object({
     role: z.enum(['admin', 'editor', 'reporter', 'user']),
     createdAt: z.number(),
     lastLoginAt: z.number().optional()
+});
+
+export const eventSchema = z.object({
+    id: z.string(),
+    reporterId: z.string(),
+    createdTime: z.number(),
+    updatedTime: z.number(),
+    facts: z.array(z.string())
+});
+
+export const eventGenerationResponseSchema = z.object({
+    events: z.array(z.object({
+        id: z.string().optional(), // Optional for new events
+        title: z.string(),
+        facts: z.array(z.string()).max(5) // Max 5 facts per event
+    })).max(5) // Max 5 events
 });
 
 export const loginRequestSchema = z.object({

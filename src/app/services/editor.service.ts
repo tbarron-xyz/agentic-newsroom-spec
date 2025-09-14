@@ -129,14 +129,14 @@ export class EditorService {
       frontPageArticle: dailyEditionContent.frontPageArticle,
       topics: dailyEditionContent.topics,
       modelFeedbackAboutThePrompt: dailyEditionContent.modelFeedbackAboutThePrompt,
-      newspaperName: dailyEditionContent.newspaperName,
+      newspaperName: (d => `${d.getDay()}, ${d.getMonth()}/${d.getDate()}`)(new Date()),//dailyEditionContent.newspaperName,
       prompt: fullPrompt
     };
 
     // Save the daily edition
     await this.redisService.saveDailyEdition(dailyEdition);
 
-    console.log(`Daily edition ${dailyEditionId} generated with comprehensive content for ${dailyEditionContent.newspaperName}`);
+    console.log(`Daily edition ${dailyEditionId} generated with comprehensive content for ${dailyEdition.newspaperName}`);
     return dailyEdition;
   }
 
