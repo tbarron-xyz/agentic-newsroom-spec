@@ -33,7 +33,9 @@ export async function GET() {
       modelName: editor?.modelName || 'gpt-5-nano',
       messageSliceCount: editor?.messageSliceCount || 200,
       articleGenerationPeriodMinutes: editor?.articleGenerationPeriodMinutes || 15,
-      lastArticleGenerationTime: editor?.lastArticleGenerationTime || null
+      lastArticleGenerationTime: editor?.lastArticleGenerationTime || null,
+      eventGenerationPeriodMinutes: editor?.eventGenerationPeriodMinutes || 30,
+      lastEventGenerationTime: editor?.lastEventGenerationTime || null
     });
   } catch (error) {
     console.error('Error fetching editor data:', error);
@@ -68,7 +70,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { bio, prompt, modelName, messageSliceCount, articleGenerationPeriodMinutes } = body;
+    const { bio, prompt, modelName, messageSliceCount, articleGenerationPeriodMinutes, eventGenerationPeriodMinutes } = body;
 
     if (typeof bio !== 'string' || typeof prompt !== 'string' || typeof modelName !== 'string') {
       return NextResponse.json(
@@ -91,13 +93,21 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    if (typeof eventGenerationPeriodMinutes !== 'number' || eventGenerationPeriodMinutes < 1 || eventGenerationPeriodMinutes > 1440) {
+      return NextResponse.json(
+        { error: 'eventGenerationPeriodMinutes must be a number between 1 and 1440' },
+        { status: 400 }
+      );
+    }
+
     const redisService = await getRedisService();
     await redisService.saveEditor({
       bio,
       prompt,
       modelName,
       messageSliceCount,
-      articleGenerationPeriodMinutes
+      articleGenerationPeriodMinutes,
+      eventGenerationPeriodMinutes
     });
 
     return NextResponse.json({
@@ -106,6 +116,7 @@ export async function PUT(request: NextRequest) {
       modelName,
       messageSliceCount,
       articleGenerationPeriodMinutes,
+      eventGenerationPeriodMinutes,
       message: 'Editor data updated successfully'
     });
   } catch (error) {

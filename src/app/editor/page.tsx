@@ -10,6 +10,8 @@ interface EditorData {
   messageSliceCount: number;
   articleGenerationPeriodMinutes: number;
   lastArticleGenerationTime: number | null;
+  eventGenerationPeriodMinutes: number;
+  lastEventGenerationTime: number | null;
 }
 
 interface JobStatus {
@@ -33,7 +35,9 @@ export default function EditorPage() {
     modelName: '',
     messageSliceCount: 200,
     articleGenerationPeriodMinutes: 15,
-    lastArticleGenerationTime: null
+    lastArticleGenerationTime: null,
+    eventGenerationPeriodMinutes: 30,
+    lastEventGenerationTime: null
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -395,6 +399,58 @@ export default function EditorPage() {
                 />
                 <p className="text-sm text-white/70 mt-2">
                   Timestamp of the last successful article generation run. This field is automatically updated by the system.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Event Generation Period Section */}
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-white/90">Event Generation Period</h2>
+            </div>
+            <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">
+                  Generation Interval (minutes)
+                </label>
+                <input
+                  type="number"
+                  value={editorData.eventGenerationPeriodMinutes}
+                  onChange={(e) => setEditorData({ ...editorData, eventGenerationPeriodMinutes: parseInt(e.target.value) || 30 })}
+                  placeholder="Enter generation period in minutes (e.g., 30)"
+                  min="1"
+                  max="1440"
+                  className={`w-full p-4 backdrop-blur-sm bg-white/10 border border-white/20 rounded-lg text-white/90 placeholder-white/50 ${
+                    isAdmin
+                      ? 'focus:ring-2 focus:ring-white/50 focus:border-white/30'
+                      : 'bg-white/5 cursor-not-allowed opacity-60'
+                  }`}
+                  readOnly={!isAdmin}
+                />
+                <p className="text-sm text-white/70 mt-2">
+                  Minimum time interval between event generation runs (1-1440 minutes). The cron job will skip generation if this duration hasn't elapsed since the last run.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-2">
+                  Last Generation Time
+                </label>
+                <input
+                  type="text"
+                  value={editorData.lastEventGenerationTime ? new Date(editorData.lastEventGenerationTime).toLocaleString() : 'Never'}
+                  placeholder="No generation has occurred yet"
+                  className="w-full p-4 backdrop-blur-sm bg-white/10 border border-white/20 rounded-lg text-white/90 bg-white/5 cursor-not-allowed"
+                  readOnly
+                />
+                <p className="text-sm text-white/70 mt-2">
+                  Timestamp of the last successful event generation run. This field is automatically updated by the system.
                 </p>
               </div>
             </div>

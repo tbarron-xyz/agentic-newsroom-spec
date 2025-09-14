@@ -5,6 +5,8 @@ export interface Editor {
   messageSliceCount: number;
   articleGenerationPeriodMinutes: number;
   lastArticleGenerationTime?: number; // milliseconds since epoch, optional for backward compatibility
+  eventGenerationPeriodMinutes: number;
+  lastEventGenerationTime?: number; // milliseconds since epoch, optional for backward compatibility
 }
 
 export interface Reporter {
@@ -97,6 +99,8 @@ export const REDIS_KEYS = {
   EDITOR_MESSAGE_SLICE_COUNT: 'editor:message_slice_count',
   ARTICLE_GENERATION_PERIOD_MINUTES: 'article_generation:period_minutes',
   LAST_ARTICLE_GENERATION_TIME: 'article_generation:last_time',
+  EVENT_GENERATION_PERIOD_MINUTES: 'event_generation:period_minutes',
+  LAST_EVENT_GENERATION_TIME: 'event_generation:last_time',
 
   // Reporters
   REPORTERS: 'reporters',
