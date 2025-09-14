@@ -75,7 +75,7 @@ export const eventSchema = z.object({
 
 export const eventGenerationResponseSchema = z.object({
     events: z.array(z.object({
-        id: z.string().optional(), // Optional for new events
+        id: z.string().nullable().optional().describe("Optional for new events"), // Optional for new events
         title: z.string(),
         facts: z.array(z.string()).max(5) // Max 5 facts per event
     })).max(5) // Max 5 events
