@@ -66,7 +66,7 @@ export default function EventsPage() {
       }
 
       const eventsData = await eventsResponse.json();
-      setEvents(eventsData);
+      setEvents(eventsData.events || []);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {

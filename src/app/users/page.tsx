@@ -118,8 +118,8 @@ export default function UsersPage() {
         throw new Error('Failed to generate events');
       }
 
-      // Show success message or just refresh
-      alert('Events generated successfully!');
+      const result = await response.json();
+      alert(`Events generated successfully! Created ${result.totalGenerated} events.`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate events');
     } finally {
