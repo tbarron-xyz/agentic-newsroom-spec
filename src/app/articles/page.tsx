@@ -40,11 +40,7 @@ function ArticlesContent() {
     try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        if (!reporterId) {
-          // If no reporterId and not logged in, redirect to login
-          router.push('/login');
-          return;
-        }
+        // Allow public access - no redirect needed
         return;
       }
 
@@ -59,15 +55,9 @@ function ArticlesContent() {
         if (response.ok) {
           const data = await response.json();
           setHasReaderAccess(data.hasReader);
-          if (!data.hasReader) {
-            setError('Reader permission required to view all articles');
-            setLoading(false);
-            return;
-          }
         } else {
-          setError('Failed to verify permissions');
-          setLoading(false);
-          return;
+          // If we can't check permissions, assume no reader access
+          setHasReaderAccess(false);
         }
       }
 
@@ -84,11 +74,9 @@ function ArticlesContent() {
       }
     } catch (error) {
       console.error('Error checking user access:', error);
-      if (!reporterId) {
-        setError('Authentication required');
-      }
+      // Continue with public access if there's an error
     }
-  }, [reporterId, router]);
+  }, [reporterId]);
 
   // Check user authentication and reader access
   useEffect(() => {
@@ -102,13 +90,19 @@ function ArticlesContent() {
         // Fetch articles by specific reporter
         response = await fetch(`/api/articles?reporterId=${reporterId}`);
       } else {
-        // Fetch all articles (requires reader permission, checked above)
+        // Check if user has reader access for all articles
         const token = localStorage.getItem('accessToken');
-        response = await fetch('/api/articles/all', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+        if (token && hasReaderAccess) {
+          // User is authenticated and has reader access - fetch all articles
+          response = await fetch('/api/articles/all', {
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+        } else {
+          // User is not authenticated or doesn't have reader access - fetch latest 5 articles
+          response = await fetch('/api/articles/public');
+        }
       }
 
       if (response.ok) {
@@ -124,15 +118,16 @@ function ArticlesContent() {
     } finally {
       setLoading(false);
     }
-  }, [reporterId]);
+  }, [reporterId, hasReaderAccess]);
 
   useEffect(() => {
     if (reporterId) {
       fetchArticles();
-    } else if (hasReaderAccess) {
+    } else {
+      // For all articles view, fetch regardless of reader access (will use public endpoint if needed)
       fetchArticles();
     }
-  }, [reporterId, fetchArticles, hasReaderAccess]);
+  }, [reporterId, fetchArticles]);
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleDateString('en-US', {
@@ -214,10 +209,15 @@ function ArticlesContent() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-white/90 mb-2">
-                {reporterId ? 'Articles by Reporter' : 'All Articles'}
+                {reporterId ? 'Articles by Reporter' : (!hasReaderAccess ? 'Latest Articles' : 'All Articles')}
               </h1>
               <p className="text-white/70 text-lg">
-                {reporterId ? `Reporter ${reporterId.split('_')[2] || reporterId}` : 'Chronological list of all published articles'}
+                {reporterId
+                  ? `Reporter ${reporterId.split('_')[2] || reporterId}`
+                  : !hasReaderAccess
+                    ? 'Showing the 5 most recent articles (login with Reader access to see all articles)'
+                    : 'Chronological list of all published articles'
+                }
               </p>
             </div>
             <div className="flex items-center space-x-4">
