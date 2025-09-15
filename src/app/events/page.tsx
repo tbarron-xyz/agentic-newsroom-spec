@@ -114,6 +114,38 @@ export default function EventsPage() {
     }
   };
 
+  const handleGenerateArticlesFromEvents = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('accessToken');
+      if (!token) {
+        setError('Not authenticated');
+        return;
+      }
+
+      const response = await fetch('/api/articles/generate-from-events', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate articles from events');
+      }
+
+      const result = await response.json();
+      console.log('Articles generated from events:', result);
+
+      // Refresh events list (articles are generated from events, so events remain the same)
+      await checkAuthAndFetchEvents();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to generate articles from events');
+      setLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center relative overflow-hidden">
@@ -175,14 +207,24 @@ export default function EventsPage() {
                 View and manage all tracked events in the system
               </p>
             </div>
-            <button
-              onClick={handleGenerateEvents}
-              disabled={loading}
-              className="group relative inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-              <span className="relative">Generate Events</span>
-            </button>
+            <div className="flex space-x-3">
+              <button
+                onClick={handleGenerateEvents}
+                disabled={loading}
+                className="group relative inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                <span className="relative">Generate Events</span>
+              </button>
+              <button
+                onClick={handleGenerateArticlesFromEvents}
+                disabled={loading}
+                className="group relative inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                <span className="relative">Generate Articles from Events</span>
+              </button>
+            </div>
           </div>
 
           <div className="overflow-x-auto">

@@ -530,4 +530,169 @@ Instructions:
       };
     }
   }
+
+  async generateArticlesFromEvents(reporter: Reporter): Promise<{response: {
+    id: string;
+    reporterId: string;
+    beat: string;
+    headline: string;
+    leadParagraph: string;
+    body: string;
+    keyQuotes: string[];
+    sources: string[];
+    wordCount: number;
+    generationTime: number;
+    reporterNotes: {
+      researchQuality: string;
+      sourceDiversity: string;
+      factualAccuracy: string;
+    };
+    socialMediaSummary: string;
+    messageIds: number[];
+    potentialMessageIds: number[];
+  }, prompt: string,
+    messages: string[];
+} | null> {
+    const generationTime = Date.now();
+    const articleId = `article_${generationTime}_${Math.random().toString(36).substring(2, 8)}`;
+    const beatsList = reporter.beats.join(', ');
+
+    try {
+      // Get reporter's 5 latest events
+      const redis = new RedisService();
+      await redis.connect();
+      const latestEvents = await redis.getEventsByReporter(reporter.id, 5);
+      await redis.disconnect();
+
+      // Get reporter's 5 latest articles for context
+      const latestArticles = await redis.getArticlesByReporter(reporter.id, 5);
+
+      // Format events for the prompt
+      const eventsContext = latestEvents.length > 0
+        ? latestEvents.map((event, index) =>
+            `Event ${index + 1}:\nTitle: ${event.title}\nFacts: ${event.facts.join(', ')}\nCreated: ${new Date(event.createdTime).toISOString()}`
+          ).join('\n\n')
+        : 'No previous events available for this reporter.';
+
+      // Format recent article headlines for context
+      const articlesContext = latestArticles.length > 0
+        ? latestArticles.map((article, index) =>
+            `Article ${index + 1}: "${article.headline}"`
+          ).join('\n')
+        : 'No previous articles available for this reporter.';
+
+      // Fetch recent social media messages to inform article generation
+      let socialMediaMessages: Array<{did: string; text: string; time: number}> = [];
+      try {
+        this.mcpClient = new McpBskyClient({
+          serverUrl: process.env.MCP_BSKY_SERVER_URL || 'http://localhost:3001'
+        });
+        await this.mcpClient.connect();
+        socialMediaMessages = await this.mcpClient.getMessages();
+        await this.mcpClient.disconnect();
+      } catch (error) {
+        console.warn('Failed to fetch social media messages:', error);
+        // Continue with article generation even if social media fetch fails
+      }
+
+      // Get configurable message slice count
+      let messageSliceCount = 200; // Default fallback
+      try {
+        const redisService = new RedisService();
+        await redisService.connect();
+        const editor = await redisService.getEditor();
+        await redisService.disconnect();
+        if (editor) {
+          messageSliceCount = editor.messageSliceCount;
+        }
+      } catch (error) {
+        console.warn('Failed to fetch message slice count from Redis, using default:', error);
+      }
+
+      const messages = socialMediaMessages.slice(-messageSliceCount);
+
+      // Format social media messages for the prompt
+      let socialMediaContext = '';
+      if (socialMediaMessages.length > 0) {
+        const formattedMessages: string[] = [];
+
+        for (let i = 0; i < messages.length; i++) {
+          formattedMessages.push(`${i + 1}. "${messages[i].text}"`);
+        }
+
+        socialMediaContext = `\n\nRecent social media discussions:\n${formattedMessages.join('\n')}`;
+      }
+
+      const systemPrompt = `You are a professional journalist creating structured news articles. Generate comprehensive, well-researched articles with proper journalistic structure including lead paragraphs, key quotes, sources, and reporter notes. ${reporter.prompt}`;
+
+      const userPrompt = `Create a focused news article about one of your recent events. You have access to these beats: ${beatsList}.
+
+Here are your 5 latest events:
+${eventsContext}
+
+Here are the headlines of your 5 latest articles:
+${articlesContext}
+
+Choose ONE of the 5 events above and write a comprehensive news article about it. Follow these guidelines:
+
+1. Select the most newsworthy event from your list of 5 latest events
+2. Write a compelling headline focused on this specific event
+3. Create a strong lead paragraph (2-3 sentences) that hooks readers with this particular story
+4. Write a detailed body (300-500 words) with deep context and analysis of this event
+5. Include 2-4 key quotes specifically related to this event
+6. List 3-5 credible sources focused on this particular event
+7. Create a brief social media summary (under 280 characters) about this specific story
+8. Provide reporter notes on research quality, source diversity, and factual accuracy for this event
+9. Specify which beat from your assigned list you chose for this article
+10. IMPORTANT: Do not write about topics you've covered in your recent articles unless there is newly developed information about that topic. If all recent events have been covered, choose the one with the most significant new developments.
+
+Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible. Focus exclusively on the chosen event to create a more targeted and impactful piece.${socialMediaContext}
+
+When generating the article, first review your recent articles to avoid repetition, then choose the most appropriate event from your list, and focus the entire article on that specific event to create a more targeted and impactful story. After writing the article, re-scan the social media messages for any that may be related to your chosen event; include their numeric indices in the "potentialMessageIds" field.`;
+
+      const fullPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
+
+      const response = await this.openai.chat.completions.create({
+        model: this.modelName,
+        messages: [
+          {
+            role: 'system',
+            content: systemPrompt
+          },
+          {
+            role: 'user',
+            content: userPrompt
+          }
+        ],
+        response_format: zodResponseFormat(reporterArticleSchema, "reporter_article")
+      });
+
+      const content = response.choices[0]?.message?.content?.trim();
+      if (!content) {
+        throw new Error('No response content from AI service');
+      }
+
+      // Save the entire AI response to JSON file
+      try {
+        const responseFilePath = join(process.cwd(), 'api_responses', `article_from_events_${generationTime}.json`);
+        await writeFile(responseFilePath, JSON.stringify(response, null, 2));
+      } catch (error) {
+        console.warn('Failed to save AI response to file:', error);
+        // Continue with article generation even if file save fails
+      }
+
+      const parsedResponse = reporterArticleSchema.parse(JSON.parse(content));
+
+      // Add generated fields
+      parsedResponse.id = articleId;
+      parsedResponse.reporterId = reporter.id;
+      parsedResponse.generationTime = generationTime;
+      parsedResponse.wordCount = parsedResponse.body.split(' ').length;
+
+      return { response: parsedResponse, prompt: fullPrompt, messages: messages.map(x => x.text)} ;
+    } catch (error) {
+      console.error('Error generating article from events:', error);
+      return null;
+    }
+  }
 }

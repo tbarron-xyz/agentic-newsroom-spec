@@ -283,4 +283,71 @@ export class ReporterService {
   async getReporterEvents(reporterId: string, limit?: number): Promise<Event[]> {
     return await this.redisService.getEventsByReporter(reporterId, limit);
   }
+
+  async generateArticlesFromEvents(): Promise<{ [reporterId: string]: Article[] }> {
+    console.log('Starting article generation from events for all reporters...');
+
+    // Get all reporters
+    const reporters = await this.redisService.getAllReporters();
+    if (reporters.length === 0) {
+      throw new Error('No reporters available to generate articles from events');
+    }
+
+    // Filter to only enabled reporters
+    const enabledReporters = reporters.filter(reporter => reporter.enabled);
+    console.log(`Found ${reporters.length} total reporters, ${enabledReporters.length} enabled`);
+
+    if (enabledReporters.length === 0) {
+      console.log('No enabled reporters available to generate articles from events');
+      return {};
+    }
+
+    const results: { [reporterId: string]: Article[] } = {};
+
+    // Generate articles from events for each enabled reporter
+    for (const reporter of enabledReporters) {
+      try {
+        const structuredArticle = await this.aiService.generateArticlesFromEvents(reporter);
+        if (!structuredArticle) { continue; } // no article generated, that's fine
+
+        // Check if messageIds is empty - if so, skip generating and saving this article
+        if (!structuredArticle.response.messageIds || structuredArticle.response.messageIds.length === 0) {
+          console.log(`Skipping article generation from events for reporter ${reporter.id} - no messageIds returned`);
+          continue;
+        }
+
+        // Extract message texts for the used message IDs
+        const messageTexts: string[] = [];
+        if (structuredArticle.response.messageIds && structuredArticle.response.messageIds.length > 0) {
+          console.log(`Article used message IDs: ${structuredArticle.response.messageIds.join(', ')}`);
+          const ids = [...(new Set(structuredArticle.response.messageIds).union(new Set(structuredArticle.response.potentialMessageIds)))];
+          ids.forEach(x => messageTexts.push(structuredArticle.messages[x-1])); // -1 because ai service does a +1
+        }
+
+        // Convert structured article to simple Article format for storage
+        const article: Article = {
+          id: structuredArticle.response.id,
+          reporterId: structuredArticle.response.reporterId,
+          headline: structuredArticle.response.headline,
+          body: `${structuredArticle.response.leadParagraph}\n\n${structuredArticle.response.body}`,
+          generationTime: structuredArticle.response.generationTime,
+          prompt: structuredArticle.prompt,
+          messageIds: structuredArticle.response.messageIds || [],
+          messageTexts: messageTexts
+        };
+
+        await this.redisService.saveArticle(article);
+        results[reporter.id] = [article];
+        console.log(`Generated article from events: "${article.headline}" for reporter ${reporter.id}`);
+      } catch (error) {
+        console.error(`Failed to generate article from events for reporter ${reporter.id}:`, error);
+        results[reporter.id] = [];
+      }
+    }
+
+    const totalArticles = Object.values(results).reduce((sum, articles) => sum + articles.length, 0);
+    console.log(`Generated ${totalArticles} articles from events across ${enabledReporters.length} enabled reporters`);
+
+    return results;
+  }
 }
