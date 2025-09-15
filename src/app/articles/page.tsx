@@ -213,10 +213,10 @@ function ArticlesContent() {
               </h1>
               <p className="text-white/70 text-lg">
                 {reporterId
-                  ? `Reporter ${reporterId.split('_')[2] || reporterId}`
+                  ? `Reporter ${reporterId.split('_')[2] || reporterId} (${articles.length} articles)`
                   : !hasReaderAccess
-                    ? 'Showing the 5 most recent articles (login with Reader access to see all articles)'
-                    : 'Chronological list of all published articles'
+                    ? `Showing the ${articles.length} most recent articles (login with Reader access to see all articles)`
+                    : `Chronological list of all published articles (${articles.length} articles)`
                 }
               </p>
             </div>
