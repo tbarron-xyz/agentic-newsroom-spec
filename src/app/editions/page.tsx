@@ -138,7 +138,9 @@ export default function EditionsPage() {
                   <div className="space-y-4">
                     {edition.stories.map((article: Article, _index: number) => (
                       <div key={article.id} className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-lg p-4">
-                        <h5 className="font-semibold text-white/90 mb-2">{article.headline}</h5>
+                        <Link href={`/articles/${article.id}`} className="block">
+                          <h5 className="font-semibold text-white/90 mb-2 hover:text-white transition-colors cursor-pointer">{article.headline}</h5>
+                        </Link>
                         <p className="text-white/80 text-sm leading-relaxed">{article.body}</p>
                         <div className="mt-2 text-xs text-white/60">
                           Reporter: {article.reporterId} | Generated: {new Date(article.generationTime).toLocaleDateString()}
