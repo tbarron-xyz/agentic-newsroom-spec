@@ -147,18 +147,18 @@ export default function Home() {
                 </div>
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-white/90 mb-3">
+                <h2 className="text-xl font-bold text-white/90 mb-3">
                   Welcome to Skylines AI Newsroom
                 </h2>
                 <div className="text-white/80 space-y-3">
-                  <p className="text-lg leading-relaxed">
+                  <p className="text-base leading-relaxed">
                     Each article in our newsroom is sourced from real messages on the Bluesky social media platform's firehose - a continuous stream of public posts and conversations.
                   </p>
-                  <p className="text-lg leading-relaxed">
+                  <p className="text-base leading-relaxed">
                     Every article clearly states which specific social media messages were used to write and inform the content, ensuring transparency about our AI-powered reporting process.
                   </p>
                   <div className="mt-4 p-4 backdrop-blur-sm bg-white/5 rounded-lg border border-white/10">
-                    <p className="text-sm text-white/70 italic">
+                    <p className="text-xs text-white/70 italic">
                       "Our commitment is to provide accurate, sourced journalism powered by artificial intelligence while maintaining full transparency about our data sources."
                     </p>
                   </div>

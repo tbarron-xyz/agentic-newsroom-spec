@@ -183,10 +183,9 @@ export class RedisService {
     const articleIds = await this.client.ZRANGE(
       REDIS_KEYS.ARTICLES_BY_REPORTER(reporterId),
       0,
-      count - 1
+      count == -1 ? count : count - 1, 
+      { REV: true }
     );
-    // Reverse to get most recent first
-    articleIds.reverse();
 
     const articles: Article[] = [];
     for (const articleId of articleIds) {
@@ -493,9 +492,7 @@ export class RedisService {
 
   async getNewspaperEditions(limit?: number): Promise<NewspaperEdition[]> {
     const count = limit || -1;
-    const editionIds = await this.client.ZRANGE(REDIS_KEYS.EDITIONS, 0, count == -1 ? count : count - 1);
-    // Reverse to get most recent first
-    editionIds.reverse();
+    const editionIds = await this.client.ZRANGE(REDIS_KEYS.EDITIONS, 0, count == -1 ? count : count - 1, { REV: true });
 
     const editions: NewspaperEdition[] = [];
     for (const editionId of editionIds) {

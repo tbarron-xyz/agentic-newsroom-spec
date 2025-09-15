@@ -625,7 +625,7 @@ Instructions:
 
       const systemPrompt = `You are a professional journalist creating structured news articles. Generate comprehensive, well-researched articles with proper journalistic structure including lead paragraphs, key quotes, sources, and reporter notes. ${reporter.prompt}`;
 
-      const userPrompt = `Create a focused news article about one of your recent events. You have access to these beats: ${beatsList}.
+      const userPrompt = `Create a focused news article about one of your recent events. Your assigned beats are as follows: ${beatsList}.
 
 Here are your 5 latest events:
 ${eventsContext}
@@ -635,16 +635,16 @@ ${articlesContext}
 
 Choose ONE of the 5 events above and write a comprehensive news article about it. Follow these guidelines:
 
-1. Select the most newsworthy event from your list of 5 latest events
-2. Write a compelling headline focused on this specific event
-3. Create a strong lead paragraph (2-3 sentences) that hooks readers with this particular story
-4. Write a detailed body (300-500 words) with deep context and analysis of this event
-5. Include 2-4 key quotes specifically related to this event
-6. List 3-5 credible sources focused on this particular event
-7. Create a brief social media summary (under 280 characters) about this specific story
-8. Provide reporter notes on research quality, source diversity, and factual accuracy for this event
-9. Specify which beat from your assigned list you chose for this article
-10. IMPORTANT: Do not write about topics you've covered in your recent articles unless there is newly developed information about that topic. If all recent events have been covered, choose the one with the most significant new developments.
+ *First, scan the provided social media messages for information relevant to any of your available beats. If there are zero relevant social media messages, stop processing and return empty strings for the rest of the fields. Include the numerical indexes of the messages relevant to the article you write in the "messageIds" field.
+* Write a compelling headline focused on this specific event
+* Create a strong lead paragraph (2-3 sentences) that hooks readers with this particular story
+* Write a detailed body (300-500 words) with deep context and analysis of this event
+* Include 2-4 key quotes specifically related to this event
+* List 3-5 credible sources focused on this particular event
+* Create a brief social media summary (under 280 characters) about this specific story
+* Provide reporter notes on research quality, source diversity, and factual accuracy for this event
+* Specify which beat from your assigned list you chose for this article
+* IMPORTANT: Do not write about topics you've covered in your recent articles unless there is newly developed information about that topic. If all recent events have been covered, choose the one with the most significant new developments.
 
 Make the article engaging, factual, and professionally written. Ensure all quotes are realistic and sources are credible. Focus exclusively on the chosen event to create a more targeted and impactful piece.${socialMediaContext}
 
