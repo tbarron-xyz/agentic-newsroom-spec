@@ -129,7 +129,7 @@ export class EditorService {
       frontPageArticle: dailyEditionContent.frontPageArticle,
       topics: dailyEditionContent.topics,
       modelFeedbackAboutThePrompt: dailyEditionContent.modelFeedbackAboutThePrompt,
-      newspaperName: (d => `${d.getDay()}, ${d.getMonth()}/${d.getDate()}`)(new Date()),//dailyEditionContent.newspaperName,
+      newspaperName: (d => `${d.toLocaleDateString('en-US',{weekday: 'long'})}, ${d.getMonth()}/${d.getDate()}`)(new Date()),//dailyEditionContent.newspaperName,
       prompt: fullPrompt
     };
 

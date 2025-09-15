@@ -320,7 +320,6 @@ User: Given the following articles and editorial guidelines: "${editorPrompt}", 
         gullibleComment: string;
       }>;
       modelFeedbackAboutThePrompt: { positive: string; negative: string };
-      // newspaperName: string;
     };
     fullPrompt: string;
   }> {
@@ -346,7 +345,6 @@ Generate a complete daily edition with:
 2. A detailed front page article (300-500 words)
 3. 3-5 major topics, each with complete news coverage including headlines, two-paragraph stories, social media content, and contrasting viewpoints
 4. Feedback about the editorial prompt (both positive and negative aspects)
-5. An appropriate newspaper name
 
 Make the content engaging, balanced, and professionally written. Focus on creating a cohesive narrative that connects the various editions into a unified daily newspaper experience.`;
 
