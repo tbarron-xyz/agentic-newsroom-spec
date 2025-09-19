@@ -448,8 +448,8 @@ export class RedisService {
       throw new Error(`Event ${eventId} not found`);
     }
 
-    // Merge existing facts with new facts (avoid duplicates)
-    const mergedFacts = [...new Set([...existingEvent.facts, ...newFacts])];
+    // Replace existing facts with new facts
+    const mergedFacts = newFacts;
 
     const multi = this.client.multi();
     console.log('Redis Write: SET', REDIS_KEYS.EVENT_UPDATED_TIME(eventId), Date.now().toString());
