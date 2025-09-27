@@ -146,6 +146,12 @@ export default function Navigation() {
                   Events
                 </Link>
                 <Link
+                  href="/admin/bluesky-messages"
+                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Bluesky Messages
+                </Link>
+                <Link
                   href="/editor"
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
                 >
@@ -257,32 +263,39 @@ export default function Navigation() {
             </Link>
           )}
 
-          {/* Admin-only links */}
-          {user?.role === 'admin' && (
-            <>
-              <Link
-                href="/users"
-                onClick={closeMobileMenu}
-                className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
-              >
-                Users
-              </Link>
-              <Link
-                href="/events"
-                onClick={closeMobileMenu}
-                className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
-              >
-                Events
-              </Link>
-              <Link
-                href="/editor"
-                onClick={closeMobileMenu}
-                className="bg-blue-600 text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-700 transition-colors"
-              >
-                Editor Settings
-              </Link>
-            </>
-          )}
+           {/* Admin-only links */}
+           {user?.role === 'admin' && (
+             <>
+               <Link
+                 href="/users"
+                 onClick={closeMobileMenu}
+                 className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+               >
+                 Users
+               </Link>
+               <Link
+                 href="/events"
+                 onClick={closeMobileMenu}
+                 className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+               >
+                 Events
+               </Link>
+               <Link
+                 href="/admin/bluesky-messages"
+                 onClick={closeMobileMenu}
+                 className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+               >
+                 Bluesky Messages
+               </Link>
+               <Link
+                 href="/editor"
+                 onClick={closeMobileMenu}
+                 className="bg-blue-600 text-white block px-3 py-2 rounded-md text-base font-medium hover:bg-blue-700 transition-colors"
+               >
+                 Editor Settings
+               </Link>
+             </>
+           )}
 
           {/* Mobile auth section */}
           <div className="border-t border-slate-200 pt-4 mt-4">
