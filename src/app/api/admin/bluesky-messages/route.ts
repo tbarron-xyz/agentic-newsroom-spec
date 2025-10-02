@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { RedisService } from '../../../services/redis.service';
-import { AuthService } from '../../../services/auth.service';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+ import { NextRequest, NextResponse } from 'next/server';
+ import { RedisService } from '../../../services/redis.service';
+ import { AuthService } from '../../../services/auth.service';
+ import { TinyJetstream } from 'mbjc/tinyjetstream';
 
 const redisService = new RedisService();
 const authService = new AuthService(redisService);
@@ -39,15 +38,24 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch messages using npx mbjc command
-    const execAsync = promisify(exec);
-    const { stdout } = await execAsync('npx mbjc 500');
-    const rawMessages = JSON.parse(stdout.trim());
-    const messages = rawMessages.map((msg: any) => ({
-      did: msg.did,
-      text: msg.text,
-      time: msg.timeMs
-    }));
+    // Fetch messages using TinyJetstream
+    const messages: any[] = [];
+    const jetstream = new TinyJetstream();
+
+    await new Promise<void>((resolve) => {
+      jetstream.onTweet = (e) => {
+        messages.push({
+          did: e.did,
+          text: e.commit.record.text,
+          time: Date.now()
+        });
+        if (messages.length >= 50) {
+          jetstream.stop();
+          resolve();
+        }
+      };
+      jetstream.start();
+    });
 
     return NextResponse.json({
       messages,
