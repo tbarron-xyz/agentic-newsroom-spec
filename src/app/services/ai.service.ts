@@ -1,16 +1,16 @@
 import { Reporter, Article, Event, REDIS_KEYS } from '../models/types';
 import OpenAI from 'openai';
-import { McpBskyClient } from "mcp-bsky-jetstream/client/dist/McpBskyClient.js";
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { dailyEditionSchema, reporterArticleSchema, eventGenerationResponseSchema } from '../models/schemas';
 import { RedisService } from './redis.service';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 export class AIService {
   private openai: OpenAI;
   private modelName: string = 'gpt-5-nano';
-  private mcpClient: McpBskyClient;
 
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -20,11 +20,6 @@ export class AIService {
 
     this.openai = new OpenAI({
       apiKey: apiKey,
-    });
-
-    // Initialize MCP Bluesky client
-    this.mcpClient = new McpBskyClient({
-      serverUrl: process.env.MCP_BSKY_SERVER_URL || 'http://localhost:3001'
     });
 
     // Initialize modelName from Redis with default
@@ -77,17 +72,19 @@ export class AIService {
       // Fetch recent social media messages to inform article generation
       let socialMediaMessages: Array<{did: string; text: string; time: number}> = [];
       try {
-        this.mcpClient = new McpBskyClient({
-          serverUrl: process.env.MCP_BSKY_SERVER_URL || 'http://localhost:3001'
-        });
-        await this.mcpClient.connect();
-        socialMediaMessages = await this.mcpClient.getMessages();
-        await this.mcpClient.disconnect();
+        const execAsync = promisify(exec);
+        const { stdout } = await execAsync('npx mbjc 500');
+        const rawMessages = JSON.parse(stdout.trim());
+        socialMediaMessages = rawMessages.map((msg: any) => ({
+          did: msg.did,
+          text: msg.text,
+          time: msg.timeMs
+        }));
       } catch (error) {
         console.warn('Failed to fetch social media messages:', error);
         // Continue with article generation even if social media fetch fails
       }
-      
+
 
       // Fetch the most recent ad from data storage
       let mostRecentAd = null;
@@ -434,12 +431,14 @@ User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive 
       // Fetch recent social media messages
       let socialMediaMessages: Array<{did: string; text: string; time: number}> = [];
       try {
-        this.mcpClient = new McpBskyClient({
-          serverUrl: process.env.MCP_BSKY_SERVER_URL || 'http://localhost:3001'
-        });
-        await this.mcpClient.connect();
-        socialMediaMessages = await this.mcpClient.getMessages();
-        await this.mcpClient.disconnect();
+        const execAsync = promisify(exec);
+        const { stdout } = await execAsync('npx mbjc 500');
+        const rawMessages = JSON.parse(stdout.trim());
+        socialMediaMessages = rawMessages.map((msg: any) => ({
+          did: msg.did,
+          text: msg.text,
+          time: msg.timeMs
+        }));
       } catch (error) {
         console.warn('Failed to fetch social media messages for events:', error);
       }
@@ -582,12 +581,14 @@ Instructions:
       // Fetch recent social media messages to inform article generation
       let socialMediaMessages: Array<{did: string; text: string; time: number}> = [];
       try {
-        this.mcpClient = new McpBskyClient({
-          serverUrl: process.env.MCP_BSKY_SERVER_URL || 'http://localhost:3001'
-        });
-        await this.mcpClient.connect();
-        socialMediaMessages = await this.mcpClient.getMessages();
-        await this.mcpClient.disconnect();
+        const execAsync = promisify(exec);
+        const { stdout } = await execAsync('npx mbjc 500');
+        const rawMessages = JSON.parse(stdout.trim());
+        socialMediaMessages = rawMessages.map((msg: any) => ({
+          did: msg.did,
+          text: msg.text,
+          time: msg.timeMs
+        }));
       } catch (error) {
         console.warn('Failed to fetch social media messages:', error);
         // Continue with article generation even if social media fetch fails

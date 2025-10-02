@@ -1,5 +1,7 @@
 import { AIService } from '../services/ai.service';
 import { RedisService } from '../services/redis.service';
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 async function testAdIntegration() {
   console.log('Testing ad integration in article generation...');
@@ -37,19 +39,8 @@ async function testAdIntegration() {
     // Test the AI service with mock social media messages
     const aiService = new AIService();
 
-    // Mock the MCP client to return test messages
-    const mockMessages: Array<{did: string; text: string; time: number}> = [];
-    for (let i = 1; i <= 45; i++) {
-      mockMessages.push({
-        did: `user${i}`,
-        text: `This is test social media message number ${i} about current events and discussions.`,
-        time: Date.now() - (i * 1000)
-      });
-    }
-
-    // Temporarily replace the MCP client method for testing
-    const originalGetMessages = aiService['mcpClient'].getMessages;
-    aiService['mcpClient'].getMessages = async () => mockMessages;
+    // Note: This test now uses the actual npx mbjc 500 command
+    // Make sure the command is available and returns valid JSON
 
     // Create a mock reporter
     const mockReporter = {
@@ -82,8 +73,7 @@ async function testAdIntegration() {
     }
     console.log('Total ad insertions found:', adInsertions);
 
-    // Restore original method
-    aiService['mcpClient'].getMessages = originalGetMessages;
+    // No need to restore since we're not mocking anymore
 
     console.log('Test completed successfully!');
 
