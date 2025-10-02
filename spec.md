@@ -1,6 +1,10 @@
 @./initialize-code.spec.md
 @./initialize-data.spec.md
-@./additional-prompts.spec.md
+
+Implement real openai calls in ai.service.ts. The api key will come from the env vars. The model used should be "gpt-5-nano".
+Make the editor's API call use the response format found in @/schemas.ts
+Add a schema for the response format of the reporters' api calls, similar to the daily editions schema.
+
 @./frontend.spec.md
 
 Add a login page with just an "admin password" field, which hits a new login endpoint that compares the field value to the environment variable "NEWSROOM_ADMIN_PASS".
