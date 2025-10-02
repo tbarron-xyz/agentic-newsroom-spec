@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { RedisService } from '../../../services/redis.service';
 import { AuthService } from '../../../services/auth.service';
-import { McpBskyClient } from "mcp-bsky-jetstream/client/dist/McpBskyClient.js";
+import { exec } from 'child_process';
+import { promisify } from 'util';
 
 const redisService = new RedisService();
 const authService = new AuthService(redisService);
@@ -38,15 +39,15 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Initialize MCP Bluesky client
-    const mcpClient = new McpBskyClient({
-      serverUrl: process.env.MCP_BSKY_SERVER_URL || 'http://localhost:3001'
-    });
-
-    // Fetch messages
-    await mcpClient.connect();
-    const messages = await mcpClient.getMessages();
-    await mcpClient.disconnect();
+    // Fetch messages using npx mbjc command
+    const execAsync = promisify(exec);
+    const { stdout } = await execAsync('npx mbjc 500');
+    const rawMessages = JSON.parse(stdout.trim());
+    const messages = rawMessages.map((msg: any) => ({
+      did: msg.did,
+      text: msg.text,
+      time: msg.timeMs
+    }));
 
     return NextResponse.json({
       messages,
