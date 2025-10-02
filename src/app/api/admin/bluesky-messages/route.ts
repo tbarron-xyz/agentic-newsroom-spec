@@ -1,7 +1,7 @@
  import { NextRequest, NextResponse } from 'next/server';
  import { RedisService } from '../../../services/redis.service';
  import { AuthService } from '../../../services/auth.service';
- import { TinyJetstream } from 'mbjc/tinyjetstream';
+ import { fetchLatestMessages } from '../../../services/bluesky.service';
 
 const redisService = new RedisService();
 const authService = new AuthService(redisService);
@@ -38,24 +38,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Fetch messages using TinyJetstream
-    const messages: any[] = [];
-    const jetstream = new TinyJetstream();
+    // Get message count from editor settings
+    let messageCount = 50; // Default fallback
+    try {
+      const editor = await redisService.getEditor();
+      if (editor) {
+        messageCount = editor.messageSliceCount;
+      }
+    } catch (error) {
+      console.warn('Failed to fetch message count from editor settings, using default:', error);
+    }
 
-    await new Promise<void>((resolve) => {
-      jetstream.onTweet = (e) => {
-        messages.push({
-          did: e.did,
-          text: e.commit.record.text,
-          time: Date.now()
-        });
-        if (messages.length >= 50) {
-          jetstream.stop();
-          resolve();
-        }
-      };
-      jetstream.start();
-    });
+    // Fetch messages using utility function
+    const messages = await fetchLatestMessages(messageCount);
 
     return NextResponse.json({
       messages,

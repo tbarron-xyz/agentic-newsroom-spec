@@ -5,8 +5,7 @@ import { dailyEditionSchema, reporterArticleSchema, eventGenerationResponseSchem
 import { RedisService } from './redis.service';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
-import { exec } from 'child_process';
-import { promisify } from 'util';
+import { fetchLatestMessages } from './bluesky.service';
 
 export class AIService {
   private openai: OpenAI;
@@ -69,17 +68,24 @@ export class AIService {
     const beatsList = reporter.beats.join(', ');
 
     try {
+      // Get configurable message slice count from Redis
+      let messageSliceCount = 200; // Default fallback
+      try {
+        const redis = new RedisService();
+        await redis.connect();
+        const editor = await redis.getEditor();
+        await redis.disconnect();
+        if (editor) {
+          messageSliceCount = editor.messageSliceCount;
+        }
+      } catch (error) {
+        console.warn('Failed to fetch message slice count from Redis, using default:', error);
+      }
+
       // Fetch recent social media messages to inform article generation
       let socialMediaMessages: Array<{did: string; text: string; time: number}> = [];
       try {
-        const execAsync = promisify(exec);
-        const { stdout } = await execAsync('npx mbjc 500');
-        const rawMessages = JSON.parse(stdout.trim());
-        socialMediaMessages = rawMessages.map((msg: any) => ({
-          did: msg.did,
-          text: msg.text,
-          time: msg.timeMs
-        }));
+        socialMediaMessages = await fetchLatestMessages(messageSliceCount);
       } catch (error) {
         console.warn('Failed to fetch social media messages:', error);
         // Continue with article generation even if social media fetch fails
@@ -98,29 +104,13 @@ export class AIService {
         // Continue with article generation even if ad fetch fails
       }
 
-      // Get configurable message slice count from Redis
-      let messageSliceCount = 200; // Default fallback
-      try {
-        const redis = new RedisService();
-        await redis.connect();
-        const editor = await redis.getEditor();
-        await redis.disconnect();
-        if (editor) {
-          messageSliceCount = editor.messageSliceCount;
-        }
-      } catch (error) {
-        console.warn('Failed to fetch message slice count from Redis, using default:', error);
-      }
-      
-        const messages = socialMediaMessages.slice(-messageSliceCount);
-
       // Format social media messages for the prompt with ad insertion
       let socialMediaContext = '';
       if (socialMediaMessages.length > 0) {
         const formattedMessages: string[] = [];
 
-        for (let i = 0; i < messages.length; i++) {
-          formattedMessages.push(`${i + 1}. "${messages[i].text}"`);
+        for (let i = 0; i < socialMediaMessages.length; i++) {
+          formattedMessages.push(`${i + 1}. "${socialMediaMessages[i].text}"`);
 
           // Insert ad prompt after every 20 message entries
           if ((i + 1) % 20 === 0 && mostRecentAd) {
@@ -192,7 +182,7 @@ When generating the article, first scan the social media context for messages re
       parsedResponse.generationTime = generationTime;
       parsedResponse.wordCount = parsedResponse.body.split(' ').length;
 
-      return { response: parsedResponse, prompt: fullPrompt, messages: messages.map(x => x.text)} ;
+      return { response: parsedResponse, prompt: fullPrompt, messages: socialMediaMessages.map(x => x.text)} ;
     } catch (error) {
       console.error('Error generating structured article:', error);
       // Return fallback structured article
@@ -428,21 +418,6 @@ User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive 
           ).join('\n\n')
         : 'No previous events available.';
 
-      // Fetch recent social media messages
-      let socialMediaMessages: Array<{did: string; text: string; time: number}> = [];
-      try {
-        const execAsync = promisify(exec);
-        const { stdout } = await execAsync('npx mbjc 500');
-        const rawMessages = JSON.parse(stdout.trim());
-        socialMediaMessages = rawMessages.map((msg: any) => ({
-          did: msg.did,
-          text: msg.text,
-          time: msg.timeMs
-        }));
-      } catch (error) {
-        console.warn('Failed to fetch social media messages for events:', error);
-      }
-
       // Get configurable message slice count
       let messageSliceCount = 200; // Default fallback
       try {
@@ -457,11 +432,17 @@ User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive 
         console.warn('Failed to fetch message slice count for events, using default:', error);
       }
 
-      const messages = socialMediaMessages.slice(-messageSliceCount);
+      // Fetch recent social media messages
+      let socialMediaMessages: Array<{did: string; text: string; time: number}> = [];
+      try {
+        socialMediaMessages = await fetchLatestMessages(messageSliceCount);
+      } catch (error) {
+        console.warn('Failed to fetch social media messages for events:', error);
+      }
 
       // Format social media messages for the prompt
-      const socialMediaContext = messages.length > 0
-        ? messages.map((msg, index) => `${index + 1}. "${msg.text}"`).join('\n')
+      const socialMediaContext = socialMediaMessages.length > 0
+        ? socialMediaMessages.map((msg, index) => `${index + 1}. "${msg.text}"`).join('\n')
         : 'No social media messages available.';
 
       const beatsList = reporter.beats.join(', ');
@@ -578,22 +559,6 @@ Instructions:
           ).join('\n')
         : 'No previous articles available for this reporter.';
 
-      // Fetch recent social media messages to inform article generation
-      let socialMediaMessages: Array<{did: string; text: string; time: number}> = [];
-      try {
-        const execAsync = promisify(exec);
-        const { stdout } = await execAsync('npx mbjc 500');
-        const rawMessages = JSON.parse(stdout.trim());
-        socialMediaMessages = rawMessages.map((msg: any) => ({
-          did: msg.did,
-          text: msg.text,
-          time: msg.timeMs
-        }));
-      } catch (error) {
-        console.warn('Failed to fetch social media messages:', error);
-        // Continue with article generation even if social media fetch fails
-      }
-
       // Get configurable message slice count
       let messageSliceCount = 200; // Default fallback
       try {
@@ -608,15 +573,22 @@ Instructions:
         console.warn('Failed to fetch message slice count from Redis, using default:', error);
       }
 
-      const messages = socialMediaMessages.slice(-messageSliceCount);
+      // Fetch recent social media messages to inform article generation
+      let socialMediaMessages: Array<{did: string; text: string; time: number}> = [];
+      try {
+        socialMediaMessages = await fetchLatestMessages(messageSliceCount);
+      } catch (error) {
+        console.warn('Failed to fetch social media messages:', error);
+        // Continue with article generation even if social media fetch fails
+      }
 
       // Format social media messages for the prompt
       let socialMediaContext = '';
       if (socialMediaMessages.length > 0) {
         const formattedMessages: string[] = [];
 
-        for (let i = 0; i < messages.length; i++) {
-          formattedMessages.push(`${i + 1}. "${messages[i].text}"`);
+        for (let i = 0; i < socialMediaMessages.length; i++) {
+          formattedMessages.push(`${i + 1}. "${socialMediaMessages[i].text}"`);
         }
 
         socialMediaContext = `\n\nRecent social media discussions:\n${formattedMessages.join('\n')}`;
@@ -688,7 +660,7 @@ When generating the article, first review your recent articles to avoid repetiti
       parsedResponse.generationTime = generationTime;
       parsedResponse.wordCount = parsedResponse.body.split(' ').length;
 
-      return { response: parsedResponse, prompt: fullPrompt, messages: messages.map(x => x.text)} ;
+      return { response: parsedResponse, prompt: fullPrompt, messages: socialMediaMessages.map(x => x.text)} ;
     } catch (error) {
       console.error('Error generating article from events:', error);
       return null;
