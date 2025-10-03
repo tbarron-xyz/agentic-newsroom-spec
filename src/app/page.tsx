@@ -310,8 +310,8 @@ export default function Home() {
                   </div>
 
                   {/* Model Feedback */}
-                  {selectedEdition.modelFeedbackAboutThePrompt.positive && (
-                    <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
+                  {user?.role === 'admin' && selectedEdition.modelFeedbackAboutThePrompt.positive && (
+                    <div className="backdrop-blur-xl sparkly-bg border border-white/20 rounded-2xl p-8 shadow-2xl">
                       <h2 className="text-2xl font-bold text-white/90 mb-6">Editorial Notes</h2>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
