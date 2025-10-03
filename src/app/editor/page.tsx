@@ -347,7 +347,7 @@ export default function EditorPage() {
                 readOnly={!isAdmin}
               />
               <p className="text-sm text-white/70 mt-2">
-                Number of recent messages to fetch from the MCP server for article generation (1-1000). Higher values provide more context but may slow down processing.
+                Number of recent messages to fetch from Bluesky for article generation (1-1000). Higher values provide more context but may slow down processing.
               </p>
             </div>
           </div>

@@ -145,9 +145,9 @@ export default function BlueskyMessagesPage() {
         <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20">
           <div className="px-6 py-4 border-b border-white/20">
             <h1 className="text-2xl font-bold text-white">Bluesky Messages</h1>
-            <p className="mt-1 text-sm text-white/80">
-              Full response from the Bluesky MCP server
-            </p>
+             <p className="mt-1 text-sm text-white/80">
+               Bluesky messages will be obtained from bluesky.service.ts by constructing a fresh TinyJetstream from the npm package "mbjc", listening for "n" messages, and then disposing the TinyJetstream.
+             </p>
             {data && (
               <div className="mt-2 text-sm text-white/70">
                 <span className="font-medium">{data.count}</span> messages fetched at {formatTimestamp(data.timestamp)}
