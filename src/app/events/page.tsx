@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { Event } from '../models/types';
 
 interface SafeEvent {
@@ -12,50 +13,76 @@ interface SafeEvent {
   facts: string[];
 }
 
+interface User {
+  id: string;
+  email: string;
+  role: 'admin' | 'editor' | 'reporter' | 'user';
+  hasReader: boolean;
+  hasReporter: boolean;
+  hasEditor: boolean;
+}
+
 export default function EventsPage() {
-  const [events, setEvents] = useState<SafeEvent[]>([]);
+  const [publicEvents, setPublicEvents] = useState<SafeEvent[]>([]);
+  const [adminEvents, setAdminEvents] = useState<SafeEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [adminLoading, setAdminLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [_currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    checkAuthAndFetchEvents();
+    fetchPublicEvents();
+    checkAuthStatus();
   }, []);
 
-  const checkAuthAndFetchEvents = async () => {
+  const fetchPublicEvents = async () => {
     try {
-      // Get token from localStorage (assuming it's stored there after login)
+      const response = await fetch('/api/events/public');
+      if (!response.ok) {
+        throw new Error('Failed to fetch events');
+      }
+      const eventsData = await response.json();
+      setPublicEvents(eventsData || []);
+    } catch (err) {
+      console.error('Error fetching public events:', err);
+      // Don't set error for public events, just log it
+    }
+  };
+
+  const checkAuthStatus = async () => {
+    try {
       const token = localStorage.getItem('accessToken');
       if (!token) {
-        setError('Not authenticated');
         setLoading(false);
         return;
       }
 
-      // First, verify the current user
       const userResponse = await fetch('/api/auth/verify', {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
 
-      if (!userResponse.ok) {
-        setError('Authentication failed');
-        setLoading(false);
-        return;
+      if (userResponse.ok) {
+        const userData = await userResponse.json();
+        setCurrentUser(userData.user);
+        setIsAdmin(userData.user.role === 'admin');
+
+        if (userData.user.role === 'admin') {
+          await fetchAdminEvents(token);
+        }
       }
+    } catch (err) {
+      console.error('Auth check failed:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      const userData = await userResponse.json();
-      setCurrentUser(userData.user);
-
-      // Check if user is admin
-      if (userData.user.role !== 'admin') {
-        setError('Admin access required');
-        setLoading(false);
-        return;
-      }
-
-      // Fetch events
+  const fetchAdminEvents = async (token: string) => {
+    try {
+      setAdminLoading(true);
       const eventsResponse = await fetch('/api/events', {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -63,15 +90,15 @@ export default function EventsPage() {
       });
 
       if (!eventsResponse.ok) {
-        throw new Error('Failed to fetch events');
+        throw new Error('Failed to fetch admin events');
       }
 
       const eventsData = await eventsResponse.json();
-      setEvents(eventsData.events || []);
+      setAdminEvents(eventsData.events || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
+      setError(err instanceof Error ? err.message : 'Failed to fetch admin events');
     } finally {
-      setLoading(false);
+      setAdminLoading(false);
     }
   };
 
@@ -86,8 +113,10 @@ export default function EventsPage() {
   };
 
   const handleGenerateEvents = async () => {
+    if (!isAdmin) return;
+
     try {
-      setLoading(true);
+      setAdminLoading(true);
       const token = localStorage.getItem('accessToken');
       if (!token) {
         setError('Not authenticated');
@@ -106,17 +135,20 @@ export default function EventsPage() {
         throw new Error('Failed to generate events');
       }
 
-      // Refresh events list
-      await checkAuthAndFetchEvents();
+      // Refresh both public and admin events
+      await fetchPublicEvents();
+      await fetchAdminEvents(token);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate events');
-      setLoading(false);
+      setAdminLoading(false);
     }
   };
 
   const handleGenerateArticlesFromEvents = async () => {
+    if (!isAdmin) return;
+
     try {
-      setLoading(true);
+      setAdminLoading(true);
       const token = localStorage.getItem('accessToken');
       if (!token) {
         setError('Not authenticated');
@@ -138,11 +170,12 @@ export default function EventsPage() {
       const result = await response.json();
       console.log('Articles generated from events:', result);
 
-      // Refresh events list (articles are generated from events, so events remain the same)
-      await checkAuthAndFetchEvents();
+      // Refresh events (articles are generated from events, so events remain the same)
+      await fetchPublicEvents();
+      if (token) await fetchAdminEvents(token);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to generate articles from events');
-      setLoading(false);
+      setAdminLoading(false);
     }
   };
 
@@ -164,31 +197,6 @@ export default function EventsPage() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 flex items-center justify-center relative overflow-hidden">
-        {/* Floating background elements */}
-        <div className="absolute inset-0 overflow-hidden">
-          <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-500"></div>
-        </div>
-
-        <div className="text-center relative z-10">
-          <div className="text-red-300 text-lg font-semibold mb-2">Access Denied</div>
-          <p className="text-white/80">{error}</p>
-          <a
-            href="/login"
-            className="group relative inline-flex items-center mt-4 px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 overflow-hidden transition-all duration-300"
-          >
-            <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-            <span className="relative">Go to Login</span>
-          </a>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500 relative overflow-hidden">
       {/* Floating background elements */}
@@ -198,84 +206,139 @@ export default function EventsPage() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl animate-pulse delay-500"></div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20">
-          <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Event Management</h1>
-              <p className="mt-1 text-sm text-white/80">
-                View and manage all tracked events in the system
-              </p>
-            </div>
-            <div className="flex space-x-3">
-              <button
-                onClick={handleGenerateEvents}
-                disabled={loading}
-                className="group relative inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-                <span className="relative">Generate Events</span>
-              </button>
-              <button
-                onClick={handleGenerateArticlesFromEvents}
-                disabled={loading}
-                className="group relative inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
-                <span className="relative">Generate Articles from Events</span>
-              </button>
-            </div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10 space-y-8">
+        {/* Explanatory Box */}
+        <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20 p-6">
+          <div className="text-center">
+            <h2 className="text-xl font-bold text-white mb-4">Latest Events</h2>
+            <p className="text-white/80 mb-4">
+              Events are regularly updated from Bluesky messages and social media data.
+              Our reporters use these events as the foundation for writing their articles.
+            </p>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-300"
+            >
+              Add your custom reporter
+            </Link>
           </div>
+        </div>
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-white/10">
-              <thead className="backdrop-blur-xl bg-white/5">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    Title
-                  </th>
-                  <th className="px-6 py-3 text-center text-xs font-medium text-white/70 uppercase tracking-wider w-1/2">
-                    Facts
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                    Details
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="backdrop-blur-xl bg-white/5 divide-y divide-white/10">
-                {events.map((event) => (
-                  <tr key={event.id} className="hover:bg-white/5 transition-colors duration-200">
-                    <td className="px-6 py-4 text-sm font-medium text-white">
-                      <div className="font-semibold">{event.title}</div>
-                      <div className="text-xs text-white/60 mt-1">ID: {event.id}</div>
-                    </td>
-                    <td className="px-6 py-4 text-sm text-white/70 w-1/2 text-center">
-                      <div className="space-y-1">
-                        {event.facts.map((fact, index) => (
-                          <div key={index} className="text-xs">
-                            • {fact}
-                          </div>
-                        ))}
+        {/* Public Events Grid */}
+        <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20 p-6">
+          <h3 className="text-lg font-semibold text-white mb-6">Recent Events</h3>
+          {publicEvents.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+              {publicEvents.map((event) => (
+                <div key={event.id} className="backdrop-blur-xl bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-colors duration-200">
+                  <h4 className="text-sm font-medium text-white mb-2 truncate">{event.title}</h4>
+                  <div className="text-xs text-white/60 mb-2">
+                    Updated: {formatDate(event.updatedTime)}
+                  </div>
+                  {event.facts.length > 0 && (
+                    <div className="text-xs text-white/70">
+                      <div className="truncate">
+                        • {event.facts[0]}
+                        {event.facts.length > 1 && ` (+${event.facts.length - 1} more)`}
                       </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
-                      Reporter: {event.reporterId}<br/>
-                      Created: {formatDate(event.createdTime)}<br/>
-                      Updated: {formatDate(event.updatedTime)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {events.length === 0 && (
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
             <div className="text-center py-12">
-              <p className="text-white/70">No events found</p>
-              <p className="text-white/50 text-sm mt-2">Click "Generate Events" to create new events from recent social media data</p>
+              <p className="text-white/70">No events available</p>
             </div>
           )}
         </div>
+
+        {/* Admin Section */}
+        {isAdmin && (
+          <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20">
+            <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
+              <div>
+                <h1 className="text-2xl font-bold text-white">Event Management</h1>
+                <p className="mt-1 text-sm text-white/80">
+                  View and manage all tracked events in the system
+                </p>
+              </div>
+              <div className="flex space-x-3">
+                <button
+                  onClick={handleGenerateEvents}
+                  disabled={adminLoading}
+                  className="group relative inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                  <span className="relative">Generate Events</span>
+                </button>
+                <button
+                  onClick={handleGenerateArticlesFromEvents}
+                  disabled={adminLoading}
+                  className="group relative inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 overflow-hidden transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -skew-x-12 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"></span>
+                  <span className="relative">Generate Articles from Events</span>
+                </button>
+              </div>
+            </div>
+
+            {error && (
+              <div className="px-6 py-4 border-b border-red-500/20 bg-red-500/10">
+                <p className="text-red-300 text-sm">{error}</p>
+              </div>
+            )}
+
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-white/10">
+                <thead className="backdrop-blur-xl bg-white/5">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                      Title
+                    </th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-white/70 uppercase tracking-wider w-1/2">
+                      Facts
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                      Details
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="backdrop-blur-xl bg-white/5 divide-y divide-white/10">
+                  {adminEvents.map((event) => (
+                    <tr key={event.id} className="hover:bg-white/5 transition-colors duration-200">
+                      <td className="px-6 py-4 text-sm font-medium text-white">
+                        <div className="font-semibold">{event.title}</div>
+                        <div className="text-xs text-white/60 mt-1">ID: {event.id}</div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-white/70 w-1/2 text-center">
+                        <div className="space-y-1">
+                          {event.facts.map((fact, index) => (
+                            <div key={index} className="text-xs">
+                              • {fact}
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
+                        Reporter: {event.reporterId}<br/>
+                        Created: {formatDate(event.createdTime)}<br/>
+                        Updated: {formatDate(event.updatedTime)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {adminEvents.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-white/70">No events found</p>
+                <p className="text-white/50 text-sm mt-2">Click "Generate Events" to create new events from recent social media data</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

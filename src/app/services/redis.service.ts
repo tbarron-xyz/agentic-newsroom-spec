@@ -394,6 +394,39 @@ export class RedisService {
     return limitedEvents.map(item => item.event);
   }
 
+  async getLatestUpdatedEvents(limit?: number): Promise<Event[]> {
+    const reporterIds = await this.client.sMembers(REDIS_KEYS.REPORTERS);
+
+    // Collect all events with their updated timestamps
+    const allEvents: { event: Event; timestamp: number }[] = [];
+
+    for (const reporterId of reporterIds) {
+      const eventIds = await this.client.ZRANGE(
+        REDIS_KEYS.EVENTS_BY_REPORTER(reporterId),
+        0,
+        -1
+      );
+
+      for (const eventId of eventIds) {
+        const event = await this.getEvent(eventId);
+        if (event) {
+          allEvents.push({
+            event,
+            timestamp: event.updatedTime
+          });
+        }
+      }
+    }
+
+    // Sort by updated timestamp (most recent first)
+    allEvents.sort((a, b) => b.timestamp - a.timestamp);
+
+    // Apply limit if specified
+    const limitedEvents = limit ? allEvents.slice(0, limit) : allEvents;
+
+    return limitedEvents.map(item => item.event);
+  }
+
   async getEvent(eventId: string): Promise<Event | null> {
     const [title, createdTimeStr, updatedTimeStr, factsJson] = await Promise.all([
       this.client.get(REDIS_KEYS.EVENT_TITLE(eventId)),
