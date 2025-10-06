@@ -154,9 +154,19 @@ export default function EditionsPage() {
                   Edition ID: {edition.id.slice(0, 12)}...
                 </div>
 
-                {/* Prompt Display */}
-                <div className="mt-4 pt-4 border-t border-white/20">
-                  <h4 className="text-sm font-semibold text-white/90 mb-2">Generation Prompt</h4>
+                 {/* Prompt Display */}
+                 <div className="mt-4 pt-4 border-t border-white/20">
+                   <div className="flex items-center gap-2 mb-2 relative group">
+                     <h4 className="text-sm font-semibold text-white/90">Generation Prompt</h4>
+                     <div className="relative group">
+                       <svg className="w-4 h-4 text-white/60 hover:text-white/80 cursor-help" fill="currentColor" viewBox="0 0 20 20">
+                         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                       </svg>
+                       <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-black/90 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                         To ensure full journalistic transparency, this is the exact prompt given to the AI model to generate this edition. This allows the user to verify that no funny business has taken place.
+                       </div>
+                     </div>
+                   </div>
                   <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-lg p-3 text-xs text-white/70 font-mono whitespace-pre-wrap max-h-32 overflow-y-auto">
                     {edition.prompt}
                   </div>
