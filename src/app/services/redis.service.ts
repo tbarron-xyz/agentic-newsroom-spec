@@ -337,6 +337,14 @@ export class RedisService {
     multi.set(REDIS_KEYS.EVENT_UPDATED_TIME(eventId), event.updatedTime.toString());
     console.log('Redis Write: SET', REDIS_KEYS.EVENT_FACTS(eventId), JSON.stringify(event.facts));
     multi.set(REDIS_KEYS.EVENT_FACTS(eventId), JSON.stringify(event.facts));
+    if (event.where) {
+      console.log('Redis Write: SET', REDIS_KEYS.EVENT_WHERE(eventId), event.where);
+      multi.set(REDIS_KEYS.EVENT_WHERE(eventId), event.where);
+    }
+    if (event.when) {
+      console.log('Redis Write: SET', REDIS_KEYS.EVENT_WHEN(eventId), event.when);
+      multi.set(REDIS_KEYS.EVENT_WHEN(eventId), event.when);
+    }
     console.log('Redis Write: SET', REDIS_KEYS.EVENT_MESSAGE_IDS(eventId), JSON.stringify(event.messageIds || []));
     multi.set(REDIS_KEYS.EVENT_MESSAGE_IDS(eventId), JSON.stringify(event.messageIds || []));
     console.log('Redis Write: SET', REDIS_KEYS.EVENT_MESSAGE_TEXTS(eventId), JSON.stringify(event.messageTexts || []));
@@ -432,11 +440,13 @@ export class RedisService {
   }
 
   async getEvent(eventId: string): Promise<Event | null> {
-    const [title, createdTimeStr, updatedTimeStr, factsJson, messageIdsJson, messageTextsJson] = await Promise.all([
+    const [title, createdTimeStr, updatedTimeStr, factsJson, where, when, messageIdsJson, messageTextsJson] = await Promise.all([
       this.client.get(REDIS_KEYS.EVENT_TITLE(eventId)),
       this.client.get(REDIS_KEYS.EVENT_CREATED_TIME(eventId)),
       this.client.get(REDIS_KEYS.EVENT_UPDATED_TIME(eventId)),
       this.client.get(REDIS_KEYS.EVENT_FACTS(eventId)),
+      this.client.get(REDIS_KEYS.EVENT_WHERE(eventId)),
+      this.client.get(REDIS_KEYS.EVENT_WHEN(eventId)),
       this.client.get(REDIS_KEYS.EVENT_MESSAGE_IDS(eventId)),
       this.client.get(REDIS_KEYS.EVENT_MESSAGE_TEXTS(eventId))
     ]);
@@ -487,6 +497,8 @@ export class RedisService {
       createdTime: parseInt(createdTimeStr),
       updatedTime: parseInt(updatedTimeStr),
       facts,
+      where: where || undefined,
+      when: when || undefined,
       messageIds,
       messageTexts
     };

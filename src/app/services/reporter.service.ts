@@ -227,11 +227,13 @@ export class ReporterService {
           console.log(`Updating existing event: ${previousEventId}`);
           await this.redisService.updateEventFacts(previousEventId, aiEvent.facts);
 
-          // Update message data for existing event
+          // Update message data and location/timing for existing event
           const existingEvent = await this.redisService.getEvent(previousEventId);
           if (existingEvent) {
             const updatedEvent: Event = {
               ...existingEvent,
+              where: aiEvent.where || existingEvent.where,
+              when: aiEvent.when || existingEvent.when,
               messageIds: aiEvent.messageIds || [],
               messageTexts: messageTexts
             };
@@ -247,6 +249,8 @@ export class ReporterService {
             createdTime: now,
             updatedTime: now,
             facts: aiEvent.facts,
+            where: aiEvent.where || undefined,
+            when: aiEvent.when || undefined,
             messageIds: aiEvent.messageIds || [],
             messageTexts: messageTexts
           };

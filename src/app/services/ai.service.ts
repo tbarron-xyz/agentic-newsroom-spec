@@ -414,6 +414,8 @@ User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive 
       index?: number | null;
       title: string;
       facts: string[];
+      where?: string | null;
+      when?: string | null;
       messageIds: number[];
       potentialMessageIds: number[];
     }>;

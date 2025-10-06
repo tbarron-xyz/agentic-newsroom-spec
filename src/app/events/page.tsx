@@ -11,6 +11,8 @@ interface SafeEvent {
   createdTime: number;
   updatedTime: number;
   facts: string[];
+  where?: string;
+  when?: string;
 }
 
 interface User {
@@ -291,8 +293,14 @@ export default function EventsPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                       Title
                     </th>
-                    <th className="px-6 py-3 text-center text-xs font-medium text-white/70 uppercase tracking-wider w-1/2">
+                    <th className="px-6 py-3 text-center text-xs font-medium text-white/70 uppercase tracking-wider w-1/3">
                       Facts
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                      Where
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                      When
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                       Details
@@ -306,7 +314,7 @@ export default function EventsPage() {
                         <div className="font-semibold">{event.title}</div>
                         <div className="text-xs text-white/60 mt-1">ID: {event.id}</div>
                       </td>
-                      <td className="px-6 py-4 text-sm text-white/70 w-1/2 text-center">
+                      <td className="px-6 py-4 text-sm text-white/70 w-1/3 text-center">
                         <div className="space-y-1">
                           {event.facts.map((fact, index) => (
                             <div key={index} className="text-xs">
@@ -314,6 +322,12 @@ export default function EventsPage() {
                             </div>
                           ))}
                         </div>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-white/70">
+                        {event.where || '-'}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-white/70">
+                        {event.when || '-'}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
                         Reporter: {event.reporterId}<br/>
