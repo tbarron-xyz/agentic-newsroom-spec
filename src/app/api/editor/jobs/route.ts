@@ -1,99 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RedisService } from '../../../services/redis.service';
-import { AuthService } from '../../../services/auth.service';
+import { withAuth } from '../../../utils/auth';
 import { AIService } from '../../../services/ai.service';
 import { ReporterService } from '../../../services/reporter.service';
 import { EditorService } from '../../../services/editor.service';
 
-let redisService: RedisService | null = null;
-let authService: AuthService | null = null;
-let aiService: AIService | null = null;
-let reporterService: ReporterService | null = null;
-let editorService: EditorService | null = null;
 
-async function initializeServices(): Promise<void> {
-  if (!redisService) {
-    redisService = new RedisService();
-    await redisService.connect();
-  }
-  if (!authService) {
-    authService = new AuthService(redisService);
-  }
-  if (!aiService) {
-    aiService = new AIService();
-  }
-  if (!reporterService) {
-    reporterService = new ReporterService(redisService, aiService);
-  }
-  if (!editorService) {
-    editorService = new EditorService(redisService, aiService);
-  }
-}
 
 // POST /api/editor/jobs/trigger - Trigger a specific job
-export async function POST(request: NextRequest) {
-  try {
-    // Check authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authorization token required' },
-        { status: 401 }
-      );
-    }
+export const POST = withAuth(async (request: NextRequest, user, redis) => {
+  const aiService = new AIService();
+  const reporterService = new ReporterService(redis, aiService);
+  const editorService = new EditorService(redis, aiService);
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    await initializeServices();
-    const user = await authService!.getUserFromToken(token);
+  const body = await request.json();
+  const { jobType } = body;
 
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
-
-    const body = await request.json();
-    const { jobType } = body;
-
-    if (!jobType || typeof jobType !== 'string') {
-      return NextResponse.json(
-        { error: 'Job type is required and must be a string' },
-        { status: 400 }
-      );
-    }
-
-    let result;
-    switch (jobType) {
-      case 'reporter':
-        const reporterResults = await reporterService!.generateAllReporterArticles();
-        const totalArticles = Object.values(reporterResults).reduce((sum, articles) => sum + articles.length, 0);
-        result = { message: `Reporter article generation job triggered successfully. Generated ${totalArticles} articles.` };
-        break;
-      case 'newspaper':
-        const edition = await editorService!.generateHourlyEdition();
-        result = { message: `Newspaper edition generation job triggered successfully. Created edition: ${edition.id} with ${edition.stories.length} stories.` };
-        break;
-      case 'daily':
-        const dailyEdition = await editorService!.generateDailyEdition();
-        result = { message: `Daily edition generation job triggered successfully. Created daily edition: ${dailyEdition.id} with ${dailyEdition.editions.length} newspaper editions.` };
-        break;
-      default:
-        return NextResponse.json(
-          { error: 'Invalid job type. Must be one of: reporter, newspaper, daily' },
-          { status: 400 }
-        );
-    }
-
-    return NextResponse.json(result);
-  } catch (error) {
-    console.error('Error triggering job:', error);
+  if (!jobType || typeof jobType !== 'string') {
     return NextResponse.json(
-      { error: 'Failed to trigger job' },
-      { status: 500 }
+      { error: 'Job type is required and must be a string' },
+      { status: 400 }
     );
   }
-}
+
+  let result;
+  switch (jobType) {
+    case 'reporter':
+      const reporterResults = await reporterService.generateAllReporterArticles();
+      const totalArticles = Object.values(reporterResults).reduce((sum, articles) => sum + articles.length, 0);
+      result = { message: `Reporter article generation job triggered successfully. Generated ${totalArticles} articles.` };
+      break;
+    case 'newspaper':
+      const edition = await editorService.generateHourlyEdition();
+      result = { message: `Newspaper edition generation job triggered successfully. Created edition: ${edition.id} with ${edition.stories.length} stories.` };
+      break;
+    case 'daily':
+      const dailyEdition = await editorService.generateDailyEdition();
+      result = { message: `Daily edition generation job triggered successfully. Created daily edition: ${dailyEdition.id} with ${dailyEdition.editions.length} newspaper editions.` };
+      break;
+    default:
+      return NextResponse.json(
+        { error: 'Invalid job type. Must be one of: reporter, newspaper, daily' },
+        { status: 400 }
+      );
+  }
+
+  return NextResponse.json(result);
+}, { requiredRole: 'admin' });
 
 // GET /api/editor/jobs/status - Get job status and next run times
 export async function GET() {

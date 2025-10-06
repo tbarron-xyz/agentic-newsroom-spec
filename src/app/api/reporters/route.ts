@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '../../utils/auth';
 import { RedisService } from '../../services/redis.service';
 import { ReporterService } from '../../services/reporter.service';
 import { AIService } from '../../services/ai.service';
@@ -75,41 +76,28 @@ export async function GET(_request: NextRequest) {
 }
 
 // POST /api/reporters - Create new reporter
-export async function POST(request: NextRequest) {
-  try {
-    await initializeServices();
+export const POST = withAuth(async (request: NextRequest, user, redis) => {
+  const aiService = new AIService();
+  const reporterService = new ReporterService(redis, aiService);
 
-    // Check if user has reporter permission
-    const permissionCheck = await checkReporterPermission(request);
-    if (permissionCheck instanceof NextResponse) {
-      return permissionCheck;
-    }
+  const body = await request.json();
+  const { beats, prompt, enabled } = body;
 
-    const body = await request.json();
-    const { beats, prompt, enabled } = body;
-
-    if (!Array.isArray(beats) || typeof prompt !== 'string') {
-      return NextResponse.json(
-        { error: 'Beats must be an array and prompt must be a string' },
-        { status: 400 }
-      );
-    }
-
-    const reporter = await reporterService!.createReporter({
-      beats,
-      prompt,
-      enabled: enabled ?? true // Default to true if not specified
-    });
-
-    return NextResponse.json({
-      ...reporter,
-      message: 'Reporter created successfully'
-    }, { status: 201 });
-  } catch (error) {
-    console.error('Error creating reporter:', error);
+  if (!Array.isArray(beats) || typeof prompt !== 'string') {
     return NextResponse.json(
-      { error: 'Failed to create reporter' },
-      { status: 500 }
+      { error: 'Beats must be an array and prompt must be a string' },
+      { status: 400 }
     );
   }
-}
+
+  const reporter = await reporterService.createReporter({
+    beats,
+    prompt,
+    enabled: enabled ?? true // Default to true if not specified
+  });
+
+  return NextResponse.json({
+    ...reporter,
+    message: 'Reporter created successfully'
+  }, { status: 201 });
+}, { requiredPermission: 'reporter' });

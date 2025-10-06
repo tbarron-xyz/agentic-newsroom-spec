@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RedisService } from '../../../../services/redis.service';
+import { withAuth } from '../../../../utils/auth';
 import { ReporterService } from '../../../../services/reporter.service';
 import { AIService } from '../../../../services/ai.service';
-import { AuthService } from '../../../../services/auth.service';
-import { AbilitiesService } from '../../../../services/abilities.service';
 
 let redisService: RedisService | null = null;
 let reporterService: ReporterService | null = null;
@@ -59,49 +57,39 @@ async function checkEditorPermission(request: NextRequest): Promise<{ user: any 
 }
 
 // POST /api/reporters/[id]/toggle - Toggle reporter enabled status
-export async function POST(
+export const POST = withAuth(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: reporterId } = await params;
-    await initializeServices();
+  user,
+  redis,
+  context
+) => {
+  const { id: reporterId } = await context.params;
 
-    // Check if user has editor permission
-    const permissionCheck = await checkEditorPermission(request);
-    if (permissionCheck instanceof NextResponse) {
-      return permissionCheck;
-    }
+  const aiService = new AIService();
+  const reporterService = new ReporterService(redis, aiService);
 
-    // Get current reporter
-    const reporter = await redisService!.getReporter(reporterId);
-    if (!reporter) {
-      return NextResponse.json(
-        { error: 'Reporter not found' },
-        { status: 404 }
-      );
-    }
-
-    // Toggle the enabled status
-    const newEnabledStatus = !reporter.enabled;
-    const updatedReporter = await reporterService!.updateReporter(reporterId, { enabled: newEnabledStatus });
-
-    if (!updatedReporter) {
-      return NextResponse.json(
-        { error: 'Failed to update reporter' },
-        { status: 500 }
-      );
-    }
-
-    return NextResponse.json({
-      ...updatedReporter,
-      message: `Reporter ${newEnabledStatus ? 'enabled' : 'disabled'} successfully`
-    });
-  } catch (error) {
-    console.error('Error toggling reporter status:', error);
+  // Get current reporter
+  const reporter = await redis.getReporter(reporterId);
+  if (!reporter) {
     return NextResponse.json(
-      { error: 'Failed to toggle reporter status' },
+      { error: 'Reporter not found' },
+      { status: 404 }
+    );
+  }
+
+  // Toggle the enabled status
+  const newEnabledStatus = !reporter.enabled;
+  const updatedReporter = await reporterService.updateReporter(reporterId, { enabled: newEnabledStatus });
+
+  if (!updatedReporter) {
+    return NextResponse.json(
+      { error: 'Failed to update reporter' },
       { status: 500 }
     );
   }
-}
+
+  return NextResponse.json({
+    ...updatedReporter,
+    message: `Reporter ${newEnabledStatus ? 'enabled' : 'disabled'} successfully`
+  });
+}, { requiredPermission: 'editor' });

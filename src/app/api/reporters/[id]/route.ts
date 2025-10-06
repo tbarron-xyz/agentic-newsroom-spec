@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '../../../utils/auth';
 import { RedisService } from '../../../services/redis.service';
 import { ReporterService } from '../../../services/reporter.service';
 import { AIService } from '../../../services/ai.service';
@@ -86,83 +87,63 @@ export async function GET(
 }
 
 // PUT /api/reporters/[id] - Update specific reporter
-export async function PUT(
+export const PUT = withAuth(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: reporterId } = await params;
-    await initializeServices();
+  user,
+  redis,
+  context
+) => {
+  const { id: reporterId } = await context.params;
 
-    // Check if user has reporter permission
-    const permissionCheck = await checkReporterPermission(request);
-    if (permissionCheck instanceof NextResponse) {
-      return permissionCheck;
-    }
+  const aiService = new AIService();
+  const reporterService = new ReporterService(redis, aiService);
 
-    const body = await request.json();
-    const { beats, prompt, enabled } = body;
+  const body = await request.json();
+  const { beats, prompt, enabled } = body;
 
-    if (!Array.isArray(beats) || typeof prompt !== 'string') {
-      return NextResponse.json(
-        { error: 'Beats must be an array and prompt must be a string' },
-        { status: 400 }
-      );
-    }
-
-    const updatedReporter = await reporterService!.updateReporter(reporterId, { beats, prompt, enabled });
-
-    if (!updatedReporter) {
-      return NextResponse.json(
-        { error: 'Reporter not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      ...updatedReporter,
-      message: 'Reporter updated successfully'
-    });
-  } catch (error) {
-    console.error('Error updating reporter:', error);
+  if (!Array.isArray(beats) || typeof prompt !== 'string') {
     return NextResponse.json(
-      { error: 'Failed to update reporter' },
-      { status: 500 }
+      { error: 'Beats must be an array and prompt must be a string' },
+      { status: 400 }
     );
   }
-}
+
+  const updatedReporter = await reporterService.updateReporter(reporterId, { beats, prompt, enabled });
+
+  if (!updatedReporter) {
+    return NextResponse.json(
+      { error: 'Reporter not found' },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json({
+    ...updatedReporter,
+    message: 'Reporter updated successfully'
+  });
+}, { requiredPermission: 'reporter' });
 
 // DELETE /api/reporters/[id] - Delete specific reporter
-export async function DELETE(
+export const DELETE = withAuth(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: reporterId } = await params;
-    await initializeServices();
+  user,
+  redis,
+  context
+) => {
+  const { id: reporterId } = await context.params;
 
-    // Check if user has reporter permission
-    const permissionCheck = await checkReporterPermission(request);
-    if (permissionCheck instanceof NextResponse) {
-      return permissionCheck;
-    }
+  const aiService = new AIService();
+  const reporterService = new ReporterService(redis, aiService);
 
-    const success = await reporterService!.deleteReporter(reporterId);
-    if (!success) {
-      return NextResponse.json(
-        { error: 'Reporter not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      message: 'Reporter deleted successfully'
-    });
-  } catch (error) {
-    console.error('Error deleting reporter:', error);
+  const success = await reporterService.deleteReporter(reporterId);
+  if (!success) {
     return NextResponse.json(
-      { error: 'Failed to delete reporter' },
-      { status: 500 }
+      { error: 'Reporter not found' },
+      { status: 404 }
     );
   }
-}
+
+  return NextResponse.json({
+    message: 'Reporter deleted successfully'
+  });
+}, { requiredPermission: 'reporter' });

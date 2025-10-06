@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '../../utils/auth';
 import { RedisService } from '../../services/redis.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -47,83 +48,54 @@ export async function GET() {
 }
 
 // PUT /api/editor - Update editor data
-export async function PUT(request: NextRequest) {
-  try {
-    // Check authorization header
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authorization token required' },
-        { status: 401 }
-      );
-    }
+export const PUT = withAuth(async (request: NextRequest, user, redis) => {
+  const body = await request.json();
+  const { bio, prompt, modelName, messageSliceCount, articleGenerationPeriodMinutes, eventGenerationPeriodMinutes } = body;
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    const authService = await getAuthService();
-    const user = await authService.getUserFromToken(token);
-
-    if (!user || user.role !== 'admin') {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
-
-    const body = await request.json();
-    const { bio, prompt, modelName, messageSliceCount, articleGenerationPeriodMinutes, eventGenerationPeriodMinutes } = body;
-
-    if (typeof bio !== 'string' || typeof prompt !== 'string' || typeof modelName !== 'string') {
-      return NextResponse.json(
-        { error: 'Bio, prompt, and modelName must be strings' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof messageSliceCount !== 'number' || messageSliceCount < 1 || messageSliceCount > 1000) {
-      return NextResponse.json(
-        { error: 'messageSliceCount must be a number between 1 and 1000' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof articleGenerationPeriodMinutes !== 'number' || articleGenerationPeriodMinutes < 1 || articleGenerationPeriodMinutes > 1440) {
-      return NextResponse.json(
-        { error: 'articleGenerationPeriodMinutes must be a number between 1 and 1440' },
-        { status: 400 }
-      );
-    }
-
-    if (typeof eventGenerationPeriodMinutes !== 'number' || eventGenerationPeriodMinutes < 1 || eventGenerationPeriodMinutes > 1440) {
-      return NextResponse.json(
-        { error: 'eventGenerationPeriodMinutes must be a number between 1 and 1440' },
-        { status: 400 }
-      );
-    }
-
-    const redisService = await getRedisService();
-    await redisService.saveEditor({
-      bio,
-      prompt,
-      modelName,
-      messageSliceCount,
-      articleGenerationPeriodMinutes,
-      eventGenerationPeriodMinutes
-    });
-
-    return NextResponse.json({
-      bio,
-      prompt,
-      modelName,
-      messageSliceCount,
-      articleGenerationPeriodMinutes,
-      eventGenerationPeriodMinutes,
-      message: 'Editor data updated successfully'
-    });
-  } catch (error) {
-    console.error('Error updating editor data:', error);
+  if (typeof bio !== 'string' || typeof prompt !== 'string' || typeof modelName !== 'string') {
     return NextResponse.json(
-      { error: 'Failed to update editor data' },
-      { status: 500 }
+      { error: 'Bio, prompt, and modelName must be strings' },
+      { status: 400 }
     );
   }
-}
+
+  if (typeof messageSliceCount !== 'number' || messageSliceCount < 1 || messageSliceCount > 1000) {
+    return NextResponse.json(
+      { error: 'messageSliceCount must be a number between 1 and 1000' },
+      { status: 400 }
+    );
+  }
+
+  if (typeof articleGenerationPeriodMinutes !== 'number' || articleGenerationPeriodMinutes < 1 || articleGenerationPeriodMinutes > 1440) {
+    return NextResponse.json(
+      { error: 'articleGenerationPeriodMinutes must be a number between 1 and 1440' },
+      { status: 400 }
+    );
+  }
+
+  if (typeof eventGenerationPeriodMinutes !== 'number' || eventGenerationPeriodMinutes < 1 || eventGenerationPeriodMinutes > 1440) {
+    return NextResponse.json(
+      { error: 'eventGenerationPeriodMinutes must be a number between 1 and 1440' },
+      { status: 400 }
+    );
+  }
+
+  await redis.saveEditor({
+    bio,
+    prompt,
+    modelName,
+    messageSliceCount,
+    articleGenerationPeriodMinutes,
+    eventGenerationPeriodMinutes
+  });
+
+  return NextResponse.json({
+    bio,
+    prompt,
+    modelName,
+    messageSliceCount,
+    articleGenerationPeriodMinutes,
+    eventGenerationPeriodMinutes,
+    message: 'Editor data updated successfully'
+  });
+}, { requiredRole: 'admin' });
