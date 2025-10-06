@@ -228,21 +228,21 @@ export default function EventsPage() {
         <div className="backdrop-blur-xl bg-white/10 rounded-2xl shadow-2xl border border-white/20 p-6">
           <h3 className="text-lg font-semibold text-white mb-6">Recent Events</h3>
           {publicEvents.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
               {publicEvents.map((event) => (
                 <div key={event.id} className="backdrop-blur-xl bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-colors duration-200">
-                  <h4 className="text-sm font-medium text-white mb-2 truncate">{event.title}</h4>
+                   <h4 className="text-sm font-medium text-white mb-2">{event.title}</h4>
                   <div className="text-xs text-white/60 mb-2">
                     Updated: {formatDate(event.updatedTime)}
                   </div>
-                  {event.facts.length > 0 && (
-                    <div className="text-xs text-white/70">
-                      <div className="truncate">
-                        • {event.facts[0]}
-                        {event.facts.length > 1 && ` (+${event.facts.length - 1} more)`}
-                      </div>
-                    </div>
-                  )}
+                   {event.facts.length > 0 && (
+                     <div className="text-xs text-white/70">
+                       {event.facts.slice(0, 2).map((fact, index) => (
+                         <div key={index}>• {fact}</div>
+                       ))}
+                       {event.facts.length > 2 && <div>+{event.facts.length - 2} more</div>}
+                     </div>
+                   )}
                 </div>
               ))}
             </div>
