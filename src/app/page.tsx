@@ -157,11 +157,7 @@ export default function Home() {
                   <p className="text-base leading-relaxed">
                     Every article clearly states which specific social media messages were used to write and inform the content, ensuring transparency about our AI-powered reporting process.
                   </p>
-                  <div className="mt-4 p-4 backdrop-blur-sm bg-white/5 rounded-lg border border-white/10">
-                    <p className="text-xs text-white/70 italic">
-                      "Our commitment is to provide accurate, sourced journalism powered by artificial intelligence while maintaining full transparency about our data sources."
-                    </p>
-                  </div>
+
                 </div>
               </div>
             </div>
