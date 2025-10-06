@@ -213,11 +213,30 @@ export class ReporterService {
 
     for (const aiEvent of eventGenerationResult.events) {
       try {
+        // Extract message texts for the used message IDs
+        const messageTexts: string[] = [];
+        if (aiEvent.messageIds && aiEvent.messageIds.length > 0) {
+          console.log(`Event used message IDs: ${aiEvent.messageIds.join(', ')}`);
+          const ids = [...(new Set(aiEvent.messageIds).union(new Set(aiEvent.potentialMessageIds || [])))];
+          ids.forEach(x => messageTexts.push(eventGenerationResult.messages[x-1])); // -1 because ai service does a +1
+        }
+
         if (aiEvent.index) {
           // Update existing event with new facts
           const previousEventId = lastEvents[aiEvent.index - 1].id;
           console.log(`Updating existing event: ${previousEventId}`);
           await this.redisService.updateEventFacts(previousEventId, aiEvent.facts);
+
+          // Update message data for existing event
+          const existingEvent = await this.redisService.getEvent(previousEventId);
+          if (existingEvent) {
+            const updatedEvent: Event = {
+              ...existingEvent,
+              messageIds: aiEvent.messageIds || [],
+              messageTexts: messageTexts
+            };
+            await this.redisService.saveEvent(updatedEvent);
+          }
         } else {
           // Create new event
           const eventId = await this.redisService.generateId('event');
@@ -227,7 +246,9 @@ export class ReporterService {
             title: aiEvent.title,
             createdTime: now,
             updatedTime: now,
-            facts: aiEvent.facts
+            facts: aiEvent.facts,
+            messageIds: aiEvent.messageIds || [],
+            messageTexts: messageTexts
           };
 
           await this.redisService.saveEvent(newEvent);

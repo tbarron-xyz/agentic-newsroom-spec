@@ -66,6 +66,8 @@ export interface Event {
   createdTime: number; // milliseconds since epoch
   updatedTime: number; // milliseconds since epoch
   facts: string[]; // JSON list of strings
+  messageIds?: number[]; // Indices of social media messages used
+  messageTexts?: string[]; // Text content of the messages that were used
 }
 
 export interface AdEntry {
@@ -142,6 +144,8 @@ export const REDIS_KEYS = {
   EVENT_CREATED_TIME: (eventId: string) => `event:${eventId}:created_time`,
   EVENT_UPDATED_TIME: (eventId: string) => `event:${eventId}:updated_time`,
   EVENT_FACTS: (eventId: string) => `event:${eventId}:facts`,
+  EVENT_MESSAGE_IDS: (eventId: string) => `event:${eventId}:message_ids`,
+  EVENT_MESSAGE_TEXTS: (eventId: string) => `event:${eventId}:message_texts`,
 
   // Ads
   ADS: 'ads',

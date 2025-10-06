@@ -337,6 +337,10 @@ export class RedisService {
     multi.set(REDIS_KEYS.EVENT_UPDATED_TIME(eventId), event.updatedTime.toString());
     console.log('Redis Write: SET', REDIS_KEYS.EVENT_FACTS(eventId), JSON.stringify(event.facts));
     multi.set(REDIS_KEYS.EVENT_FACTS(eventId), JSON.stringify(event.facts));
+    console.log('Redis Write: SET', REDIS_KEYS.EVENT_MESSAGE_IDS(eventId), JSON.stringify(event.messageIds || []));
+    multi.set(REDIS_KEYS.EVENT_MESSAGE_IDS(eventId), JSON.stringify(event.messageIds || []));
+    console.log('Redis Write: SET', REDIS_KEYS.EVENT_MESSAGE_TEXTS(eventId), JSON.stringify(event.messageTexts || []));
+    multi.set(REDIS_KEYS.EVENT_MESSAGE_TEXTS(eventId), JSON.stringify(event.messageTexts || []));
 
     await multi.exec();
   }
@@ -428,11 +432,13 @@ export class RedisService {
   }
 
   async getEvent(eventId: string): Promise<Event | null> {
-    const [title, createdTimeStr, updatedTimeStr, factsJson] = await Promise.all([
+    const [title, createdTimeStr, updatedTimeStr, factsJson, messageIdsJson, messageTextsJson] = await Promise.all([
       this.client.get(REDIS_KEYS.EVENT_TITLE(eventId)),
       this.client.get(REDIS_KEYS.EVENT_CREATED_TIME(eventId)),
       this.client.get(REDIS_KEYS.EVENT_UPDATED_TIME(eventId)),
-      this.client.get(REDIS_KEYS.EVENT_FACTS(eventId))
+      this.client.get(REDIS_KEYS.EVENT_FACTS(eventId)),
+      this.client.get(REDIS_KEYS.EVENT_MESSAGE_IDS(eventId)),
+      this.client.get(REDIS_KEYS.EVENT_MESSAGE_TEXTS(eventId))
     ]);
 
     if (!title || !createdTimeStr || !updatedTimeStr || !factsJson) return null;
@@ -452,13 +458,37 @@ export class RedisService {
       }
     }
 
+    // Parse message IDs JSON
+    let messageIds: number[] = [];
+    if (messageIdsJson) {
+      try {
+        messageIds = JSON.parse(messageIdsJson);
+      } catch (error) {
+        console.error('Error parsing event messageIds JSON:', error);
+        messageIds = [];
+      }
+    }
+
+    // Parse message texts JSON
+    let messageTexts: string[] = [];
+    if (messageTextsJson) {
+      try {
+        messageTexts = JSON.parse(messageTextsJson);
+      } catch (error) {
+        console.error('Error parsing event messageTexts JSON:', error);
+        messageTexts = [];
+      }
+    }
+
     return {
       id: eventId,
       reporterId,
       title,
       createdTime: parseInt(createdTimeStr),
       updatedTime: parseInt(updatedTimeStr),
-      facts
+      facts,
+      messageIds,
+      messageTexts
     };
   }
 

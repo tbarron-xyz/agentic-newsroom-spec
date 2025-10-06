@@ -80,7 +80,9 @@ export const eventGenerationResponseSchema = z.object({
         title: z.string(),
         facts: z.array(z.string()).max(5), // Max 5 facts per event
         where: z.string().nullable().optional().describe("Where the event took place, if known"),
-        when: z.string().nullable().optional().describe("Date and time the event took place, if known")
+        when: z.string().nullable().optional().describe("Date and time the event took place, if known"),
+        messageIds: z.array(z.number()).optional().default([]).describe("The indexes of the social media messages used to create or update this event"),
+        potentialMessageIds: z.array(z.number()).optional().default([]).describe("The indexes of potentially related social media messages")
     })).max(5) // Max 5 events
 });
 

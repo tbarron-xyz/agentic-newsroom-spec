@@ -414,8 +414,11 @@ User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive 
       index?: number | null;
       title: string;
       facts: string[];
+      messageIds: number[];
+      potentialMessageIds: number[];
     }>;
     fullPrompt: string;
+    messages: string[];
   }> {
     try {
       // Format last events for context
@@ -456,11 +459,13 @@ User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive 
 
       const systemPrompt = `You are an AI journalist tasked with identifying and tracking important events and developments. Your goal is to create structured event records that capture key facts about ongoing stories and developments. You specialize in these beats: ${beatsList}. ${reporter.prompt}`;
 
-      const userPrompt = `Based on the recent social media messages and the reporter's previous events, identify up to 5 significant events or developments that should be tracked. Focus on events and developments that align with your assigned beats: ${beatsList}. For each event:
+       const userPrompt = `Based on the recent social media messages and the reporter's previous events, identify up to 5 significant events or developments that should be tracked. Focus on events and developments that align with your assigned beats: ${beatsList}. For each event:
 
 1. If this matches an existing event from the previous events list, use the existing event's numerical index and add any new facts to it
 2. If this is a new event, create a new title and initial facts
 3. Each event should have 1-5 key facts that capture the essential information
+4. messageIds: List the indices (1, 2, 3, etc.) of only the relevant messages you identified and actually used to create or update this event. If you didn't find any relevant messages or didn't use any specific messages, use an empty array.
+5. potentialMessageIds: After creating/updating the event, re-scan the social media messages for any that may be potentially related to this event; include their numeric indices in this field.
 
 Previous Events:
 ${eventsContext}
@@ -476,7 +481,8 @@ Instructions:
 - Focus on factual, verifiable information
 - Prioritize events that represent ongoing stories or important developments within your beats
 - Return up to 5 events maximum
-`;
+- IMPORTANT: Always include messageIds and potentialMessageIds arrays for each event, even if empty
+ `;
 
       const fullPrompt = `System: ${systemPrompt}\n\nUser: ${userPrompt}`;
 
@@ -507,14 +513,16 @@ Instructions:
 
       return {
         events: parsedResponse.events,
-        fullPrompt
+        fullPrompt,
+        messages: socialMediaMessages.map(x => x.text)
       };
     } catch (error) {
       console.error('Error generating events:', error);
       // Return empty events on error
       return {
         events: [],
-        fullPrompt: 'Error occurred during event generation'
+        fullPrompt: 'Error occurred during event generation',
+        messages: []
       };
     }
   }
