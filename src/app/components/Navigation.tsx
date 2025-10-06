@@ -129,6 +129,12 @@ export default function Navigation() {
                 Account
               </Link>
             )}
+            <Link
+              href="/events"
+              className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Events
+            </Link>
 
             {/* Admin-only links */}
             {user?.role === 'admin' && (
@@ -138,12 +144,6 @@ export default function Navigation() {
                   className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                 >
                   Users
-                </Link>
-                <Link
-                  href="/events"
-                  className="text-slate-600 hover:text-slate-900 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                >
-                  Events
                 </Link>
                 <Link
                   href="/admin/bluesky-messages"
@@ -262,6 +262,13 @@ export default function Navigation() {
               Account
             </Link>
           )}
+          <Link
+            href="/events"
+            onClick={closeMobileMenu}
+            className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
+          >
+            Events
+          </Link>
 
            {/* Admin-only links */}
            {user?.role === 'admin' && (
@@ -272,13 +279,6 @@ export default function Navigation() {
                  className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
                >
                  Users
-               </Link>
-               <Link
-                 href="/events"
-                 onClick={closeMobileMenu}
-                 className="text-slate-600 hover:text-slate-900 block px-3 py-2 rounded-md text-base font-medium transition-colors"
-               >
-                 Events
                </Link>
                <Link
                  href="/admin/bluesky-messages"
