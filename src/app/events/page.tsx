@@ -231,14 +231,13 @@ export default function EventsPage() {
                   <div className="text-xs text-white/60 mb-2">
                     Updated: {formatDate(event.updatedTime)}
                   </div>
-                   {event.facts.length > 0 && (
-                     <div className="text-xs text-white/70">
-                       {event.facts.slice(0, 2).map((fact, index) => (
-                         <div key={index}>• {fact}</div>
-                       ))}
-                       {event.facts.length > 2 && <div>+{event.facts.length - 2} more</div>}
-                     </div>
-                   )}
+                    {event.facts.length > 0 && (
+                      <div className="text-xs text-white/70">
+                        {event.facts.map((fact, index) => (
+                          <div key={index}>• {fact}</div>
+                        ))}
+                      </div>
+                    )}
                 </div>
               ))}
             </div>
