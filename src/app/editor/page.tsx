@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { KpiName } from '../models/types';
 
 interface EditorData {
   bio: string;
@@ -12,6 +13,12 @@ interface EditorData {
   lastArticleGenerationTime: number | null;
   eventGenerationPeriodMinutes: number;
   lastEventGenerationTime: number | null;
+}
+
+interface KpiData {
+  [KpiName.TOTAL_AI_API_SPEND]: number;
+  [KpiName.TOTAL_TEXT_INPUT_TOKENS]: number;
+  [KpiName.TOTAL_TEXT_OUTPUT_TOKENS]: number;
 }
 
 interface JobStatus {
@@ -45,6 +52,7 @@ export default function EditorPage() {
   const [jobTriggering, setJobTriggering] = useState<string | null>(null);
   const [jobStatus, setJobStatus] = useState<JobStatus | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [kpiData, setKpiData] = useState<KpiData | null>(null);
   const router = useRouter();
 
   // Check admin status and fetch data on component mount
@@ -52,6 +60,7 @@ export default function EditorPage() {
     checkAdminStatus();
     fetchEditorData();
     fetchJobStatus();
+    fetchKpiData();
   }, []);
 
   const checkAdminStatus = async () => {
@@ -175,6 +184,18 @@ export default function EditorPage() {
       }
     } catch (error) {
       console.error('Error fetching job status:', error);
+    }
+  };
+
+  const fetchKpiData = async () => {
+    try {
+      const response = await fetch('/api/kpi');
+      if (response.ok) {
+        const data = await response.json();
+        setKpiData(data);
+      }
+    } catch (error) {
+      console.error('Error fetching KPI data:', error);
     }
   };
 
@@ -498,6 +519,96 @@ export default function EditorPage() {
                     </>
                   )}
                 </span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* KPI Display Section */}
+        <div className="backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
+          <div className="space-y-6">
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-semibold text-white/90">AI Usage Metrics</h2>
+            </div>
+
+            <p className="text-white/70">
+              Track your AI API usage and costs across all newsroom operations.
+            </p>
+
+            {kpiData ? (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Total AI API Spend */}
+                <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-green-500/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-green-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white/90">API Spend</h3>
+                      <p className="text-sm text-white/70">Total cost</p>
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-green-200">
+                    ${kpiData[KpiName.TOTAL_AI_API_SPEND].toFixed(4)}
+                  </div>
+                </div>
+
+                {/* Total Input Tokens */}
+                <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-blue-500/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-blue-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white/90">Input Tokens</h3>
+                      <p className="text-sm text-white/70">Total sent</p>
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-blue-200">
+                    {kpiData[KpiName.TOTAL_TEXT_INPUT_TOKENS].toLocaleString()}
+                  </div>
+                </div>
+
+                {/* Total Output Tokens */}
+                <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-10 h-10 bg-purple-500/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <svg className="w-5 h-5 text-purple-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white/90">Output Tokens</h3>
+                      <p className="text-sm text-white/70">Total received</p>
+                    </div>
+                  </div>
+                  <div className="text-3xl font-bold text-purple-200">
+                    {kpiData[KpiName.TOTAL_TEXT_OUTPUT_TOKENS].toLocaleString()}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white/30 mx-auto mb-4"></div>
+                <p className="text-white/70">Loading KPI data...</p>
+              </div>
+            )}
+
+            <div className="flex items-center justify-center pt-4">
+              <button
+                onClick={fetchKpiData}
+                className="relative px-6 py-3 backdrop-blur-sm bg-white/10 border border-white/20 rounded-xl font-medium text-white/90 hover:bg-white/20 transition-all duration-300"
+              >
+                Refresh Metrics
               </button>
             </div>
           </div>

@@ -88,6 +88,13 @@ export interface User {
   hasEditor: boolean;
 }
 
+// KPI Names enum
+export enum KpiName {
+  TOTAL_AI_API_SPEND = 'Total AI API spend',
+  TOTAL_TEXT_INPUT_TOKENS = 'Total text input tokens',
+  TOTAL_TEXT_OUTPUT_TOKENS = 'Total text output tokens'
+}
+
 // Redis key patterns
 export const REDIS_KEYS = {
   // AI Service
@@ -154,6 +161,10 @@ export const REDIS_KEYS = {
   USER_HAS_REPORTER: (userId: string) => `user:${userId}:has_reporter`,
   USER_HAS_EDITOR: (userId: string) => `user:${userId}:has_editor`,
   USER_BY_EMAIL: (email: string) => `user_by_email:${email}`,
+
+  // KPIs
+  KPI_VALUE: (name: string) => `kpi:${name}:value`,
+  KPI_LAST_UPDATED: (name: string) => `kpi:${name}:last_updated`,
 } as const;
 
 // Utility types for Redis operations

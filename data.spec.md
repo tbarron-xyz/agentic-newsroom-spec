@@ -106,6 +106,13 @@ Users are stored with authentication and role information.
 - `user:{user_id}:has_editor` - String ("true"/"false") indicating editor access permission
 - `user_by_email:{email}` - String containing user ID for email lookup
 
+### KPIs
+Key Performance Indicators are stored to track AI API usage and costs.
+
+**Keys:**
+- `kpi:{name}:value` - String containing the current KPI value (numbers stored as strings)
+- `kpi:{name}:last_updated` - String containing timestamp of last update (milliseconds since epoch)
+
 ## Key Naming Conventions
 - Use colons (`:`) as separators for hierarchical key names
 - Use descriptive prefixes (`editor:`, `reporter:`, `article:`, `edition:`, `daily_edition:`, `event:`, `ad:`, `user:`, `ai:`)
