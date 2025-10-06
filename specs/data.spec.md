@@ -6,12 +6,14 @@ This document outlines the Redis data storage strategy for the AI Newsroom appli
 ## Data Types and Structures
 
 ### Editor
-The editor is a single entity with bio, prompt, and configuration information.
+The editor is a single entity with bio, prompt, AI model configuration, and pricing information.
 
 **Keys:**
 - `editor:bio` - String containing the editor's biography
 - `editor:prompt` - String containing the editor's system prompt
 - `editor:message_slice_count` - String containing message slice count for AI processing
+- `editor:input_token_cost` - String containing the cost per million input tokens for AI API
+- `editor:output_token_cost` - String containing the cost per million output tokens for AI API
 - `article_generation:period_minutes` - String containing article generation period in minutes
 - `article_generation:last_time` - String containing last article generation timestamp (milliseconds since epoch)
 - `event_generation:period_minutes` - String containing event generation period in minutes
@@ -124,7 +126,7 @@ Key Performance Indicators are stored to track AI API usage and costs.
 - Store JSON data as strings for complex objects (facts arrays, topics arrays, message arrays)
 
 ## Data Access Patterns
-- **Editor lookup**: Direct key access with `GET editor:bio`, `GET editor:prompt`, and other editor configuration keys
+- **Editor lookup**: Direct key access with `GET editor:bio`, `GET editor:prompt`, `GET editor:input_token_cost`, `GET editor:output_token_cost`, and other editor configuration keys
 - **Reporter enumeration**: `SMEMBERS reporters` to get all reporter IDs
 - **Reporter details**: Direct key access with `SMEMBERS reporter:{id}:beats`, `GET reporter:{id}:prompt`, and `GET reporter:{id}:enabled`
 - **Recent articles by reporter**: `ZREVRANGE articles:{reporter_id} 0 -1 WITHSCORES` for most recent articles

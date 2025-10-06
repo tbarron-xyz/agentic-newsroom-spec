@@ -53,6 +53,10 @@ export class RedisService {
     multi.set(REDIS_KEYS.MODEL_NAME, editor.modelName);
     console.log('Redis Write: SET', REDIS_KEYS.EDITOR_MESSAGE_SLICE_COUNT, editor.messageSliceCount.toString());
     multi.set(REDIS_KEYS.EDITOR_MESSAGE_SLICE_COUNT, editor.messageSliceCount.toString());
+    console.log('Redis Write: SET', REDIS_KEYS.INPUT_TOKEN_COST, editor.inputTokenCost.toString());
+    multi.set(REDIS_KEYS.INPUT_TOKEN_COST, editor.inputTokenCost.toString());
+    console.log('Redis Write: SET', REDIS_KEYS.OUTPUT_TOKEN_COST, editor.outputTokenCost.toString());
+    multi.set(REDIS_KEYS.OUTPUT_TOKEN_COST, editor.outputTokenCost.toString());
     console.log('Redis Write: SET', REDIS_KEYS.ARTICLE_GENERATION_PERIOD_MINUTES, editor.articleGenerationPeriodMinutes.toString());
     multi.set(REDIS_KEYS.ARTICLE_GENERATION_PERIOD_MINUTES, editor.articleGenerationPeriodMinutes.toString());
     if (editor.lastArticleGenerationTime !== undefined) {
@@ -69,11 +73,13 @@ export class RedisService {
   }
 
   async getEditor(): Promise<Editor | null> {
-    const [bio, prompt, modelName, messageSliceCountStr, articleGenerationPeriodMinutesStr, lastArticleGenerationTimeStr, eventGenerationPeriodMinutesStr, lastEventGenerationTimeStr] = await Promise.all([
+    const [bio, prompt, modelName, messageSliceCountStr, inputTokenCostStr, outputTokenCostStr, articleGenerationPeriodMinutesStr, lastArticleGenerationTimeStr, eventGenerationPeriodMinutesStr, lastEventGenerationTimeStr] = await Promise.all([
       this.client.get(REDIS_KEYS.EDITOR_BIO),
       this.client.get(REDIS_KEYS.EDITOR_PROMPT),
       this.client.get(REDIS_KEYS.MODEL_NAME),
       this.client.get(REDIS_KEYS.EDITOR_MESSAGE_SLICE_COUNT),
+      this.client.get(REDIS_KEYS.INPUT_TOKEN_COST),
+      this.client.get(REDIS_KEYS.OUTPUT_TOKEN_COST),
       this.client.get(REDIS_KEYS.ARTICLE_GENERATION_PERIOD_MINUTES),
       this.client.get(REDIS_KEYS.LAST_ARTICLE_GENERATION_TIME),
       this.client.get(REDIS_KEYS.EVENT_GENERATION_PERIOD_MINUTES),
@@ -87,6 +93,8 @@ export class RedisService {
       prompt,
       modelName: modelName || 'gpt-5-nano', // Default fallback
       messageSliceCount: messageSliceCountStr ? parseInt(messageSliceCountStr) : 200, // Default fallback
+      inputTokenCost: inputTokenCostStr ? parseFloat(inputTokenCostStr) : 0.050, // Default to $0.050 per 1M tokens
+      outputTokenCost: outputTokenCostStr ? parseFloat(outputTokenCostStr) : 0.400, // Default to $0.400 per 1M tokens
       articleGenerationPeriodMinutes: articleGenerationPeriodMinutesStr ? parseInt(articleGenerationPeriodMinutesStr) : 15, // Default fallback
       lastArticleGenerationTime: lastArticleGenerationTimeStr ? parseInt(lastArticleGenerationTimeStr) : undefined, // Optional field
       eventGenerationPeriodMinutes: eventGenerationPeriodMinutesStr ? parseInt(eventGenerationPeriodMinutesStr) : 30, // Default fallback

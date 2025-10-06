@@ -9,6 +9,8 @@ interface EditorData {
   prompt: string;
   modelName: string;
   messageSliceCount: number;
+  inputTokenCost: number;
+  outputTokenCost: number;
   articleGenerationPeriodMinutes: number;
   lastArticleGenerationTime: number | null;
   eventGenerationPeriodMinutes: number;
@@ -41,6 +43,8 @@ export default function EditorPage() {
     prompt: '',
     modelName: '',
     messageSliceCount: 200,
+    inputTokenCost: 0.050,
+    outputTokenCost: 0.400,
     articleGenerationPeriodMinutes: 15,
     lastArticleGenerationTime: null,
     eventGenerationPeriodMinutes: 30,
@@ -309,34 +313,88 @@ export default function EditorPage() {
             </div>
           </div>
 
-          {/* Model Name Section */}
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
-                <svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                </svg>
-              </div>
-              <h2 className="text-2xl font-semibold text-white/90">AI Model Name</h2>
-            </div>
-            <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6">
-              <input
-                type="text"
-                value={editorData.modelName}
-                onChange={(e) => setEditorData({ ...editorData, modelName: e.target.value })}
-                placeholder="Enter AI model name (e.g., gpt-5-nano)"
-                className={`w-full p-4 backdrop-blur-sm bg-white/10 border border-white/20 rounded-lg text-white/90 placeholder-white/50 ${
-                  isAdmin
-                    ? 'focus:ring-2 focus:ring-white/50 focus:border-white/30'
-                    : 'bg-white/5 cursor-not-allowed opacity-60'
-                }`}
-                readOnly={!isAdmin}
-              />
-              <p className="text-sm text-white/70 mt-2">
-                Specify the AI model to use for content generation. This setting affects all AI operations in the newsroom.
-              </p>
-            </div>
-          </div>
+           {/* Model Name Section */}
+           <div className="space-y-4">
+             <div className="flex items-center space-x-3">
+               <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                 <svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                 </svg>
+               </div>
+               <h2 className="text-2xl font-semibold text-white/90">AI Model Configuration</h2>
+             </div>
+             <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6 space-y-6">
+               {/* Model Name */}
+               <div>
+                 <label className="block text-sm font-medium text-white/80 mb-2">
+                   Model Name
+                 </label>
+                 <input
+                   type="text"
+                   value={editorData.modelName}
+                   onChange={(e) => setEditorData({ ...editorData, modelName: e.target.value })}
+                   placeholder="Enter AI model name (e.g., gpt-5-nano)"
+                   className={`w-full p-4 backdrop-blur-sm bg-white/10 border border-white/20 rounded-lg text-white/90 placeholder-white/50 ${
+                     isAdmin
+                       ? 'focus:ring-2 focus:ring-white/50 focus:border-white/30'
+                       : 'bg-white/5 cursor-not-allowed opacity-60'
+                   }`}
+                   readOnly={!isAdmin}
+                 />
+                 <p className="text-sm text-white/70 mt-2">
+                   Specify the AI model to use for content generation. This setting affects all AI operations in the newsroom.
+                 </p>
+               </div>
+
+               {/* Input Token Cost */}
+               <div>
+                 <label className="block text-sm font-medium text-white/80 mb-2">
+                   Input Token Cost ($ per 1M tokens)
+                 </label>
+                 <input
+                   type="number"
+                   value={editorData.inputTokenCost}
+                   onChange={(e) => setEditorData({ ...editorData, inputTokenCost: parseFloat(e.target.value) || 0 })}
+                   placeholder="0.050"
+                   min="0"
+                   step="0.001"
+                   className={`w-full p-4 backdrop-blur-sm bg-white/10 border border-white/20 rounded-lg text-white/90 placeholder-white/50 ${
+                     isAdmin
+                       ? 'focus:ring-2 focus:ring-white/50 focus:border-white/30'
+                       : 'bg-white/5 cursor-not-allowed opacity-60'
+                   }`}
+                   readOnly={!isAdmin}
+                 />
+                 <p className="text-sm text-white/70 mt-2">
+                   Cost per million input tokens for AI API calls. Used to calculate and track API spending.
+                 </p>
+               </div>
+
+               {/* Output Token Cost */}
+               <div>
+                 <label className="block text-sm font-medium text-white/80 mb-2">
+                   Output Token Cost ($ per 1M tokens)
+                 </label>
+                 <input
+                   type="number"
+                   value={editorData.outputTokenCost}
+                   onChange={(e) => setEditorData({ ...editorData, outputTokenCost: parseFloat(e.target.value) || 0 })}
+                   placeholder="0.400"
+                   min="0"
+                   step="0.001"
+                   className={`w-full p-4 backdrop-blur-sm bg-white/10 border border-white/20 rounded-lg text-white/90 placeholder-white/50 ${
+                     isAdmin
+                       ? 'focus:ring-2 focus:ring-white/50 focus:border-white/30'
+                       : 'bg-white/5 cursor-not-allowed opacity-60'
+                   }`}
+                   readOnly={!isAdmin}
+                 />
+                 <p className="text-sm text-white/70 mt-2">
+                   Cost per million output tokens for AI API calls. Used to calculate and track API spending.
+                 </p>
+               </div>
+             </div>
+           </div>
 
           {/* Message Slice Count Section */}
           <div className="space-y-4">

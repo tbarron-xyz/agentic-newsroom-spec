@@ -5,9 +5,7 @@ import OpenAI from 'openai';
 export class KpiService {
   private redisService: RedisService;
 
-  // Pricing constants (per 1M tokens)
-  private readonly INPUT_TOKEN_COST = 0.050; // $0.050 per 1M input tokens
-  private readonly OUTPUT_TOKEN_COST = 0.400; // $0.400 per 1M output tokens
+  // Pricing fetched from editor configuration
 
   constructor() {
     this.redisService = new RedisService();
@@ -45,7 +43,7 @@ export class KpiService {
       await this.incrementKpi(KpiName.TOTAL_TEXT_OUTPUT_TOKENS, usage.completionTokens);
 
       // Calculate and increment spend
-      const spendIncrement = this.calculateSpend(usage.promptTokens, usage.completionTokens);
+      const spendIncrement = await this.calculateSpend(usage.promptTokens, usage.completionTokens);
       await this.incrementKpi(KpiName.TOTAL_AI_API_SPEND, spendIncrement);
 
     } catch (error) {
@@ -95,9 +93,13 @@ export class KpiService {
     }
   }
 
-  private calculateSpend(inputTokens: number, outputTokens: number): number {
-    const inputCost = (inputTokens / 1000000) * this.INPUT_TOKEN_COST;
-    const outputCost = (outputTokens / 1000000) * this.OUTPUT_TOKEN_COST;
+  private async calculateSpend(inputTokens: number, outputTokens: number): Promise<number> {
+    const editor = await this.redisService.getEditor();
+    const inputTokenCost = editor?.inputTokenCost || 0.050; // Fallback to default
+    const outputTokenCost = editor?.outputTokenCost || 0.400; // Fallback to default
+
+    const inputCost = (inputTokens / 1000000) * inputTokenCost;
+    const outputCost = (outputTokens / 1000000) * outputTokenCost;
     return inputCost + outputCost;
   }
 

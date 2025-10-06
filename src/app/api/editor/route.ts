@@ -32,6 +32,8 @@ export const GET = withRedis(async (_request: NextRequest, redis) => {
     prompt: editor?.prompt || '',
     modelName: editor?.modelName || 'gpt-5-nano',
     messageSliceCount: editor?.messageSliceCount || 200,
+    inputTokenCost: editor?.inputTokenCost || 0.050,
+    outputTokenCost: editor?.outputTokenCost || 0.400,
     articleGenerationPeriodMinutes: editor?.articleGenerationPeriodMinutes || 15,
     lastArticleGenerationTime: editor?.lastArticleGenerationTime || null,
     eventGenerationPeriodMinutes: editor?.eventGenerationPeriodMinutes || 30,
@@ -42,7 +44,7 @@ export const GET = withRedis(async (_request: NextRequest, redis) => {
 // PUT /api/editor - Update editor data
 export const PUT = withAuth(async (request: NextRequest, user, redis) => {
   const body = await request.json();
-  const { bio, prompt, modelName, messageSliceCount, articleGenerationPeriodMinutes, eventGenerationPeriodMinutes } = body;
+  const { bio, prompt, modelName, messageSliceCount, inputTokenCost, outputTokenCost, articleGenerationPeriodMinutes, eventGenerationPeriodMinutes } = body;
 
   if (typeof bio !== 'string' || typeof prompt !== 'string' || typeof modelName !== 'string') {
     return NextResponse.json(
@@ -72,11 +74,27 @@ export const PUT = withAuth(async (request: NextRequest, user, redis) => {
     );
   }
 
+  if (typeof inputTokenCost !== 'number' || inputTokenCost < 0) {
+    return NextResponse.json(
+      { error: 'inputTokenCost must be a non-negative number' },
+      { status: 400 }
+    );
+  }
+
+  if (typeof outputTokenCost !== 'number' || outputTokenCost < 0) {
+    return NextResponse.json(
+      { error: 'outputTokenCost must be a non-negative number' },
+      { status: 400 }
+    );
+  }
+
   await redis.saveEditor({
     bio,
     prompt,
     modelName,
     messageSliceCount,
+    inputTokenCost,
+    outputTokenCost,
     articleGenerationPeriodMinutes,
     eventGenerationPeriodMinutes
   });
@@ -86,6 +104,8 @@ export const PUT = withAuth(async (request: NextRequest, user, redis) => {
     prompt,
     modelName,
     messageSliceCount,
+    inputTokenCost,
+    outputTokenCost,
     articleGenerationPeriodMinutes,
     eventGenerationPeriodMinutes,
     message: 'Editor data updated successfully'

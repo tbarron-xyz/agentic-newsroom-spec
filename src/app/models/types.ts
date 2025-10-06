@@ -3,6 +3,8 @@ export interface Editor {
   prompt: string;
   modelName: string;
   messageSliceCount: number;
+  inputTokenCost: number;
+  outputTokenCost: number;
   articleGenerationPeriodMinutes: number;
   lastArticleGenerationTime?: number; // milliseconds since epoch, optional for backward compatibility
   eventGenerationPeriodMinutes: number;
@@ -104,11 +106,13 @@ export const REDIS_KEYS = {
   // AI Service
   MODEL_NAME: 'ai:model_name',
 
-  // Editor
-  EDITOR_BIO: 'editor:bio',
-  EDITOR_PROMPT: 'editor:prompt',
-  EDITOR_MESSAGE_SLICE_COUNT: 'editor:message_slice_count',
-  ARTICLE_GENERATION_PERIOD_MINUTES: 'article_generation:period_minutes',
+// Editor
+EDITOR_BIO: 'editor:bio',
+EDITOR_PROMPT: 'editor:prompt',
+EDITOR_MESSAGE_SLICE_COUNT: 'editor:message_slice_count',
+INPUT_TOKEN_COST: 'editor:input_token_cost',
+OUTPUT_TOKEN_COST: 'editor:output_token_cost',
+ARTICLE_GENERATION_PERIOD_MINUTES: 'article_generation:period_minutes',
   LAST_ARTICLE_GENERATION_TIME: 'article_generation:last_time',
   EVENT_GENERATION_PERIOD_MINUTES: 'event_generation:period_minutes',
   LAST_EVENT_GENERATION_TIME: 'event_generation:last_time',
