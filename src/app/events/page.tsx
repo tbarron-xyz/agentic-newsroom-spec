@@ -13,6 +13,8 @@ interface SafeEvent {
   facts: string[];
   where?: string;
   when?: string;
+  messageIds?: number[];
+  messageTexts?: string[];
 }
 
 interface User {
@@ -26,7 +28,7 @@ interface User {
 
 export default function EventsPage() {
   const [publicEvents, setPublicEvents] = useState<SafeEvent[]>([]);
-  const [adminEvents, setAdminEvents] = useState<SafeEvent[]>([]);
+  const [adminEvents, setAdminEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [adminLoading, setAdminLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -302,9 +304,12 @@ export default function EventsPage() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
                       When
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
-                      Details
-                    </th>
+                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                       Social Media Messages
+                     </th>
+                     <th className="px-6 py-3 text-left text-xs font-medium text-white/70 uppercase tracking-wider">
+                       Details
+                     </th>
                   </tr>
                 </thead>
                 <tbody className="backdrop-blur-xl bg-white/5 divide-y divide-white/10">
@@ -326,14 +331,27 @@ export default function EventsPage() {
                       <td className="px-6 py-4 text-sm text-white/70">
                         {event.where || '-'}
                       </td>
-                      <td className="px-6 py-4 text-sm text-white/70">
-                        {event.when || '-'}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
-                        Reporter: {event.reporterId}<br/>
-                        Created: {formatDate(event.createdTime)}<br/>
-                        Updated: {formatDate(event.updatedTime)}
-                      </td>
+                       <td className="px-6 py-4 text-sm text-white/70">
+                         {event.when || '-'}
+                       </td>
+                       <td className="px-6 py-4 text-sm text-white/70">
+                         {event.messageTexts && event.messageTexts.length > 0 ? (
+                           <div className="space-y-1 max-h-32 overflow-y-auto">
+                             {event.messageTexts.map((text, index) => (
+                               <div key={index} className="text-xs bg-black/20 p-2 rounded">
+                                 {text}
+                               </div>
+                             ))}
+                           </div>
+                         ) : (
+                           <span className="text-white/50">No messages</span>
+                         )}
+                       </td>
+                       <td className="px-6 py-4 whitespace-nowrap text-sm text-white/70">
+                         Reporter: {event.reporterId}<br/>
+                         Created: {formatDate(event.createdTime)}<br/>
+                         Updated: {formatDate(event.updatedTime)}
+                       </td>
                     </tr>
                   ))}
                 </tbody>
