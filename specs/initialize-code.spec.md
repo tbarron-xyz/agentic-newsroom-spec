@@ -7,7 +7,7 @@ We need the following pieces of data:
 * There are many reporters, who each have several beats (string) and one prompt (string)
 * Each reporter periodically writes articles, each of which has a headline and a body (each string) and a generation time (in milliseconds since epoch)
 
-Determine a data storage strategy (types, keys, etc) and write it to "data.spec.md".
+Determine a data storage strategy (types, keys, etc) and write it to "./data.spec.md".
 
 # Scheduling
 Use the 'cron' package to register time-based cron jobs:

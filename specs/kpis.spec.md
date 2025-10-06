@@ -12,7 +12,7 @@ The KpiService provides tracking and monitoring of AI API usage metrics across t
 - **getKpiValue()** and **getAllKpis()** methods for retrieving KPI data
 - Automatic spend calculation using configurable pricing ($0.0015 per 1K input tokens, $0.002 per 1K output tokens)
 
-### 2. Data Storage (`data.spec.md`)
+### 2. Data Storage (`./data.spec.md`)
 KPIs are stored in Redis with the following key patterns:
 - `kpi:{name}:value` - Current KPI value (stored as string)
 - `kpi:{name}:last_updated` - Timestamp of last update (milliseconds since epoch)
