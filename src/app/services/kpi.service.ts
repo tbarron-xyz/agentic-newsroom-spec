@@ -5,9 +5,9 @@ import OpenAI from 'openai';
 export class KpiService {
   private redisService: RedisService;
 
-  // Pricing constants (per 1K tokens)
-  private readonly INPUT_TOKEN_COST = 0.0015; // $0.0015 per 1K input tokens
-  private readonly OUTPUT_TOKEN_COST = 0.002; // $0.002 per 1K output tokens
+  // Pricing constants (per 1M tokens)
+  private readonly INPUT_TOKEN_COST = 0.050; // $0.050 per 1M input tokens
+  private readonly OUTPUT_TOKEN_COST = 0.400; // $0.400 per 1M output tokens
 
   constructor() {
     this.redisService = new RedisService();
@@ -96,8 +96,8 @@ export class KpiService {
   }
 
   private calculateSpend(inputTokens: number, outputTokens: number): number {
-    const inputCost = (inputTokens / 1000) * this.INPUT_TOKEN_COST;
-    const outputCost = (outputTokens / 1000) * this.OUTPUT_TOKEN_COST;
+    const inputCost = (inputTokens / 1000000) * this.INPUT_TOKEN_COST;
+    const outputCost = (outputTokens / 1000000) * this.OUTPUT_TOKEN_COST;
     return inputCost + outputCost;
   }
 
