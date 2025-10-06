@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '../../../utils/auth';
+import { withRedis } from '../../../utils/redis';
 import { RedisService } from '../../../services/redis.service';
 import { ReporterService } from '../../../services/reporter.service';
 import { AIService } from '../../../services/ai.service';
@@ -60,31 +61,23 @@ async function checkReporterPermission(request: NextRequest): Promise<{ user: an
 }
 
 // GET /api/reporters/[id] - Get specific reporter (public read-only access)
-export async function GET(
+export const GET = withRedis(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: reporterId } = await params;
-    await initializeServices();
+  redis,
+  context: { params: Promise<{ id: string }> }
+) => {
+  const { id: reporterId } = await context.params;
 
-    const reporter = await redisService!.getReporter(reporterId);
-    if (!reporter) {
-      return NextResponse.json(
-        { error: 'Reporter not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json(reporter);
-  } catch (error) {
-    console.error('Error fetching reporter:', error);
+  const reporter = await redis.getReporter(reporterId);
+  if (!reporter) {
     return NextResponse.json(
-      { error: 'Failed to fetch reporter' },
-      { status: 500 }
+      { error: 'Reporter not found' },
+      { status: 404 }
     );
   }
-}
+
+  return NextResponse.json(reporter);
+});
 
 // PUT /api/reporters/[id] - Update specific reporter
 export const PUT = withAuth(async (

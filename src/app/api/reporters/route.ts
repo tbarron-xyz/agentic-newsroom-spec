@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '../../utils/auth';
+import { withRedis } from '../../utils/redis';
 import { RedisService } from '../../services/redis.service';
 import { ReporterService } from '../../services/reporter.service';
 import { AIService } from '../../services/ai.service';
@@ -60,20 +61,10 @@ async function checkReporterPermission(request: NextRequest): Promise<{ user: an
 }
 
 // GET /api/reporters - Get all reporters (public read-only access)
-export async function GET(_request: NextRequest) {
-  try {
-    await initializeServices();
-
-    const reporters = await redisService!.getAllReporters();
-    return NextResponse.json(reporters);
-  } catch (error) {
-    console.error('Error fetching reporters:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch reporters' },
-      { status: 500 }
-    );
-  }
-}
+export const GET = withRedis(async (_request: NextRequest, redis) => {
+  const reporters = await redis.getAllReporters();
+  return NextResponse.json(reporters);
+});
 
 // POST /api/reporters - Create new reporter
 export const POST = withAuth(async (request: NextRequest, user, redis) => {

@@ -1,68 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RedisService } from '../../services/redis.service';
+import { withRedis } from '../../utils/redis';
 import { AuthService } from '../../services/auth.service';
 import { AbilitiesService } from '../../services/abilities.service';
 
-let redisService: RedisService | null = null;
-let authService: AuthService | null = null;
-let abilitiesService: AbilitiesService | null = null;
-
-async function getRedisService(): Promise<RedisService> {
-  if (!redisService) {
-    redisService = new RedisService();
-    await redisService.connect();
-  }
-  return redisService;
-}
-
-async function getAuthService(): Promise<AuthService> {
-  if (!authService) {
-    const redis = await getRedisService();
-    authService = new AuthService(redis);
-  }
-  return authService;
-}
-
-async function getAbilitiesService(): Promise<AbilitiesService> {
-  if (!abilitiesService) {
-    abilitiesService = new AbilitiesService();
-  }
-  return abilitiesService;
-}
-
 // GET /api/daily-editions - Get daily editions (limited for non-Reader users)
-export async function GET(request: NextRequest) {
-  try {
-    const redisService = await getRedisService();
+export const GET = withRedis(async (request: NextRequest, redis) => {
+  // Check authentication and Reader ability
+  let hasReaderAccess = false;
+  const authHeader = request.headers.get('authorization');
 
-    // Check authentication and Reader ability
-    let hasReaderAccess = false;
-    const authHeader = request.headers.get('authorization');
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
+    const authService = new AuthService(redis);
+    const user = await authService.getUserFromToken(token);
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-      const authService = await getAuthService();
-      const user = await authService.getUserFromToken(token);
-
-      if (user) {
-        const abilitiesService = await getAbilitiesService();
-        hasReaderAccess = abilitiesService.userIsReader(user);
-      }
+    if (user) {
+      const abilitiesService = new AbilitiesService();
+      hasReaderAccess = abilitiesService.userIsReader(user);
     }
-
-    // If user is not authenticated or doesn't have Reader ability, limit to 3 results
-    const limit = hasReaderAccess ? undefined : 3;
-    const dailyEditions = await redisService.getDailyEditions(limit);
-
-    return NextResponse.json(dailyEditions);
-  } catch (error) {
-    console.error('Error fetching daily editions:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch daily editions' },
-      { status: 500 }
-    );
   }
-}
+
+  // If user is not authenticated or doesn't have Reader ability, limit to 3 results
+  const limit = hasReaderAccess ? undefined : 3;
+  const dailyEditions = await redis.getDailyEditions(limit);
+
+  return NextResponse.json(dailyEditions);
+});
 
 // POST /api/daily-editions - Generate a new daily edition (placeholder for now)
 export async function POST() {

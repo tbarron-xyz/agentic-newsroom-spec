@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '../../utils/auth';
+import { withRedis } from '../../utils/redis';
 import { RedisService } from '../../services/redis.service';
 import { AuthService } from '../../services/auth.service';
 
@@ -23,29 +24,20 @@ async function getAuthService(): Promise<AuthService> {
 }
 
 // GET /api/editor - Get current editor data
-export async function GET() {
-  try {
-    const redisService = await getRedisService();
-    const editor = await redisService.getEditor();
+export const GET = withRedis(async (_request: NextRequest, redis) => {
+  const editor = await redis.getEditor();
 
-    return NextResponse.json({
-      bio: editor?.bio || '',
-      prompt: editor?.prompt || '',
-      modelName: editor?.modelName || 'gpt-5-nano',
-      messageSliceCount: editor?.messageSliceCount || 200,
-      articleGenerationPeriodMinutes: editor?.articleGenerationPeriodMinutes || 15,
-      lastArticleGenerationTime: editor?.lastArticleGenerationTime || null,
-      eventGenerationPeriodMinutes: editor?.eventGenerationPeriodMinutes || 30,
-      lastEventGenerationTime: editor?.lastEventGenerationTime || null
-    });
-  } catch (error) {
-    console.error('Error fetching editor data:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch editor data' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json({
+    bio: editor?.bio || '',
+    prompt: editor?.prompt || '',
+    modelName: editor?.modelName || 'gpt-5-nano',
+    messageSliceCount: editor?.messageSliceCount || 200,
+    articleGenerationPeriodMinutes: editor?.articleGenerationPeriodMinutes || 15,
+    lastArticleGenerationTime: editor?.lastArticleGenerationTime || null,
+    eventGenerationPeriodMinutes: editor?.eventGenerationPeriodMinutes || 30,
+    lastEventGenerationTime: editor?.lastEventGenerationTime || null
+  });
+});
 
 // PUT /api/editor - Update editor data
 export const PUT = withAuth(async (request: NextRequest, user, redis) => {

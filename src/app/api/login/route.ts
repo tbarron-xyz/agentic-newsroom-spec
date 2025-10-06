@@ -1,65 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RedisService } from '../../services/redis.service';
+import { withRedis } from '../../utils/redis';
 import { AuthService } from '../../services/auth.service';
 import { loginRequestSchema } from '../../models/schemas';
 
-const redisService = new RedisService();
-const authService = new AuthService(redisService);
+export const POST = withRedis(async (request: NextRequest, redis) => {
+  const body = await request.json();
 
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-
-    // Validate request body
-    const validationResult = loginRequestSchema.safeParse(body);
-    if (!validationResult.success) {
-      return NextResponse.json(
-        { message: 'Invalid request data', errors: validationResult.error.errors },
-        { status: 400 }
-      );
-    }
-
-    const { email, password } = validationResult.data;
-
-    // Connect to Redis
-    await redisService.connect();
-
-    // Authenticate user
-    const user = await authService.authenticateUser(email, password);
-    if (!user) {
-      return NextResponse.json(
-        { message: 'Invalid email or password' },
-        { status: 401 }
-      );
-    }
-
-    // Generate tokens
-    const tokens = authService.generateTokens(user);
-
-    // Return success response with tokens
+  // Validate request body
+  const validationResult = loginRequestSchema.safeParse(body);
+  if (!validationResult.success) {
     return NextResponse.json(
-      {
-        message: 'Login successful',
-        user: {
-          id: user.id,
-          email: user.email,
-          role: user.role
-        },
-        tokens
-      },
-      { status: 200 }
+      { message: 'Invalid request data', errors: validationResult.error.errors },
+      { status: 400 }
     );
-  } catch (error) {
-    console.error('Login error:', error);
-    return NextResponse.json(
-      { message: 'Internal server error' },
-      { status: 500 }
-    );
-  } finally {
-    try {
-      await redisService.disconnect();
-    } catch (error) {
-      console.error('Error disconnecting from Redis:', error);
-    }
   }
-}
+
+  const { email, password } = validationResult.data;
+
+  const authService = new AuthService(redis);
+
+  // Authenticate user
+  const user = await authService.authenticateUser(email, password);
+  if (!user) {
+    return NextResponse.json(
+      { message: 'Invalid email or password' },
+      { status: 401 }
+    );
+  }
+
+  // Generate tokens
+  const tokens = authService.generateTokens(user);
+
+  // Return success response with tokens
+  return NextResponse.json(
+    {
+      message: 'Login successful',
+      user: {
+        id: user.id,
+        email: user.email,
+        role: user.role
+      },
+      tokens
+    },
+    { status: 200 }
+  );
+});

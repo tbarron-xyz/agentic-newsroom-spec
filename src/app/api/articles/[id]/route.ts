@@ -1,42 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RedisService } from '../../../services/redis.service';
+import { withRedis } from '../../../utils/redis';
 
-export async function GET(
+export const GET = withRedis(async (
   request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const { id: articleId } = await params;
+  redis,
+  context: { params: Promise<{ id: string }> }
+) => {
+  const { id: articleId } = await context.params;
 
-    if (!articleId) {
-      return NextResponse.json(
-        { error: 'Article ID is required' },
-        { status: 400 }
-      );
-    }
-
-    const redis = new RedisService();
-    await redis.connect();
-
-    try {
-      const article = await redis.getArticle(articleId);
-
-      if (!article) {
-        return NextResponse.json(
-          { error: 'Article not found' },
-          { status: 404 }
-        );
-      }
-
-      return NextResponse.json(article);
-    } finally {
-      await redis.disconnect();
-    }
-  } catch (error) {
-    console.error('Error fetching article:', error);
+  if (!articleId) {
     return NextResponse.json(
-      { error: 'Failed to fetch article' },
-      { status: 500 }
+      { error: 'Article ID is required' },
+      { status: 400 }
     );
   }
-}
+
+  const article = await redis.getArticle(articleId);
+
+  if (!article) {
+    return NextResponse.json(
+      { error: 'Article not found' },
+      { status: 404 }
+    );
+  }
+
+  return NextResponse.json(article);
+});

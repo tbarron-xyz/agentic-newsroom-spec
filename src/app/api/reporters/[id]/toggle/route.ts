@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '../../../../utils/auth';
 import { ReporterService } from '../../../../services/reporter.service';
 import { AIService } from '../../../../services/ai.service';
+import { RedisService } from '../../../../services/redis.service';
+import { AuthService } from '../../../../services/auth.service';
+import { AbilitiesService } from '../../../../services/abilities.service';
 
 let redisService: RedisService | null = null;
 let reporterService: ReporterService | null = null;

@@ -1,51 +1,32 @@
-import { NextResponse } from 'next/server';
-import { RedisService } from '../../services/redis.service';
-
-let redisService: RedisService | null = null;
-
-async function getRedisService(): Promise<RedisService> {
-  if (!redisService) {
-    redisService = new RedisService();
-    await redisService.connect();
-  }
-  return redisService;
-}
+import { NextRequest, NextResponse } from 'next/server';
+import { withRedis } from '../../utils/redis';
 
 // GET /api/editions - Get all newspaper editions with full article data
-export async function GET() {
-  try {
-    const redisService = await getRedisService();
-    const editions = await redisService.getNewspaperEditions();
+export const GET = withRedis(async (_request: NextRequest, redis) => {
+  const editions = await redis.getNewspaperEditions();
 
-    // Fetch full article data for each edition
-    const editionsWithArticles = await Promise.all(
-      editions.map(async (edition) => {
-        const articles = await Promise.all(
-          edition.stories.map(async (storyId) => {
-            const article = await redisService.getArticle(storyId);
-            return article;
-          })
-        );
+  // Fetch full article data for each edition
+  const editionsWithArticles = await Promise.all(
+    editions.map(async (edition) => {
+      const articles = await Promise.all(
+        edition.stories.map(async (storyId) => {
+          const article = await redis.getArticle(storyId);
+          return article;
+        })
+      );
 
-        // Filter out null articles (in case some are missing)
-        const validArticles = articles.filter(article => article !== null);
+      // Filter out null articles (in case some are missing)
+      const validArticles = articles.filter(article => article !== null);
 
-        return {
-          ...edition,
-          stories: validArticles
-        };
-      })
-    );
+      return {
+        ...edition,
+        stories: validArticles
+      };
+    })
+  );
 
-    return NextResponse.json(editionsWithArticles);
-  } catch (error) {
-    console.error('Error fetching newspaper editions:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch newspaper editions' },
-      { status: 500 }
-    );
-  }
-}
+  return NextResponse.json(editionsWithArticles);
+});
 
 // POST /api/editions - Generate a new newspaper edition (placeholder for now)
 export async function POST() {
