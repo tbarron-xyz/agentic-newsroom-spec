@@ -28,16 +28,35 @@ export async function GET(_request: NextRequest) {
 
     await initializeServices();
 
-    const dailyEdition = await editorService!.generateDailyEdition();
+    const currentTime = Date.now();
 
-    console.log(`[${new Date().toISOString()}] Successfully generated daily edition ${dailyEdition.id}`);
-    console.log('Cron job completed successfully\n');
+    // Set job as running and update last run time
+    await redisService!.setJobRunning('daily', true);
+    await redisService!.setJobLastRun('daily', currentTime);
+    console.log(`[${new Date().toISOString()}] Set daily job running=true and last_run=${currentTime}`);
 
-    return NextResponse.json({
-      success: true,
-      message: `Daily edition generation job completed successfully. Generated edition ${dailyEdition.id}.`,
-      dailyEditionId: dailyEdition.id
-    });
+    try {
+      const dailyEdition = await editorService!.generateDailyEdition();
+
+      // Mark job as completed successfully
+      await redisService!.setJobRunning('daily', false);
+      await redisService!.setJobLastSuccess('daily', currentTime);
+      console.log(`[${new Date().toISOString()}] Set daily job running=false and last_success=${currentTime}`);
+
+      console.log(`[${new Date().toISOString()}] Successfully generated daily edition ${dailyEdition.id}`);
+      console.log('Cron job completed successfully\n');
+
+      return NextResponse.json({
+        success: true,
+        message: `Daily edition generation job completed successfully. Generated edition ${dailyEdition.id}.`,
+        dailyEditionId: dailyEdition.id
+      });
+    } catch (error) {
+      // Mark job as not running on error (don't update last_success)
+      await redisService!.setJobRunning('daily', false);
+      console.log(`[${new Date().toISOString()}] Set daily job running=false due to error`);
+      throw error; // Re-throw to be handled by outer catch
+    }
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Cron job failed:`, error);
     return NextResponse.json(

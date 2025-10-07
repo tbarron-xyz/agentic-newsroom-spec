@@ -174,10 +174,15 @@ ARTICLE_GENERATION_PERIOD_MINUTES: 'article_generation:period_minutes',
   USER_HAS_EDITOR: (userId: string) => `user:${userId}:has_editor`,
   USER_BY_EMAIL: (email: string) => `user_by_email:${email}`,
 
-  // KPIs
-  KPI_VALUE: (name: string) => `kpi:${name}:value`,
-  KPI_LAST_UPDATED: (name: string) => `kpi:${name}:last_updated`,
-} as const;
+   // KPIs
+   KPI_VALUE: (name: string) => `kpi:${name}:value`,
+   KPI_LAST_UPDATED: (name: string) => `kpi:${name}:last_updated`,
+
+   // Jobs
+   JOB_RUNNING: (jobName: string) => `job:${jobName}:running`,
+   JOB_LAST_RUN: (jobName: string) => `job:${jobName}:last_run`,
+   JOB_LAST_SUCCESS: (jobName: string) => `job:${jobName}:last_success`,
+ } as const;
 
 // Utility types for Redis operations
 export interface RedisArticleData {

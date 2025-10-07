@@ -29,6 +29,11 @@ interface JobStatus {
     newspaperJob: boolean;
     dailyJob: boolean;
   };
+  lastRuns: {
+    reporterJob: Date | null;
+    newspaperJob: Date | null;
+    dailyJob: Date | null;
+  };
   nextRuns: {
     reporterJob: Date | null;
     newspaperJob: Date | null;
@@ -816,18 +821,98 @@ export default function EditorPage() {
               </div>
             </div>
 
-            {/* Status Information */}
-            {jobStatus?.note && (
-              <div className="backdrop-blur-sm bg-blue-500/20 border border-blue-500/30 rounded-xl p-4">
-                <div className="flex items-start space-x-3">
-                  <svg className="w-5 h-5 text-blue-200 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <div>
-                    <h4 className="font-medium text-blue-200">Job Status</h4>
-                    <p className="text-sm text-blue-100 mt-1">{jobStatus.note}</p>
+            {/* Job Status Information */}
+            {jobStatus && (
+              <div className="space-y-4">
+                <h3 className="text-xl font-semibold text-white/90">Job Status</h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {/* Reporter Job Status */}
+                  <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-white/90">Article Generation</span>
+                      <div className="flex items-center space-x-2">
+                        {jobStatus.status.reporterJob ? (
+                          <div className="flex items-center space-x-1">
+                            <div className="animate-spin rounded-full h-3 w-3 border border-yellow-400 border-t-transparent"></div>
+                            <span className="text-xs text-yellow-200">Running</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-1">
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span className="text-xs text-green-200">Idle</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-1 text-xs text-white/70">
+                      <div>Last run: {jobStatus.lastRuns.reporterJob ? jobStatus.lastRuns.reporterJob.toLocaleString() : 'Never'}</div>
+                      <div>Next run: {jobStatus.nextRuns.reporterJob ? jobStatus.nextRuns.reporterJob.toLocaleString() : 'Unknown'}</div>
+                    </div>
+                  </div>
+
+                  {/* Newspaper Job Status */}
+                  <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-white/90">Newspaper Edition</span>
+                      <div className="flex items-center space-x-2">
+                        {jobStatus.status.newspaperJob ? (
+                          <div className="flex items-center space-x-1">
+                            <div className="animate-spin rounded-full h-3 w-3 border border-yellow-400 border-t-transparent"></div>
+                            <span className="text-xs text-yellow-200">Running</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-1">
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span className="text-xs text-green-200">Idle</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-1 text-xs text-white/70">
+                      <div>Last run: {jobStatus.lastRuns.newspaperJob ? jobStatus.lastRuns.newspaperJob.toLocaleString() : 'Never'}</div>
+                      <div>Next run: {jobStatus.nextRuns.newspaperJob ? jobStatus.nextRuns.newspaperJob.toLocaleString() : 'Unknown'}</div>
+                    </div>
+                  </div>
+
+                  {/* Daily Job Status */}
+                  <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-white/90">Daily Edition</span>
+                      <div className="flex items-center space-x-2">
+                        {jobStatus.status.dailyJob ? (
+                          <div className="flex items-center space-x-1">
+                            <div className="animate-spin rounded-full h-3 w-3 border border-yellow-400 border-t-transparent"></div>
+                            <span className="text-xs text-yellow-200">Running</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center space-x-1">
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span className="text-xs text-green-200">Idle</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <div className="space-y-1 text-xs text-white/70">
+                      <div>Last run: {jobStatus.lastRuns.dailyJob ? jobStatus.lastRuns.dailyJob.toLocaleString() : 'Never'}</div>
+                      <div>Next run: {jobStatus.nextRuns.dailyJob ? jobStatus.nextRuns.dailyJob.toLocaleString() : 'Unknown'}</div>
+                    </div>
                   </div>
                 </div>
+
+                {jobStatus.note && (
+                  <div className="backdrop-blur-sm bg-blue-500/20 border border-blue-500/30 rounded-xl p-4">
+                    <div className="flex items-start space-x-3">
+                      <svg className="w-5 h-5 text-blue-200 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      <div>
+                        <h4 className="font-medium text-blue-200">Note</h4>
+                        <p className="text-sm text-blue-100 mt-1">{jobStatus.note}</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>

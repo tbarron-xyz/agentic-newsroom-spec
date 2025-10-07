@@ -974,6 +974,37 @@ export class RedisService {
     return `${prefix}_${timestamp}_${random}`;
   }
 
+  // Job status operations
+  async setJobRunning(jobName: string, running: boolean): Promise<void> {
+    console.log('Redis Write: SET', REDIS_KEYS.JOB_RUNNING(jobName), running.toString());
+    await this.client.set(REDIS_KEYS.JOB_RUNNING(jobName), running.toString());
+  }
+
+  async getJobRunning(jobName: string): Promise<boolean> {
+    const value = await this.client.get(REDIS_KEYS.JOB_RUNNING(jobName));
+    return value === 'true';
+  }
+
+  async setJobLastRun(jobName: string, timestamp: number): Promise<void> {
+    console.log('Redis Write: SET', REDIS_KEYS.JOB_LAST_RUN(jobName), timestamp.toString());
+    await this.client.set(REDIS_KEYS.JOB_LAST_RUN(jobName), timestamp.toString());
+  }
+
+  async getJobLastRun(jobName: string): Promise<number | null> {
+    const value = await this.client.get(REDIS_KEYS.JOB_LAST_RUN(jobName));
+    return value ? parseInt(value) : null;
+  }
+
+  async setJobLastSuccess(jobName: string, timestamp: number): Promise<void> {
+    console.log('Redis Write: SET', REDIS_KEYS.JOB_LAST_SUCCESS(jobName), timestamp.toString());
+    await this.client.set(REDIS_KEYS.JOB_LAST_SUCCESS(jobName), timestamp.toString());
+  }
+
+  async getJobLastSuccess(jobName: string): Promise<number | null> {
+    const value = await this.client.get(REDIS_KEYS.JOB_LAST_SUCCESS(jobName));
+    return value ? parseInt(value) : null;
+  }
+
   async clearAllData(): Promise<void> {
     await this.client.flushAll();
   }

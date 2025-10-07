@@ -50,29 +50,46 @@ export async function GET(_request: NextRequest) {
       }
     }
 
-    // Proceed with generation
-    const results = await reporterService!.generateAllReporterArticles();
-    const totalArticles = Object.values(results).reduce((sum, articles) => sum + articles.length, 0);
+    // Set job as running and update last run time
+    await redisService!.setJobRunning('reporter', true);
+    await redisService!.setJobLastRun('reporter', currentTime);
+    console.log(`[${new Date().toISOString()}] Set reporter job running=true and last_run=${currentTime}`);
 
-    // Update the last generation time
-    if (editor) {
-      const updatedEditor = {
-        ...editor,
-        lastArticleGenerationTime: currentTime
-      };
-      await redisService!.saveEditor(updatedEditor);
-      console.log(`[${new Date().toISOString()}] Updated last generation time to ${new Date(currentTime).toISOString()}`);
+    try {
+      // Proceed with generation
+      const results = await reporterService!.generateAllReporterArticles();
+      const totalArticles = Object.values(results).reduce((sum, articles) => sum + articles.length, 0);
+
+      // Update the last generation time
+      if (editor) {
+        const updatedEditor = {
+          ...editor,
+          lastArticleGenerationTime: currentTime
+        };
+        await redisService!.saveEditor(updatedEditor);
+        console.log(`[${new Date().toISOString()}] Updated last generation time to ${new Date(currentTime).toISOString()}`);
+      }
+
+      // Mark job as completed successfully
+      await redisService!.setJobRunning('reporter', false);
+      await redisService!.setJobLastSuccess('reporter', currentTime);
+      console.log(`[${new Date().toISOString()}] Set reporter job running=false and last_success=${currentTime}`);
+
+      console.log(`[${new Date().toISOString()}] Successfully generated ${totalArticles} articles`);
+      console.log('Cron job completed successfully\n');
+
+      return NextResponse.json({
+        success: true,
+        message: `Reporter article generation job completed successfully. Generated ${totalArticles} articles.`,
+        totalArticles,
+        lastGenerationTime: currentTime
+      });
+    } catch (error) {
+      // Mark job as not running on error (don't update last_success)
+      await redisService!.setJobRunning('reporter', false);
+      console.log(`[${new Date().toISOString()}] Set reporter job running=false due to error`);
+      throw error; // Re-throw to be handled by outer catch
     }
-
-    console.log(`[${new Date().toISOString()}] Successfully generated ${totalArticles} articles`);
-    console.log('Cron job completed successfully\n');
-
-    return NextResponse.json({
-      success: true,
-      message: `Reporter article generation job completed successfully. Generated ${totalArticles} articles.`,
-      totalArticles,
-      lastGenerationTime: currentTime
-    });
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Cron job failed:`, error);
     return NextResponse.json(

@@ -28,16 +28,35 @@ export async function GET(_request: NextRequest) {
 
     await initializeServices();
 
-    const hourlyEdition = await editorService!.generateHourlyEdition();
+    const currentTime = Date.now();
 
-    console.log(`[${new Date().toISOString()}] Successfully generated hourly edition ${hourlyEdition.id}`);
-    console.log('Cron job completed successfully\n');
+    // Set job as running and update last run time
+    await redisService!.setJobRunning('newspaper', true);
+    await redisService!.setJobLastRun('newspaper', currentTime);
+    console.log(`[${new Date().toISOString()}] Set newspaper job running=true and last_run=${currentTime}`);
 
-    return NextResponse.json({
-      success: true,
-      message: `hourly edition generation job completed successfully. Generated edition ${hourlyEdition.id}.`,
-      hourlyEditionId: hourlyEdition.id
-    });
+    try {
+      const hourlyEdition = await editorService!.generateHourlyEdition();
+
+      // Mark job as completed successfully
+      await redisService!.setJobRunning('newspaper', false);
+      await redisService!.setJobLastSuccess('newspaper', currentTime);
+      console.log(`[${new Date().toISOString()}] Set newspaper job running=false and last_success=${currentTime}`);
+
+      console.log(`[${new Date().toISOString()}] Successfully generated hourly edition ${hourlyEdition.id}`);
+      console.log('Cron job completed successfully\n');
+
+      return NextResponse.json({
+        success: true,
+        message: `hourly edition generation job completed successfully. Generated edition ${hourlyEdition.id}.`,
+        hourlyEditionId: hourlyEdition.id
+      });
+    } catch (error) {
+      // Mark job as not running on error (don't update last_success)
+      await redisService!.setJobRunning('newspaper', false);
+      console.log(`[${new Date().toISOString()}] Set newspaper job running=false due to error`);
+      throw error; // Re-throw to be handled by outer catch
+    }
   } catch (error) {
     console.error(`[${new Date().toISOString()}] Cron job failed:`, error);
     return NextResponse.json(
