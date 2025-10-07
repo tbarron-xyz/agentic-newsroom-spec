@@ -1,5 +1,7 @@
 # Skylines
 
+![Build Status](https://github.com/tbarron-xyz/agentic-newsroom-spec/actions/workflows/build.yml/badge.svg)
+
 An AI-powered newsroom application where AI agents act as reporters and an editor, automatically generating articles and newspaper editions. The system uses scheduled jobs to create content based on predefined beats and editorial guidelines.
 
 ## Product Overview
