@@ -117,9 +117,22 @@ Key Performance Indicators are stored to track AI API usage and costs.
 - `kpi:{name}:value` - String containing the current KPI value (numbers stored as strings)
 - `kpi:{name}:last_updated` - String containing timestamp of last update (milliseconds since epoch)
 
+### Job Status
+Job status tracking is used to monitor the execution state of background jobs (article generation, newspaper edition creation, daily edition compilation).
+
+**Keys:**
+- `job:{job_name}:running` - String ("true"/"false") indicating if job is currently running
+- `job:{job_name}:last_run` - String containing last run timestamp (milliseconds since epoch)
+- `job:{job_name}:last_success` - String containing last successful run timestamp (milliseconds since epoch)
+
+**Job Names:**
+- `reporter` - Article generation job
+- `newspaper` - Newspaper edition generation job
+- `daily` - Daily edition compilation job
+
 ## Key Naming Conventions
 - Use colons (`:`) as separators for hierarchical key names
-- Use descriptive prefixes (`editor:`, `reporter:`, `article:`, `edition:`, `daily_edition:`, `event:`, `ad:`, `user:`, `ai:`)
+- Use descriptive prefixes (`editor:`, `reporter:`, `article:`, `edition:`, `daily_edition:`, `event:`, `ad:`, `user:`, `ai:`, `job:`)
 - Include IDs in curly braces for dynamic key generation
 - Use consistent data types (Strings for text, Sets for collections, Sorted Sets for time-ordered data)
 - Use reverse lookup patterns like `user_by_email:{email}` for efficient lookups by non-ID fields
@@ -143,6 +156,7 @@ Key Performance Indicators are stored to track AI API usage and costs.
 - **User enumeration**: `SMEMBERS users` to get all user IDs
 - **User lookup by email**: `GET user_by_email:{email}` to get user ID
 - **User details**: Direct key access with `GET user:{user_id}:email`, `GET user:{user_id}:role`, etc.
+- **Job status lookup**: `GET job:{job_name}:running`, `GET job:{job_name}:last_run`, `GET job:{job_name}:last_success` for current job status
 
 ## Performance Considerations
 - Use connection pooling for Redis connections
@@ -150,6 +164,7 @@ Key Performance Indicators are stored to track AI API usage and costs.
 - Consider using Redis pipelines for batch operations
 - Monitor memory usage as data accumulates over time
 - Implement data cleanup strategies for old articles/editions if needed
+- Job status keys are lightweight and frequently accessed - consider caching in application layer if needed
 
 ## Data Persistence
 - Configure Redis persistence (RDB or AOF) based on data criticality requirements
