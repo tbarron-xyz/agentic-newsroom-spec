@@ -345,7 +345,7 @@ Make the content engaging, balanced, and professionally written. Focus on creati
             content: userPrompt
           }
         ],
-        response_format: zodResponseFormat(reporterArticleSchema, "reporter_article")
+        response_format: zodResponseFormat(dailyEditionSchema, "reporter_article")
       });
 
       // Track KPI usage
