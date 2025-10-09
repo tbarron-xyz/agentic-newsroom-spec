@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 
 interface Topic {
   name: string;
@@ -137,7 +138,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Welcome Box for Non-Authenticated Users */}
         {!user && (
-          <div className="mb-8 backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
+           <div className="relative mb-8 backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
             <div className="flex items-start space-x-4">
               <div className="flex-shrink-0">
                 <div className="w-12 h-12 backdrop-blur-sm bg-white/20 rounded-full flex items-center justify-center">
@@ -159,10 +160,18 @@ export default function Home() {
                   </p>
 
                 </div>
-              </div>
-            </div>
-          </div>
-        )}
+               </div>
+             </div>
+
+             {/* Floating Events Info Box */}
+             <div className="absolute top-4 right-4 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl p-4 shadow-xl hover:bg-white/15 transition-all duration-300">
+               <Link href="/events" className="block text-center">
+                 <h3 className="text-sm font-bold text-white/90 mb-2">Events!</h3>
+                 <p className="text-xs text-white/70">Explore list-of-facts style event coverage sourced from real Bluesky conversations</p>
+               </Link>
+             </div>
+           </div>
+         )}
 
         {/* Page Header */}
         <div className="text-center mb-8">
