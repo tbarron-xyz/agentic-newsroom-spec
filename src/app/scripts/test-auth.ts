@@ -1,15 +1,14 @@
-import { RedisService } from '../services/redis.service';
-import { AuthService } from '../services/auth.service';
+import { ServiceContainer } from '../services/service-container';
 
 async function testAuthSystem() {
   console.log('Testing JWT Authentication System...\n');
 
-  const redisService = new RedisService();
-  const authService = new AuthService(redisService);
+  const container = ServiceContainer.getInstance();
+  const redisService = await container.getDataStorageService();
+  const authService = await container.getAuthService();
 
   try {
-    // Connect to Redis
-    await redisService.connect();
+    // Clear all data
     await redisService.clearAllData();
     console.log('✅ Connected to Redis and cleared data');
 
@@ -114,12 +113,7 @@ async function testAuthSystem() {
   } catch (error) {
     console.error('❌ Test failed:', error);
   } finally {
-    try {
-      await redisService.disconnect();
-      console.log('\n🔌 Disconnected from Redis');
-    } catch (error) {
-      console.error('Error disconnecting from Redis:', error);
-    }
+    console.log('\n🔌 Test completed');
   }
 }
 

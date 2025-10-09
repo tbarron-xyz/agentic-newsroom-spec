@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { User } from '../models/types';
-import { RedisService } from '../services/redis.service';
+import { IDataStorageService } from '../services/data-storage.interface';
 import { AuthService } from '../services/auth.service';
 import { AbilitiesService } from '../services/abilities.service';
+import { ServiceContainer } from '../services/service-container';
 
 type PermissionType = 'reader' | 'reporter' | 'editor';
 
@@ -12,17 +13,16 @@ interface WithAuthOptions {
 }
 
 export function withAuth(
-  handler: (request: NextRequest, user: User, redis: RedisService, context?: any) => Promise<NextResponse>,
+  handler: (request: NextRequest, user: User, dataStorage: IDataStorageService, context?: any) => Promise<NextResponse>,
   options: WithAuthOptions = {}
 ) {
   return async (request: NextRequest, context?: any): Promise<NextResponse> => {
-    const redis = new RedisService();
-    const authService = new AuthService(redis);
-    const abilitiesService = new AbilitiesService();
+    const container = ServiceContainer.getInstance();
+    const dataStorage = await container.getDataStorageService();
+    const authService = await container.getAuthService();
+    const abilitiesService = await container.getAbilitiesService();
 
     try {
-      await redis.connect();
-
       const authHeader = request.headers.get('authorization');
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
         return NextResponse.json(
@@ -73,19 +73,13 @@ export function withAuth(
         }
       }
 
-      return await handler(request, user, redis, context);
+      return await handler(request, user, dataStorage, context);
     } catch (error) {
       console.error('Auth middleware error:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
       );
-    } finally {
-      try {
-        await redis.disconnect();
-      } catch (error) {
-        console.error('Error disconnecting from Redis:', error);
-      }
     }
   };
 }

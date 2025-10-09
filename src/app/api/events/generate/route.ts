@@ -1,13 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '../../../utils/auth';
-import { ReporterService } from '../../../services/reporter.service';
-import { AIService } from '../../../services/ai.service';
+import { ServiceContainer } from '../../../services/service-container';
 
 // POST /api/events/generate - Generate events for all reporters (admin only)
 export const POST = withAuth(async (request: NextRequest, user, redis) => {
-  // Generate events for all reporters
-  const aiService = new AIService();
-  const reporterService = new ReporterService(redis, aiService);
+  const container = ServiceContainer.getInstance();
+  const reporterService = await container.getReporterService();
 
   console.log('Starting event generation for all reporters...');
   const results = await reporterService.generateAllReporterEvents();

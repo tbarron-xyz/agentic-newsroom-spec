@@ -1,17 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '../../../utils/auth';
-import { AIService } from '../../../services/ai.service';
-import { ReporterService } from '../../../services/reporter.service';
-import { EditorService } from '../../../services/editor.service';
-import { RedisService } from '../../../services/redis.service';
+import { ServiceContainer } from '../../../services/service-container';
 
+let container: ServiceContainer | null = null;
 
+async function getContainer(): Promise<ServiceContainer> {
+  if (!container) {
+    container = ServiceContainer.getInstance();
+  }
+  return container;
+}
 
 // POST /api/editor/jobs/trigger - Trigger a specific job
 export const POST = withAuth(async (request: NextRequest, user, redis) => {
-  const aiService = new AIService();
-  const reporterService = new ReporterService(redis, aiService);
-  const editorService = new EditorService(redis, aiService);
+  const container = await getContainer();
+  const reporterService = await container.getReporterService();
+  const editorService = await container.getEditorService();
 
   const body = await request.json();
   const { jobType } = body;
@@ -69,8 +73,8 @@ export const POST = withAuth(async (request: NextRequest, user, redis) => {
 // GET /api/editor/jobs/status - Get job status and next run times
 export async function GET() {
   try {
-    const redis = new RedisService();
-    await redis.connect();
+    const container = await getContainer();
+    const redis = await container.getDataStorageService();
 
     // Get editor config for period calculations
     const editor = await redis.getEditor();

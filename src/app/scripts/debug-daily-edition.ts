@@ -1,13 +1,12 @@
-import { RedisService } from '../services/redis.service';
+import { ServiceContainer } from '../services/service-container';
 
 async function debugDailyEdition(): Promise<void> {
   console.log('🔍 Debugging daily edition retrieval...\n');
 
   try {
-    const redisService = new RedisService();
-    console.log('📡 Connecting to Redis...');
-    await redisService.connect();
-    console.log('✅ Connected to Redis');
+    const container = ServiceContainer.getInstance();
+    const redisService = await container.getDataStorageService();
+    console.log('📡 Connected to Redis via container');
 
     console.log('\n📊 Checking daily editions...');
     const dailyEditions = await redisService.getDailyEditions();
@@ -24,7 +23,6 @@ async function debugDailyEdition(): Promise<void> {
       console.log(`   • Generation time: ${new Date(firstEdition.generationTime).toISOString()}`);
     }
 
-    await redisService.disconnect();
     console.log('\n🎉 Debug complete');
 
   } catch (error) {

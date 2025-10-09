@@ -2,7 +2,7 @@ import { Reporter, Article, Event, REDIS_KEYS } from '../models/types';
 import OpenAI from 'openai';
 import { zodResponseFormat } from 'openai/helpers/zod';
 import { dailyEditionSchema, reporterArticleSchema, eventGenerationResponseSchema } from '../models/schemas';
-import { RedisService } from './redis.service';
+import { IDataStorageService } from './data-storage.interface';
 import { KpiService } from './kpi.service';
 import { writeFile } from 'fs/promises';
 import { join } from 'path';
@@ -11,8 +11,10 @@ import { fetchLatestMessages } from './bluesky.service';
 export class AIService {
   private openai: OpenAI;
   private modelName: string = 'gpt-5-nano';
+  private dataStorageService: IDataStorageService;
 
-  constructor() {
+  constructor(dataStorageService: IDataStorageService) {
+    this.dataStorageService = dataStorageService;
     const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey) {
       throw new Error('OPENAI_API_KEY environment variable is required');
@@ -28,11 +30,7 @@ export class AIService {
 
   private async initializeModelName(): Promise<void> {
     try {
-      const redis = new RedisService();
-      await redis.connect();
-      const storedModelName = await redis.getClient().get(REDIS_KEYS.MODEL_NAME);
-      await redis.disconnect();
-
+      const storedModelName = await this.dataStorageService.getClient().get(REDIS_KEYS.MODEL_NAME);
       this.modelName = storedModelName || 'gpt-5-nano';
     } catch (error) {
       console.warn('Failed to fetch modelName from Redis, using default:', error);
@@ -72,10 +70,7 @@ export class AIService {
       // Get configurable message slice count from Redis
       let messageSliceCount = 200; // Default fallback
       try {
-        const redis = new RedisService();
-        await redis.connect();
-        const editor = await redis.getEditor();
-        await redis.disconnect();
+        const editor = await this.dataStorageService.getEditor();
         if (editor) {
           messageSliceCount = editor.messageSliceCount;
         }
@@ -96,10 +91,7 @@ export class AIService {
       // Fetch the most recent ad from data storage
       let mostRecentAd = null;
       try {
-        const redis = new RedisService();
-        await redis.connect();
-        mostRecentAd = await redis.getMostRecentAd();
-        await redis.disconnect();
+        mostRecentAd = await this.dataStorageService.getMostRecentAd();
       } catch (error) {
         console.warn('Failed to fetch most recent ad:', error);
         // Continue with article generation even if ad fetch fails
@@ -262,7 +254,7 @@ Return only the article numbers (1, 2, 3, etc.) of the selected stories, separat
       });
 
       // Track KPI usage
-      await KpiService.incrementFromOpenAIResponse(response);
+      await KpiService.incrementKpisFromOpenAIResponse(response, this.dataStorageService);
 
       const selectedIndices = response.choices[0]?.message?.content?.trim()
         .split(',')
@@ -357,7 +349,7 @@ Make the content engaging, balanced, and professionally written. Focus on creati
       });
 
       // Track KPI usage
-      await KpiService.incrementFromOpenAIResponse(response);
+      await KpiService.incrementKpisFromOpenAIResponse(response, this.dataStorageService);
 
       const content = response.choices[0]?.message?.content?.trim();
       if (!content) {
@@ -433,10 +425,7 @@ User: Using the editorial guidelines: "${editorPrompt}", create a comprehensive 
       // Get configurable message slice count
       let messageSliceCount = 200; // Default fallback
       try {
-        const redis = new RedisService();
-        await redis.connect();
-        const editor = await redis.getEditor();
-        await redis.disconnect();
+        const editor = await this.dataStorageService.getEditor();
         if (editor) {
           messageSliceCount = editor.messageSliceCount;
         }
@@ -504,7 +493,7 @@ Instructions:
       });
 
       // Track KPI usage
-      await KpiService.incrementFromOpenAIResponse(response);
+      await KpiService.incrementKpisFromOpenAIResponse(response, this.dataStorageService);
 
       const content = response.choices[0]?.message?.content?.trim();
       if (!content) {
@@ -557,13 +546,10 @@ Instructions:
 
     try {
       // Get reporter's 5 latest events
-      const redis = new RedisService();
-      await redis.connect();
-      const latestEvents = await redis.getEventsByReporter(reporter.id, 5);
-      await redis.disconnect();
+      const latestEvents = await this.dataStorageService.getEventsByReporter(reporter.id, 5);
 
       // Get reporter's 5 latest articles for context
-      const latestArticles = await redis.getArticlesByReporter(reporter.id, 5);
+      const latestArticles = await this.dataStorageService.getArticlesByReporter(reporter.id, 5);
 
       // Format events for the prompt
       const eventsContext = latestEvents.length > 0
@@ -582,10 +568,7 @@ Instructions:
       // Get configurable message slice count
       let messageSliceCount = 200; // Default fallback
       try {
-        const redisService = new RedisService();
-        await redisService.connect();
-        const editor = await redisService.getEditor();
-        await redisService.disconnect();
+        const editor = await this.dataStorageService.getEditor();
         if (editor) {
           messageSliceCount = editor.messageSliceCount;
         }
@@ -659,7 +642,7 @@ When generating the article, first review your recent articles to avoid repetiti
       });
 
       // Track KPI usage
-      await KpiService.incrementFromOpenAIResponse(response);
+      await KpiService.incrementKpisFromOpenAIResponse(response, this.dataStorageService);
 
       const content = response.choices[0]?.message?.content?.trim();
       if (!content) {

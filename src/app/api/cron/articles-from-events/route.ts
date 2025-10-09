@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RedisService } from '../../../services/redis.service';
-import { ReporterService } from '../../../services/reporter.service';
-import { AIService } from '../../../services/ai.service';
+import { ServiceContainer } from '../../../services/service-container';
 
-let redisService: RedisService | null = null;
-let aiService: AIService | null = null;
-let reporterService: ReporterService | null = null;
+let container: ServiceContainer | null = null;
 
-async function initializeServices(): Promise<void> {
-  if (!redisService) {
-    redisService = new RedisService();
-    await redisService.connect();
+async function getContainer(): Promise<ServiceContainer> {
+  if (!container) {
+    container = ServiceContainer.getInstance();
   }
-  if (!aiService) {
-    aiService = new AIService();
-  }
-  if (!reporterService) {
-    reporterService = new ReporterService(redisService, aiService);
-  }
+  return container;
 }
 
 // GET /api/cron/articles-from-events - Trigger reporter article generation from events job
@@ -26,10 +16,12 @@ export async function GET(_request: NextRequest) {
     console.log('\n=== CRON JOB: REPORTER ARTICLES FROM EVENTS GENERATION ===');
     console.log(`[${new Date().toISOString()}] Starting cron-triggered article generation from events...`);
 
-    await initializeServices();
+    const container = await getContainer();
+    const redis = await container.getDataStorageService();
+    const reporterService = await container.getReporterService();
 
     // Check if we should skip generation based on time constraints
-    const editor = await redisService!.getEditor();
+    const editor = await redis.getEditor();
     const currentTime = Date.now();
 
     if (editor?.lastArticleGenerationTime && editor?.articleGenerationPeriodMinutes) {
@@ -51,7 +43,7 @@ export async function GET(_request: NextRequest) {
     }
 
     // Proceed with generation
-    const results = await reporterService!.generateArticlesFromEvents();
+    const results = await reporterService.generateArticlesFromEvents();
     const totalArticles = Object.values(results).reduce((sum, articles) => sum + articles.length, 0);
 
     // Update the last generation time
@@ -60,7 +52,7 @@ export async function GET(_request: NextRequest) {
         ...editor,
         lastArticleGenerationTime: currentTime
       };
-      await redisService!.saveEditor(updatedEditor);
+      await redis.saveEditor(updatedEditor);
       console.log(`[${new Date().toISOString()}] Updated last article generation time to ${new Date(currentTime).toISOString()}`);
     }
 

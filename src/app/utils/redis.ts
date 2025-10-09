@@ -1,27 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RedisService } from '../services/redis.service';
+import { IDataStorageService } from '../services/data-storage.interface';
+import { ServiceContainer } from '../services/service-container';
 
 export function withRedis(
-  handler: (request: NextRequest, redis: RedisService, context?: any) => Promise<NextResponse>
+  handler: (request: NextRequest, dataStorage: IDataStorageService, context?: any) => Promise<NextResponse>
 ) {
   return async (request: NextRequest, context?: any): Promise<NextResponse> => {
-    const redis = new RedisService();
+    const container = ServiceContainer.getInstance();
+    const dataStorage = await container.getDataStorageService();
 
     try {
-      await redis.connect();
-      return await handler(request, redis, context);
+      return await handler(request, dataStorage, context);
     } catch (error) {
-      console.error('Redis wrapper error:', error);
+      console.error('Data storage wrapper error:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }
       );
-    } finally {
-      try {
-        await redis.disconnect();
-      } catch (error) {
-        console.error('Error disconnecting from Redis:', error);
-      }
     }
   };
 }

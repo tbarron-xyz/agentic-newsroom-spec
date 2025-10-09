@@ -1,11 +1,11 @@
-import { RedisService } from '../services/redis.service';
+import { ServiceContainer } from '../services/service-container';
 
 async function testAdFetching() {
   console.log('Testing ad fetching functionality...');
 
   try {
-    const redis = new RedisService();
-    await redis.connect();
+    const container = ServiceContainer.getInstance();
+    const redis = await container.getDataStorageService();
 
     // Create test ads with different timestamps
     const ad1 = {
@@ -50,7 +50,6 @@ async function testAdFetching() {
       console.log('❌ No most recent ad found');
     }
 
-    await redis.disconnect();
     console.log('Test completed successfully!');
 
   } catch (error) {

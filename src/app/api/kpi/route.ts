@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
-import { KpiService } from '../../services/kpi.service';
+import { ServiceContainer } from '../../services/service-container';
 
 export async function GET() {
   try {
-    const kpiService = new KpiService();
+    const container = ServiceContainer.getInstance();
+    const kpiService = await container.getKpiService();
     const kpiData = await kpiService.getAllKpis();
 
     return NextResponse.json(kpiData);

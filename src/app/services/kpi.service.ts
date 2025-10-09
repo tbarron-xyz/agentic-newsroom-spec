@@ -1,26 +1,27 @@
-import { KpiName, REDIS_KEYS } from '../models/types';
-import { RedisService } from './redis.service';
+import { KpiName } from '../models/types';
+import { IDataStorageService } from './data-storage.interface';
 import OpenAI from 'openai';
 
 export class KpiService {
-  private redisService: RedisService;
+  private dataStorageService: IDataStorageService;
 
-  // Pricing fetched from editor configuration
-
-  constructor() {
-    this.redisService = new RedisService();
+  constructor(dataStorageService: IDataStorageService) {
+    this.dataStorageService = dataStorageService;
   }
 
   /**
    * Static method to increment KPIs from an OpenAI API response.
    * This is a convenience method that can be called directly without instantiating KpiService.
    */
-  static async incrementFromOpenAIResponse(response: OpenAI.Chat.Completions.ChatCompletion): Promise<void> {
+  static async incrementKpisFromOpenAIResponse(
+    response: OpenAI.Chat.Completions.ChatCompletion,
+    dataStorageService: IDataStorageService
+  ): Promise<void> {
     if (!response.usage) {
+      console.warn('No usage data in OpenAI response');
       return;
     }
-
-    const kpiService = new KpiService();
+    const kpiService = new KpiService(dataStorageService);
     await kpiService.incrementKpis({
       promptTokens: response.usage.prompt_tokens,
       completionTokens: response.usage.completion_tokens,
@@ -34,8 +35,6 @@ export class KpiService {
     totalTokens: number;
   }): Promise<void> {
     try {
-      await this.redisService.connect();
-
       // Increment input tokens
       await this.incrementKpi(KpiName.TOTAL_TEXT_INPUT_TOKENS, usage.promptTokens);
 
@@ -49,8 +48,6 @@ export class KpiService {
     } catch (error) {
       console.error('Error incrementing KPIs:', error);
       // Don't throw - KPI tracking should not break the main functionality
-    } finally {
-      await this.redisService.disconnect();
     }
   }
 
@@ -62,39 +59,24 @@ export class KpiService {
 
   async getKpiValue(kpiName: KpiName): Promise<number> {
     try {
-      await this.redisService.connect();
-      const valueStr = await this.redisService.getClient().get(REDIS_KEYS.KPI_VALUE(kpiName));
-      return valueStr ? parseFloat(valueStr) : 0;
+      return await this.dataStorageService.getKpiValue(kpiName);
     } catch (error) {
       console.error(`Error getting KPI value for ${kpiName}:`, error);
       return 0;
-    } finally {
-      await this.redisService.disconnect();
     }
   }
 
   private async setKpiValue(kpiName: KpiName, value: number): Promise<void> {
     try {
-      await this.redisService.connect();
-      const multi = this.redisService.getClient().multi();
-
-      console.log('Redis Write: SET', REDIS_KEYS.KPI_VALUE(kpiName), value.toString());
-      multi.set(REDIS_KEYS.KPI_VALUE(kpiName), value.toString());
-
-      console.log('Redis Write: SET', REDIS_KEYS.KPI_LAST_UPDATED(kpiName), Date.now().toString());
-      multi.set(REDIS_KEYS.KPI_LAST_UPDATED(kpiName), Date.now().toString());
-
-      await multi.exec();
+      await this.dataStorageService.setKpiValue(kpiName, value);
     } catch (error) {
       console.error(`Error setting KPI value for ${kpiName}:`, error);
       throw error;
-    } finally {
-      await this.redisService.disconnect();
     }
   }
 
   private async calculateSpend(inputTokens: number, outputTokens: number): Promise<number> {
-    const editor = await this.redisService.getEditor();
+    const editor = await this.dataStorageService.getEditor();
     const inputTokenCost = editor?.inputTokenCost || 0.050; // Fallback to default
     const outputTokenCost = editor?.outputTokenCost || 0.400; // Fallback to default
 

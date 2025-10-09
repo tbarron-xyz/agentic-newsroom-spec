@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RedisService } from '../../../services/redis.service';
-import { ReporterService } from '../../../services/reporter.service';
-import { AIService } from '../../../services/ai.service';
+import { ServiceContainer } from '../../../services/service-container';
 
-let redisService: RedisService | null = null;
-let aiService: AIService | null = null;
-let reporterService: ReporterService | null = null;
+let container: ServiceContainer | null = null;
 
-async function initializeServices(): Promise<void> {
-  if (!redisService) {
-    redisService = new RedisService();
-    await redisService.connect();
+async function getContainer(): Promise<ServiceContainer> {
+  if (!container) {
+    container = ServiceContainer.getInstance();
   }
-  if (!aiService) {
-    aiService = new AIService();
-  }
-  if (!reporterService) {
-    reporterService = new ReporterService(redisService, aiService);
-  }
+  return container;
 }
 
 // GET /api/cron/events - Trigger reporter event generation job
@@ -26,10 +16,12 @@ export async function GET(_request: NextRequest) {
     console.log('\n=== CRON JOB: REPORTER EVENT GENERATION ===');
     console.log(`[${new Date().toISOString()}] Starting cron-triggered event generation...`);
 
-    await initializeServices();
+    const container = await getContainer();
+    const redis = await container.getDataStorageService();
+    const reporterService = await container.getReporterService();
 
     // Check if we should skip generation based on time constraints
-    const editor = await redisService!.getEditor();
+    const editor = await redis.getEditor();
     const currentTime = Date.now();
 
     if (editor?.lastEventGenerationTime && editor?.eventGenerationPeriodMinutes) {
@@ -51,7 +43,7 @@ export async function GET(_request: NextRequest) {
     }
 
     // Proceed with generation
-    const results = await reporterService!.generateAllReporterEvents();
+    const results = await reporterService.generateAllReporterEvents();
     const totalEvents = Object.values(results).reduce((sum, events) => sum + events.length, 0);
 
     // Update the last generation time
@@ -60,7 +52,7 @@ export async function GET(_request: NextRequest) {
         ...editor,
         lastEventGenerationTime: currentTime
       };
-      await redisService!.saveEditor(updatedEditor);
+      await redis.saveEditor(updatedEditor);
       console.log(`[${new Date().toISOString()}] Updated last event generation time to ${new Date(currentTime).toISOString()}`);
     }
 

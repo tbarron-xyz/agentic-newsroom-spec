@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { User } from '../models/types';
-import { RedisService } from './redis.service';
+import { IDataStorageService } from './data-storage.interface';
 
 export interface AuthTokens {
   accessToken: string;
@@ -15,12 +15,12 @@ export interface JWTPayload {
 }
 
 export class AuthService {
-  private redisService: RedisService;
+  private dataStorageService: IDataStorageService;
   private jwtSecret: string;
   private jwtRefreshSecret: string;
 
-  constructor(redisService: RedisService) {
-    this.redisService = redisService;
+  constructor(dataStorageService: IDataStorageService) {
+    this.dataStorageService = dataStorageService;
     this.jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
     this.jwtRefreshSecret = process.env.JWT_REFRESH_SECRET || 'your-refresh-secret-key';
   }
@@ -77,7 +77,7 @@ export class AuthService {
   }
 
   async authenticateUser(email: string, password: string): Promise<User | null> {
-    const user = await this.redisService.getUserByEmail(email);
+    const user = await this.dataStorageService.getUserByEmail(email);
     if (!user) {
       return null;
     }
@@ -88,14 +88,14 @@ export class AuthService {
     }
 
     // Update last login time
-    await this.redisService.updateUserLastLogin(user.id);
+    await this.dataStorageService.updateUserLastLogin(user.id);
 
     return user;
   }
 
   async registerUser(email: string, password: string): Promise<User> {
     // Check if user already exists
-    const existingUser = await this.redisService.getUserByEmail(email);
+    const existingUser = await this.dataStorageService.getUserByEmail(email);
     if (existingUser) {
       throw new Error('User with this email already exists');
     }
@@ -104,7 +104,7 @@ export class AuthService {
     const passwordHash = await this.hashPassword(password);
 
     // Create user
-    const user = await this.redisService.createUser({
+    const user = await this.dataStorageService.createUser({
       email,
       passwordHash,
       role: 'user',
@@ -122,7 +122,7 @@ export class AuthService {
       return null;
     }
 
-    const user = await this.redisService.getUserById(decoded.userId);
+    const user = await this.dataStorageService.getUserById(decoded.userId);
     if (!user) {
       return null;
     }
@@ -136,6 +136,6 @@ export class AuthService {
       return null;
     }
 
-    return await this.redisService.getUserById(payload.userId);
+    return await this.dataStorageService.getUserById(payload.userId);
   }
 }

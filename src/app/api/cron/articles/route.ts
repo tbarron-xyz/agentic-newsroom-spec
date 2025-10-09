@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RedisService } from '../../../services/redis.service';
-import { AIService } from '../../../services/ai.service';
-import { ReporterService } from '../../../services/reporter.service';
+import { ServiceContainer } from '../../../services/service-container';
 
-let redisService: RedisService | null = null;
-let aiService: AIService | null = null;
-let reporterService: ReporterService | null = null;
+let container: ServiceContainer | null = null;
 
-async function initializeServices(): Promise<void> {
-  if (!redisService) {
-    redisService = new RedisService();
-    await redisService.connect();
+async function getContainer(): Promise<ServiceContainer> {
+  if (!container) {
+    container = ServiceContainer.getInstance();
   }
-  if (!aiService) {
-    aiService = new AIService();
-  }
-  if (!reporterService) {
-    reporterService = new ReporterService(redisService, aiService);
-  }
+  return container;
 }
 
 // GET /api/cron/articles - Trigger reporter article generation job
@@ -26,10 +16,12 @@ export async function GET(_request: NextRequest) {
     console.log('\n=== CRON JOB: REPORTER ARTICLE GENERATION ===');
     console.log(`[${new Date().toISOString()}] Starting cron-triggered article generation...`);
 
-    await initializeServices();
+    const container = await getContainer();
+    const redis = await container.getDataStorageService();
+    const reporterService = await container.getReporterService();
 
     // Check if we should skip generation based on time constraints
-    const editor = await redisService!.getEditor();
+    const editor = await redis.getEditor();
     const currentTime = Date.now();
 
     if (editor?.lastArticleGenerationTime && editor?.articleGenerationPeriodMinutes) {
@@ -51,13 +43,13 @@ export async function GET(_request: NextRequest) {
     }
 
     // Set job as running and update last run time
-    await redisService!.setJobRunning('reporter', true);
-    await redisService!.setJobLastRun('reporter', currentTime);
+    await redis.setJobRunning('reporter', true);
+    await redis.setJobLastRun('reporter', currentTime);
     console.log(`[${new Date().toISOString()}] Set reporter job running=true and last_run=${currentTime}`);
 
     try {
       // Proceed with generation
-      const results = await reporterService!.generateAllReporterArticles();
+      const results = await reporterService.generateAllReporterArticles();
       const totalArticles = Object.values(results).reduce((sum, articles) => sum + articles.length, 0);
 
       // Update the last generation time
@@ -66,13 +58,13 @@ export async function GET(_request: NextRequest) {
           ...editor,
           lastArticleGenerationTime: currentTime
         };
-        await redisService!.saveEditor(updatedEditor);
+        await redis.saveEditor(updatedEditor);
         console.log(`[${new Date().toISOString()}] Updated last generation time to ${new Date(currentTime).toISOString()}`);
       }
 
       // Mark job as completed successfully
-      await redisService!.setJobRunning('reporter', false);
-      await redisService!.setJobLastSuccess('reporter', currentTime);
+      await redis.setJobRunning('reporter', false);
+      await redis.setJobLastSuccess('reporter', currentTime);
       console.log(`[${new Date().toISOString()}] Set reporter job running=false and last_success=${currentTime}`);
 
       console.log(`[${new Date().toISOString()}] Successfully generated ${totalArticles} articles`);
@@ -86,7 +78,7 @@ export async function GET(_request: NextRequest) {
       });
     } catch (error) {
       // Mark job as not running on error (don't update last_success)
-      await redisService!.setJobRunning('reporter', false);
+      await redis.setJobRunning('reporter', false);
       console.log(`[${new Date().toISOString()}] Set reporter job running=false due to error`);
       throw error; // Re-throw to be handled by outer catch
     }

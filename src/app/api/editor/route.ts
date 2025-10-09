@@ -1,27 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '../../utils/auth';
 import { withRedis } from '../../utils/redis';
-import { RedisService } from '../../services/redis.service';
-import { AuthService } from '../../services/auth.service';
-
-let redisService: RedisService | null = null;
-let authService: AuthService | null = null;
-
-async function getRedisService(): Promise<RedisService> {
-  if (!redisService) {
-    redisService = new RedisService();
-    await redisService.connect();
-  }
-  return redisService;
-}
-
-async function getAuthService(): Promise<AuthService> {
-  if (!authService) {
-    const redis = await getRedisService();
-    authService = new AuthService(redis);
-  }
-  return authService;
-}
 
 // GET /api/editor - Get current editor data
 export const GET = withRedis(async (_request: NextRequest, redis) => {

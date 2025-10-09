@@ -10,8 +10,9 @@ import {
   User,
   REDIS_KEYS
 } from '../models/types';
+import { IDataStorageService } from './data-storage.interface';
 
-export class RedisService {
+export class RedisDataStorageService implements IDataStorageService {
   private client: RedisClientType;
 
   constructor() {
@@ -1003,6 +1004,30 @@ export class RedisService {
   async getJobLastSuccess(jobName: string): Promise<number | null> {
     const value = await this.client.get(REDIS_KEYS.JOB_LAST_SUCCESS(jobName));
     return value ? parseInt(value) : null;
+  }
+
+  // KPI operations
+  async getKpiValue(kpiName: string): Promise<number> {
+    const valueStr = await this.client.get(REDIS_KEYS.KPI_VALUE(kpiName));
+    return valueStr ? parseFloat(valueStr) : 0;
+  }
+
+  async setKpiValue(kpiName: string, value: number): Promise<void> {
+    const multi = this.client.multi();
+
+    console.log('Redis Write: SET', REDIS_KEYS.KPI_VALUE(kpiName), value.toString());
+    multi.set(REDIS_KEYS.KPI_VALUE(kpiName), value.toString());
+
+    console.log('Redis Write: SET', REDIS_KEYS.KPI_LAST_UPDATED(kpiName), Date.now().toString());
+    multi.set(REDIS_KEYS.KPI_LAST_UPDATED(kpiName), Date.now().toString());
+
+    await multi.exec();
+  }
+
+  async incrementKpiValue(kpiName: string, increment: number): Promise<void> {
+    const currentValue = await this.getKpiValue(kpiName);
+    const newValue = currentValue + increment;
+    await this.setKpiValue(kpiName, newValue);
   }
 
   async clearAllData(): Promise<void> {

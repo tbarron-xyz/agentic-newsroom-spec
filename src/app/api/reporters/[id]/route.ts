@@ -1,63 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '../../../utils/auth';
 import { withRedis } from '../../../utils/redis';
-import { RedisService } from '../../../services/redis.service';
-import { ReporterService } from '../../../services/reporter.service';
-import { AIService } from '../../../services/ai.service';
-import { AuthService } from '../../../services/auth.service';
-import { AbilitiesService } from '../../../services/abilities.service';
+import { ServiceContainer } from '../../../services/service-container';
 
-let redisService: RedisService | null = null;
-let reporterService: ReporterService | null = null;
-let aiService: AIService | null = null;
-let authService: AuthService | null = null;
-let abilitiesService: AbilitiesService | null = null;
+let container: ServiceContainer | null = null;
 
-async function initializeServices(): Promise<void> {
-  if (!redisService) {
-    redisService = new RedisService();
-    await redisService.connect();
+async function getContainer(): Promise<ServiceContainer> {
+  if (!container) {
+    container = ServiceContainer.getInstance();
   }
-  if (!aiService) {
-    aiService = new AIService();
-  }
-  if (!authService) {
-    authService = new AuthService(redisService);
-  }
-  if (!abilitiesService) {
-    abilitiesService = new AbilitiesService();
-  }
-  if (!reporterService) {
-    reporterService = new ReporterService(redisService, aiService);
-  }
-}
-
-async function checkReporterPermission(request: NextRequest): Promise<{ user: any } | NextResponse> {
-  const authHeader = request.headers.get('authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return NextResponse.json(
-      { error: 'Authorization token required' },
-      { status: 401 }
-    );
-  }
-
-  const token = authHeader.substring(7);
-  const user = await authService!.getUserFromToken(token);
-  if (!user) {
-    return NextResponse.json(
-      { error: 'Invalid or expired token' },
-      { status: 401 }
-    );
-  }
-
-  if (!abilitiesService!.userIsReporter(user)) {
-    return NextResponse.json(
-      { error: 'Reporter permission required' },
-      { status: 403 }
-    );
-  }
-
-  return { user };
+  return container;
 }
 
 // GET /api/reporters/[id] - Get specific reporter (public read-only access)
@@ -88,8 +40,8 @@ export const PUT = withAuth(async (
 ) => {
   const { id: reporterId } = await context.params;
 
-  const aiService = new AIService();
-  const reporterService = new ReporterService(redis, aiService);
+  const container = await getContainer();
+  const reporterService = await container.getReporterService();
 
   const body = await request.json();
   const { beats, prompt, enabled } = body;
@@ -125,8 +77,8 @@ export const DELETE = withAuth(async (
 ) => {
   const { id: reporterId } = await context.params;
 
-  const aiService = new AIService();
-  const reporterService = new ReporterService(redis, aiService);
+  const container = await getContainer();
+  const reporterService = await container.getReporterService();
 
   const success = await reporterService.deleteReporter(reporterId);
   if (!success) {

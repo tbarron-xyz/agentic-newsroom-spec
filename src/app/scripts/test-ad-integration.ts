@@ -1,5 +1,4 @@
-import { AIService } from '../services/ai.service';
-import { RedisService } from '../services/redis.service';
+import { ServiceContainer } from '../services/service-container';
 import { exec } from 'child_process';
 import { promisify } from 'util';
 
@@ -7,9 +6,11 @@ async function testAdIntegration() {
   console.log('Testing ad integration in article generation...');
 
   try {
+    const container = ServiceContainer.getInstance();
+    const redis = await container.getDataStorageService();
+    const aiService = await container.getAIService();
+
     // First, create a test ad
-    const redis = new RedisService();
-    await redis.connect();
 
     const testAd = {
       id: await redis.generateId('ad'),
@@ -34,10 +35,7 @@ async function testAdIntegration() {
     await redis.saveAd(newerAd);
     console.log('Created newer test ad:', newerAd.id);
 
-    await redis.disconnect();
-
     // Test the AI service with mock social media messages
-    const aiService = new AIService();
 
     // Note: This test now uses the actual npx mbjc 500 command
     // Make sure the command is available and returns valid JSON

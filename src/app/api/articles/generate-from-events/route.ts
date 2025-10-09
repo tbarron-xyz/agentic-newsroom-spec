@@ -1,15 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '../../../utils/auth';
-import { ReporterService } from '../../../services/reporter.service';
-import { AIService } from '../../../services/ai.service';
+import { ServiceContainer } from '../../../services/service-container';
 
 // POST /api/articles/generate-from-events - Manually trigger article generation from events
 export const POST = withAuth(async (request: NextRequest, user, redis) => {
   console.log(`[${new Date().toISOString()}] Manual article generation from events triggered by user ${user.id}`);
 
-  // Initialize services
-  const aiService = new AIService();
-  const reporterService = new ReporterService(redis, aiService);
+  const container = ServiceContainer.getInstance();
+  const reporterService = await container.getReporterService();
 
   // Generate articles from events
   const results = await reporterService.generateArticlesFromEvents();

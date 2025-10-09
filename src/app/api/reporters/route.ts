@@ -1,38 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '../../utils/auth';
 import { withRedis } from '../../utils/redis';
-import { RedisService } from '../../services/redis.service';
-import { ReporterService } from '../../services/reporter.service';
-import { AIService } from '../../services/ai.service';
-import { AuthService } from '../../services/auth.service';
-import { AbilitiesService } from '../../services/abilities.service';
+import { ServiceContainer } from '../../services/service-container';
 
-let redisService: RedisService | null = null;
-let reporterService: ReporterService | null = null;
-let aiService: AIService | null = null;
-let authService: AuthService | null = null;
-let abilitiesService: AbilitiesService | null = null;
+let container: ServiceContainer | null = null;
 
-async function initializeServices(): Promise<void> {
-  if (!redisService) {
-    redisService = new RedisService();
-    await redisService.connect();
+async function getContainer(): Promise<ServiceContainer> {
+  if (!container) {
+    container = ServiceContainer.getInstance();
   }
-  if (!aiService) {
-    aiService = new AIService();
-  }
-  if (!authService) {
-    authService = new AuthService(redisService);
-  }
-  if (!abilitiesService) {
-    abilitiesService = new AbilitiesService();
-  }
-  if (!reporterService) {
-    reporterService = new ReporterService(redisService, aiService);
-  }
+  return container;
 }
 
 async function checkReporterPermission(request: NextRequest): Promise<{ user: any } | NextResponse> {
+  const container = await getContainer();
+  const authService = await container.getAuthService();
+  const abilitiesService = await container.getAbilitiesService();
+
   const authHeader = request.headers.get('authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return NextResponse.json(
@@ -42,7 +26,7 @@ async function checkReporterPermission(request: NextRequest): Promise<{ user: an
   }
 
   const token = authHeader.substring(7);
-  const user = await authService!.getUserFromToken(token);
+  const user = await authService.getUserFromToken(token);
   if (!user) {
     return NextResponse.json(
       { error: 'Invalid or expired token' },
@@ -50,7 +34,9 @@ async function checkReporterPermission(request: NextRequest): Promise<{ user: an
     );
   }
 
-  if (!abilitiesService!.userIsReporter(user)) {
+  // Check if user has reporter permission
+  const hasPermission = abilitiesService.userIsReporter(user);
+  if (!hasPermission) {
     return NextResponse.json(
       { error: 'Reporter permission required' },
       { status: 403 }
@@ -61,15 +47,15 @@ async function checkReporterPermission(request: NextRequest): Promise<{ user: an
 }
 
 // GET /api/reporters - Get all reporters (public read-only access)
-export const GET = withRedis(async (_request: NextRequest, redis) => {
-  const reporters = await redis.getAllReporters();
+export const GET = withRedis(async (_request: NextRequest, dataStorage) => {
+  const reporters = await dataStorage.getAllReporters();
   return NextResponse.json(reporters);
 });
 
 // POST /api/reporters - Create new reporter
-export const POST = withAuth(async (request: NextRequest, user, redis) => {
-  const aiService = new AIService();
-  const reporterService = new ReporterService(redis, aiService);
+export const POST = withAuth(async (request: NextRequest, user, dataStorage) => {
+  const container = await getContainer();
+  const reporterService = await container.getReporterService();
 
   const body = await request.json();
   const { beats, prompt, enabled } = body;

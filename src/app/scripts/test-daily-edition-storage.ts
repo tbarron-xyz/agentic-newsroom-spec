@@ -1,12 +1,12 @@
-import { RedisService } from '../services/redis.service';
+import { ServiceContainer } from '../services/service-container';
 import { DailyEdition } from '../models/types';
 
 async function testDailyEditionStorage(): Promise<void> {
   console.log('🧪 Testing daily edition storage in Redis...\n');
 
   try {
-    const redisService = new RedisService();
-    await redisService.connect();
+    const container = ServiceContainer.getInstance();
+    const redisService = await container.getDataStorageService();
 
     // Create a test daily edition
     const testDailyEdition: DailyEdition = {
@@ -60,8 +60,6 @@ async function testDailyEditionStorage(): Promise<void> {
     // Note: Test data will remain in Redis for verification
     // In production, you might want to add a cleanup method to RedisService
     console.log('\n📝 Note: Test data remains in Redis for verification purposes');
-
-    await redisService.disconnect();
 
     console.log('\n🎉 Redis storage test complete!');
     console.log('✅ All Redis operations working correctly\n');

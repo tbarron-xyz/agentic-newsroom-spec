@@ -1,23 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { RedisService } from '../../../services/redis.service';
-import { AIService } from '../../../services/ai.service';
-import { EditorService } from '../../../services/editor.service';
+import { ServiceContainer } from '../../../services/service-container';
 
-let redisService: RedisService | null = null;
-let aiService: AIService | null = null;
-let editorService: EditorService | null = null;
+let container: ServiceContainer | null = null;
 
-async function initializeServices(): Promise<void> {
-  if (!redisService) {
-    redisService = new RedisService();
-    await redisService.connect();
+async function getContainer(): Promise<ServiceContainer> {
+  if (!container) {
+    container = ServiceContainer.getInstance();
   }
-  if (!aiService) {
-    aiService = new AIService();
-  }
-  if (!editorService) {
-    editorService = new EditorService(redisService, aiService);
-  }
+  return container;
 }
 
 // GET /api/cron/daily - Trigger daily edition generation job
@@ -26,21 +16,23 @@ export async function GET(_request: NextRequest) {
     console.log('\n=== CRON JOB: DAILY EDITION GENERATION ===');
     console.log(`[${new Date().toISOString()}] Starting cron-triggered daily edition generation...`);
 
-    await initializeServices();
+    const container = await getContainer();
+    const redis = await container.getDataStorageService();
+    const editorService = await container.getEditorService();
 
     const currentTime = Date.now();
 
     // Set job as running and update last run time
-    await redisService!.setJobRunning('daily', true);
-    await redisService!.setJobLastRun('daily', currentTime);
+    await redis.setJobRunning('daily', true);
+    await redis.setJobLastRun('daily', currentTime);
     console.log(`[${new Date().toISOString()}] Set daily job running=true and last_run=${currentTime}`);
 
     try {
-      const dailyEdition = await editorService!.generateDailyEdition();
+      const dailyEdition = await editorService.generateDailyEdition();
 
       // Mark job as completed successfully
-      await redisService!.setJobRunning('daily', false);
-      await redisService!.setJobLastSuccess('daily', currentTime);
+      await redis.setJobRunning('daily', false);
+      await redis.setJobLastSuccess('daily', currentTime);
       console.log(`[${new Date().toISOString()}] Set daily job running=false and last_success=${currentTime}`);
 
       console.log(`[${new Date().toISOString()}] Successfully generated daily edition ${dailyEdition.id}`);
@@ -53,7 +45,7 @@ export async function GET(_request: NextRequest) {
       });
     } catch (error) {
       // Mark job as not running on error (don't update last_success)
-      await redisService!.setJobRunning('daily', false);
+      await redis.setJobRunning('daily', false);
       console.log(`[${new Date().toISOString()}] Set daily job running=false due to error`);
       throw error; // Re-throw to be handled by outer catch
     }
