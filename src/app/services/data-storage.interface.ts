@@ -1,4 +1,4 @@
-import { RedisClientType } from 'redis';
+
 import {
   Editor,
   Reporter,
@@ -14,7 +14,6 @@ export interface IDataStorageService {
   // Connection management
   connect(): Promise<void>;
   disconnect(): Promise<void>;
-  getClient(): RedisClientType;
 
   // Editor operations
   saveEditor(editor: Editor): Promise<void>;
@@ -80,6 +79,7 @@ export interface IDataStorageService {
   incrementKpiValue(kpiName: string, increment: number): Promise<void>;
 
   // Utility methods
+  getModelName(): Promise<string | null>;
   generateId(prefix: string): Promise<string>;
   clearAllData(): Promise<void>;
 }

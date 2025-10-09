@@ -30,7 +30,7 @@ export class AIService {
 
   private async initializeModelName(): Promise<void> {
     try {
-      const storedModelName = await this.dataStorageService.getClient().get(REDIS_KEYS.MODEL_NAME);
+      const storedModelName = await this.dataStorageService.getModelName();
       this.modelName = storedModelName || 'gpt-5-nano';
     } catch (error) {
       console.warn('Failed to fetch modelName from Redis, using default:', error);

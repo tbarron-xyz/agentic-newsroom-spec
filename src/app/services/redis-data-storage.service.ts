@@ -38,10 +38,7 @@ export class RedisDataStorageService implements IDataStorageService {
     console.log('Disconnected from Redis');
   }
 
-  // Getter for client access (used by AIService)
-  getClient() {
-    return this.client;
-  }
+
 
   // Editor operations
   async saveEditor(editor: Editor): Promise<void> {
@@ -969,6 +966,10 @@ export class RedisDataStorageService implements IDataStorageService {
   }
 
   // Utility methods
+  async getModelName(): Promise<string | null> {
+    return await this.client.get(REDIS_KEYS.MODEL_NAME);
+  }
+
   async generateId(prefix: string): Promise<string> {
     const timestamp = Date.now();
     const random = Math.random().toString(36).substring(2, 8);
