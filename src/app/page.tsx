@@ -138,39 +138,36 @@ export default function Home() {
       <div className="max-w-7xl mx-auto relative z-10">
         {/* Welcome Box for Non-Authenticated Users */}
         {!user && (
-           <div className="relative mb-8 backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
-            <div className="flex items-start space-x-4">
-              <div className="flex-shrink-0">
-                <div className="w-12 h-12 backdrop-blur-sm bg-white/20 rounded-full flex items-center justify-center">
-                  <svg className="w-6 h-6 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+            <div className="relative mb-8 backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl p-8 shadow-2xl">
+             <div className="flex items-start space-x-4">
+               <div className="flex-shrink-0">
+                 <div className="w-12 h-12 backdrop-blur-sm bg-white/20 rounded-full flex items-center justify-center">
+                   <svg className="w-6 h-6 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                   </svg>
+                 </div>
+               </div>
+               <div className="flex-1">
+                 <h2 className="text-xl font-bold text-white/90 mb-3">
+                   Welcome to Skylines AI Newsroom
+                 </h2>
+                 <div className="text-white/80 space-y-3">
+                   <p className="text-base leading-relaxed">
+                     Each article in our newsroom is sourced from real messages on the Bluesky social media platform's firehose - a continuous stream of public posts and conversations.
+                   </p>
+                    <p className="text-base leading-relaxed">
+                      Every article clearly states which specific social media messages were used to write and inform the content, ensuring transparency about our AI-powered reporting process.
+                    </p>
+                    <p className="text-base leading-relaxed">
+                      Check out the new Events feature, where you can explore list-of-facts style event coverage sourced from real Bluesky conversations.
+                    </p>
+
+                  </div>
                 </div>
               </div>
-              <div className="flex-1">
-                <h2 className="text-xl font-bold text-white/90 mb-3">
-                  Welcome to Skylines AI Newsroom
-                </h2>
-                <div className="text-white/80 space-y-3">
-                  <p className="text-base leading-relaxed">
-                    Each article in our newsroom is sourced from real messages on the Bluesky social media platform's firehose - a continuous stream of public posts and conversations.
-                  </p>
-                  <p className="text-base leading-relaxed">
-                    Every article clearly states which specific social media messages were used to write and inform the content, ensuring transparency about our AI-powered reporting process.
-                  </p>
 
-                </div>
-               </div>
-             </div>
 
-             {/* Floating Events Info Box */}
-             <div className="absolute top-4 right-4 backdrop-blur-xl bg-white/10 border border-white/20 rounded-xl p-4 shadow-xl hover:bg-white/15 transition-all duration-300">
-               <Link href="/events" className="block text-center">
-                 <h3 className="text-sm font-bold text-white/90 mb-2">Events!</h3>
-                 <p className="text-xs text-white/70">Explore list-of-facts style event coverage sourced from real Bluesky conversations</p>
-               </Link>
-             </div>
-           </div>
+            </div>
          )}
 
         {/* Page Header */}
