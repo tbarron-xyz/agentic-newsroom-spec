@@ -15,6 +15,8 @@ interface EditorData {
   lastArticleGenerationTime: number | null;
   eventGenerationPeriodMinutes: number;
   lastEventGenerationTime: number | null;
+  editionGenerationPeriodMinutes: number;
+  lastEditionGenerationTime: number | null;
 }
 
 interface KpiData {
@@ -53,7 +55,9 @@ export default function EditorPage() {
     articleGenerationPeriodMinutes: 15,
     lastArticleGenerationTime: null,
     eventGenerationPeriodMinutes: 30,
-    lastEventGenerationTime: null
+    lastEventGenerationTime: null,
+    editionGenerationPeriodMinutes: 180,
+    lastEditionGenerationTime: null
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -534,9 +538,61 @@ export default function EditorPage() {
                 </p>
               </div>
             </div>
-          </div>
+           </div>
 
-          {/* Action Buttons */}
+           {/* Edition Generation Period Section */}
+           <div className="space-y-4">
+             <div className="flex items-center space-x-3">
+               <div className="w-8 h-8 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                 <svg className="w-4 h-4 text-white/80" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2zM16 2v4M8 2v4M3 10h18" />
+                 </svg>
+               </div>
+               <h2 className="text-2xl font-semibold text-white/90">Edition Generation Period</h2>
+             </div>
+             <div className="backdrop-blur-sm bg-white/5 border border-white/10 rounded-xl p-6 space-y-4">
+               <div>
+                 <label className="block text-sm font-medium text-white/80 mb-2">
+                   Generation Interval (minutes)
+                 </label>
+                 <input
+                   type="number"
+                   value={editorData.editionGenerationPeriodMinutes}
+                   onChange={(e) => setEditorData({ ...editorData, editionGenerationPeriodMinutes: parseInt(e.target.value) || 180 })}
+                   placeholder="Enter generation period in minutes (e.g., 180)"
+                   min="1"
+                   max="1440"
+                   className={`w-full p-4 backdrop-blur-sm bg-white/10 border border-white/20 rounded-lg text-white/90 placeholder-white/50 ${
+                     isAdmin
+                       ? 'focus:ring-2 focus:ring-white/50 focus:border-white/30'
+                       : 'bg-white/5 cursor-not-allowed opacity-60'
+                   }`}
+                   readOnly={!isAdmin}
+                 />
+                 <p className="text-sm text-white/70 mt-2">
+                   Minimum time interval between edition generation runs (1-1440 minutes). The cron job will skip generation if this duration hasn't elapsed since the last run.
+                 </p>
+               </div>
+
+               <div>
+                 <label className="block text-sm font-medium text-white/80 mb-2">
+                   Last Generation Time
+                 </label>
+                 <input
+                   type="text"
+                   value={editorData.lastEditionGenerationTime ? new Date(editorData.lastEditionGenerationTime).toLocaleString() : 'Never'}
+                   placeholder="No generation has occurred yet"
+                   className="w-full p-4 backdrop-blur-sm bg-white/10 border border-white/20 rounded-lg text-white/90 bg-white/5 cursor-not-allowed"
+                   readOnly
+                 />
+                 <p className="text-sm text-white/70 mt-2">
+                   Timestamp of the last successful edition generation run. This field is automatically updated by the system.
+                 </p>
+               </div>
+             </div>
+           </div>
+
+           {/* Action Buttons */}
           <div className="flex items-center justify-between pt-6 border-t border-white/20">
             <button
               onClick={fetchEditorData}

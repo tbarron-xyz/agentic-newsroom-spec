@@ -16,14 +16,16 @@ export const GET = withRedis(async (_request: NextRequest, redis) => {
     articleGenerationPeriodMinutes: editor?.articleGenerationPeriodMinutes || 15,
     lastArticleGenerationTime: editor?.lastArticleGenerationTime || null,
     eventGenerationPeriodMinutes: editor?.eventGenerationPeriodMinutes || 30,
-    lastEventGenerationTime: editor?.lastEventGenerationTime || null
+    lastEventGenerationTime: editor?.lastEventGenerationTime || null,
+    editionGenerationPeriodMinutes: editor?.editionGenerationPeriodMinutes || 180,
+    lastEditionGenerationTime: editor?.lastEditionGenerationTime || null
   });
 });
 
 // PUT /api/editor - Update editor data
 export const PUT = withAuth(async (request: NextRequest, user, redis) => {
   const body = await request.json();
-  const { bio, prompt, modelName, messageSliceCount, inputTokenCost, outputTokenCost, articleGenerationPeriodMinutes, eventGenerationPeriodMinutes } = body;
+  const { bio, prompt, modelName, messageSliceCount, inputTokenCost, outputTokenCost, articleGenerationPeriodMinutes, eventGenerationPeriodMinutes, editionGenerationPeriodMinutes } = body;
 
   if (typeof bio !== 'string' || typeof prompt !== 'string' || typeof modelName !== 'string') {
     return NextResponse.json(
@@ -53,6 +55,13 @@ export const PUT = withAuth(async (request: NextRequest, user, redis) => {
     );
   }
 
+  if (typeof editionGenerationPeriodMinutes !== 'number' || editionGenerationPeriodMinutes < 1 || editionGenerationPeriodMinutes > 1440) {
+    return NextResponse.json(
+      { error: 'editionGenerationPeriodMinutes must be a number between 1 and 1440' },
+      { status: 400 }
+    );
+  }
+
   if (typeof inputTokenCost !== 'number' || inputTokenCost < 0) {
     return NextResponse.json(
       { error: 'inputTokenCost must be a non-negative number' },
@@ -75,7 +84,8 @@ export const PUT = withAuth(async (request: NextRequest, user, redis) => {
     inputTokenCost,
     outputTokenCost,
     articleGenerationPeriodMinutes,
-    eventGenerationPeriodMinutes
+    eventGenerationPeriodMinutes,
+    editionGenerationPeriodMinutes
   });
 
   return NextResponse.json({
@@ -87,6 +97,7 @@ export const PUT = withAuth(async (request: NextRequest, user, redis) => {
     outputTokenCost,
     articleGenerationPeriodMinutes,
     eventGenerationPeriodMinutes,
+    editionGenerationPeriodMinutes,
     message: 'Editor data updated successfully'
   });
 }, { requiredRole: 'admin' });

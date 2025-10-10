@@ -9,6 +9,8 @@ export interface Editor {
   lastArticleGenerationTime?: number; // milliseconds since epoch, optional for backward compatibility
   eventGenerationPeriodMinutes: number;
   lastEventGenerationTime?: number; // milliseconds since epoch, optional for backward compatibility
+  editionGenerationPeriodMinutes: number;
+  lastEditionGenerationTime?: number; // milliseconds since epoch, optional for backward compatibility
 }
 
 export interface Reporter {
@@ -112,10 +114,12 @@ EDITOR_PROMPT: 'editor:prompt',
 EDITOR_MESSAGE_SLICE_COUNT: 'editor:message_slice_count',
 INPUT_TOKEN_COST: 'editor:input_token_cost',
 OUTPUT_TOKEN_COST: 'editor:output_token_cost',
-ARTICLE_GENERATION_PERIOD_MINUTES: 'article_generation:period_minutes',
+  ARTICLE_GENERATION_PERIOD_MINUTES: 'article_generation:period_minutes',
   LAST_ARTICLE_GENERATION_TIME: 'article_generation:last_time',
   EVENT_GENERATION_PERIOD_MINUTES: 'event_generation:period_minutes',
   LAST_EVENT_GENERATION_TIME: 'event_generation:last_time',
+  EDITION_GENERATION_PERIOD_MINUTES: 'edition_generation:period_minutes',
+  LAST_EDITION_GENERATION_TIME: 'edition_generation:last_time',
 
   // Reporters
   REPORTERS: 'reporters',

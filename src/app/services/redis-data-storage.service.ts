@@ -67,11 +67,17 @@ export class RedisDataStorageService implements IDataStorageService {
       console.log('Redis Write: SET', REDIS_KEYS.LAST_EVENT_GENERATION_TIME, editor.lastEventGenerationTime.toString());
       multi.set(REDIS_KEYS.LAST_EVENT_GENERATION_TIME, editor.lastEventGenerationTime.toString());
     }
+    console.log('Redis Write: SET', REDIS_KEYS.EDITION_GENERATION_PERIOD_MINUTES, editor.editionGenerationPeriodMinutes.toString());
+    multi.set(REDIS_KEYS.EDITION_GENERATION_PERIOD_MINUTES, editor.editionGenerationPeriodMinutes.toString());
+    if (editor.lastEditionGenerationTime !== undefined) {
+      console.log('Redis Write: SET', REDIS_KEYS.LAST_EDITION_GENERATION_TIME, editor.lastEditionGenerationTime.toString());
+      multi.set(REDIS_KEYS.LAST_EDITION_GENERATION_TIME, editor.lastEditionGenerationTime.toString());
+    }
     await multi.exec();
   }
 
   async getEditor(): Promise<Editor | null> {
-    const [bio, prompt, modelName, messageSliceCountStr, inputTokenCostStr, outputTokenCostStr, articleGenerationPeriodMinutesStr, lastArticleGenerationTimeStr, eventGenerationPeriodMinutesStr, lastEventGenerationTimeStr] = await Promise.all([
+    const [bio, prompt, modelName, messageSliceCountStr, inputTokenCostStr, outputTokenCostStr, articleGenerationPeriodMinutesStr, lastArticleGenerationTimeStr, eventGenerationPeriodMinutesStr, lastEventGenerationTimeStr, editionGenerationPeriodMinutesStr, lastEditionGenerationTimeStr] = await Promise.all([
       this.client.get(REDIS_KEYS.EDITOR_BIO),
       this.client.get(REDIS_KEYS.EDITOR_PROMPT),
       this.client.get(REDIS_KEYS.MODEL_NAME),
@@ -81,7 +87,9 @@ export class RedisDataStorageService implements IDataStorageService {
       this.client.get(REDIS_KEYS.ARTICLE_GENERATION_PERIOD_MINUTES),
       this.client.get(REDIS_KEYS.LAST_ARTICLE_GENERATION_TIME),
       this.client.get(REDIS_KEYS.EVENT_GENERATION_PERIOD_MINUTES),
-      this.client.get(REDIS_KEYS.LAST_EVENT_GENERATION_TIME)
+      this.client.get(REDIS_KEYS.LAST_EVENT_GENERATION_TIME),
+      this.client.get(REDIS_KEYS.EDITION_GENERATION_PERIOD_MINUTES),
+      this.client.get(REDIS_KEYS.LAST_EDITION_GENERATION_TIME)
     ]);
 
     if (!bio || !prompt) return null;
@@ -96,7 +104,9 @@ export class RedisDataStorageService implements IDataStorageService {
       articleGenerationPeriodMinutes: articleGenerationPeriodMinutesStr ? parseInt(articleGenerationPeriodMinutesStr) : 15, // Default fallback
       lastArticleGenerationTime: lastArticleGenerationTimeStr ? parseInt(lastArticleGenerationTimeStr) : undefined, // Optional field
       eventGenerationPeriodMinutes: eventGenerationPeriodMinutesStr ? parseInt(eventGenerationPeriodMinutesStr) : 30, // Default fallback
-      lastEventGenerationTime: lastEventGenerationTimeStr ? parseInt(lastEventGenerationTimeStr) : undefined // Optional field
+      lastEventGenerationTime: lastEventGenerationTimeStr ? parseInt(lastEventGenerationTimeStr) : undefined, // Optional field
+      editionGenerationPeriodMinutes: editionGenerationPeriodMinutesStr ? parseInt(editionGenerationPeriodMinutesStr) : 180, // Default to 3 hours
+      lastEditionGenerationTime: lastEditionGenerationTimeStr ? parseInt(lastEditionGenerationTimeStr) : undefined // Optional field
     };
   }
 
